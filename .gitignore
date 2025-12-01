@@ -1,0 +1,20 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+
+# Env files
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# JetBrains IDE
+.idea/
+
+# VSCode
+.vscode/
