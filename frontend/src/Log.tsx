@@ -1,8 +1,12 @@
 import { Button } from "./components/ui/button";
 
 const Log = () => {
+  const googleLogin = async () => {
+    window.location.href = "http://localhost:4000/login/federated/google";
+  };
+
   return (
-    <div className="max-w-7xl w-full m-auto">
+    <div className="max-w-4xl w-full m-auto">
       <h1>Login Page</h1>
       <form
         action={"http://localhost:4000/login"}
@@ -22,8 +26,14 @@ const Log = () => {
             name="password"
           />
         </div>
-        <Button type="submit">Login</Button>
+        <Button type="submit" className="w-min">
+          Login
+        </Button>
       </form>
+
+      <hr className="my-4" />
+
+      <Button onClick={googleLogin}>Sign in with Google</Button>
     </div>
   );
 };

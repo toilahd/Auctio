@@ -24,7 +24,7 @@ import { createJwt, decodeJwt } from "./utils/jwtUtil.js";
 const app = express();
 const PORT = process.env.AUTH_PORT || 4000;
 
-const ACCESS_TOKEN_AGE = "10s";
+const ACCESS_TOKEN_AGE = "10min";
 const REFRESH_TOKEN_AGE = "30d";
 
 app.use(
@@ -55,6 +55,12 @@ const users = [
     username: "service B",
     password: "wonderland",
     longName: "Service B - south dakota",
+  },
+  {
+    id: 3,
+    username: "user",
+    password: "pass",
+    longName: "Usser Testington",
   },
 ];
 const validRefreshTokens = new Set();
@@ -173,7 +179,7 @@ passport.use(
     (accessToken, refreshToken, profile, done) => {
       const userFromGoogle = {
         googleId: profile.id,
-        email: profile.emails,
+        email: profile.emails[0].value,
         name: profile.displayName,
       };
 
@@ -191,6 +197,7 @@ passport.use(
     }
   )
 );
+
 app.get(
   "/login/federated/google",
   passport.authenticate("google", {
@@ -204,10 +211,26 @@ app.get(
     session: false,
   }),
   (req, res) => {
-    console.log("Google OAuth callback user:", req);
+    console.log("Google OAuth callback user:", req.user);
     const user = req.user;
 
-    res.redirect("/");
+    const payload = {
+      username: user.name,
+      email: user.email,
+      googleId: user.googleId,
+    };
+    const token = createJwt(payload, { expiresIn: ACCESS_TOKEN_AGE });
+    const refresh = createJwt(payload, { expiresIn: REFRESH_TOKEN_AGE });
+    validRefreshTokens.add(refresh);
+
+    res
+      .cookie("access", token, {
+        httpOnly: true,
+        // sameSite: "none",
+        // secure: false,
+      })
+      .cookie("refresh", refresh, { httpOnly: true })
+      .redirect("/");
   }
 );
 
