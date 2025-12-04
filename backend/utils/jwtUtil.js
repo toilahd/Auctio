@@ -3,15 +3,16 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const createJwt = (payload, options = { expiresIn: "1h" }) => {
+const createJwt = (payload, options = { expiresIn: "5min" }) => {
   return jwt.sign(payload, process.env.JWT_SECRET, options);
 };
 
 const decodeJwt = (token) => {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    return { payload, error: null };
   } catch (err) {
-    return null;
+    return { payload: null, error: err };
   }
 };
 
