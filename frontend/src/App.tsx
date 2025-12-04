@@ -26,7 +26,7 @@ function App() {
     getUserInfo();
   }, []);
   return (
-    <div className="max-w-7xl w-full m-auto">
+    <div className="max-w-4xl w-full m-auto">
       <pre>{apiResult}</pre>
 
       <a href="/Log">Go to login page</a>
