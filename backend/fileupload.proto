@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package fileupload;
+
+service FileUploadService {
+  // Upload a file in chunks
+  rpc UploadFile(stream FileChunk) returns (FileUploadResponse);
+  
+  // Get file info
+  rpc GetFileInfo(FileInfoRequest) returns (FileInfo);
+}
+
+message FileChunk {
+  string filename = 1;
+  bytes content = 2;
+  int32 chunk_number = 3;
+  bool is_last_chunk = 4;
+  string content_type = 5;
+}
+
+message FileUploadResponse {
+  bool success = 1;
+  string file_id = 2;
+  string message = 3;
+  int64 total_bytes = 4;
+}
+
+message FileInfoRequest {
+  string file_id = 1;
+}
+
+message FileInfo {
+  string file_id = 1;
+  string filename = 2;
+  int64 size = 3;
+  string upload_date = 4;
+}
