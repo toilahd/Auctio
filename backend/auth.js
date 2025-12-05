@@ -20,6 +20,9 @@ import cors from "cors";
 import cookie from "cookie-parser";
 import passport from "passport";
 import GoogleStrategy from "passport-google-oauth20";
+import swaggerUi from "swagger-ui-express";
+import swaggerDoc from "./swagger.json" with { type: 'json' };
+import * as z from "zod";
 import { createJwt, decodeJwt } from "./utils/jwtUtil.js";
 const app = express();
 const PORT = process.env.AUTH_PORT || 4000;
@@ -27,6 +30,7 @@ const PORT = process.env.AUTH_PORT || 4000;
 const ACCESS_TOKEN_AGE = "10min";
 const REFRESH_TOKEN_AGE = "30d";
 
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 app.use(
   cors({
     origin: [
@@ -93,12 +97,90 @@ const getUserFromJwt = (req, res, next) => {
 
 // Auth routes
 app.get("/whoami", getUserFromJwt, (req, res) => {
+  /*
+    #swagger.summary = 'Get current user'
+    #swagger.description = 'Endpoint to get information about the currently authenticated user.'
+
+    #swagger.responses[200] = {
+      description: 'User information retrieved successfully.',
+      schema: {
+        user: {
+          username: 'string',
+          email: 'string',
+          googleId: 'string'
+        }
+      }
+    }
+
+    #swagger.responses[401] = {
+      description: 'Unauthorized access.',
+      schema: { message: 'Unauthorized' }
+    }
+  */
   const user = req.user || null;
   res.json({ user });
 });
 
 app.post("/login", (req, res) => {
-  const { username, password } = req.body;
+  /*
+    #swagger.summary = 'User login'
+    #swagger.description = 'Endpoint to login and receive access and refresh tokens.'
+
+    #swagger.parameters['body'] = {
+      in: 'body',
+      description: 'Login credentials.',
+      required: true,
+      schema: {
+        $username: 'testuser',
+        $password: 'mypassword'
+      }
+    }
+
+    #swagger.responses[200] = {
+      description: 'Login successful.',
+      schema: {
+        message: 'Login successful',
+        accessToken: 'string',
+        refreshToken: 'string'
+      }
+    }
+
+    #swagger.responses[400] = {
+      description: 'Validation error.',
+      schema: {
+        message: 'Invalid input',
+        errors: [
+          {
+            origin: "string",
+            code: "too_small",
+            minimum: 3,
+            inclusive: true,
+            path: ["username"],
+            message: "Too small: expected string to have >= 3 characters"
+          }
+        ]
+      }
+    }
+
+    #swagger.responses[401] = {
+      description: 'Invalid credentials.',
+      schema: { message: 'Invalid credentials' }
+    }
+  */
+
+  // Make validation schema
+  const loginSchema = z.object({
+    username: z.string().max(8).min(3),
+    password: z.string().max(20).min(3),
+  });
+  // Validate input
+  const parseResult = loginSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    console.log("Login validation error:", parseResult.error.message);
+    return res.status(400).json({ message: "Invalid input", errors: JSON.parse(parseResult.error.message) });
+  }
+
+  const { username, password } = parseResult.data;
   const user = users.find((u) => u.username === username);
   if (user && user.password === password) {
     const token = createJwt({ username }, { expiresIn: ACCESS_TOKEN_AGE });
@@ -132,6 +214,32 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/refresh", (req, res) => {
+  /*
+    #swagger.summary = 'Refresh access token'
+    #swagger.description = 'Endpoint to refresh the access token using a valid refresh token.'
+
+    #swagger.parameters['body'] = {
+      in: 'body',
+      description: 'Refresh token.',
+      required: false,
+      schema: {
+        token: 'string'
+      }
+    }
+
+    #swagger.responses[200] = {
+      description: 'Access token refreshed successfully.',
+      schema: {
+        message: 'Access token refreshed',
+        accessToken: 'string'
+      }
+    }
+
+    #swagger.responses[401] = {
+      description: 'Invalid refresh token.',
+      schema: { message: 'Invalid refresh token' }
+    }
+  */
   const bodyRefreshToken = req.body.token;
   const refreshToken = req.cookies.refresh || bodyRefreshToken;
   if (refreshToken && validRefreshTokens.has(refreshToken)) {
