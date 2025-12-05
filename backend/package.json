@@ -34,11 +34,14 @@
     "nodemailer": "^7.0.11",
     "winston": "^3.18.3",
     "winston-daily-rotate-file": "^4.7.1",
-    "winston-elasticsearch": "^0.16.0"
+    "winston-elasticsearch": "^0.16.0",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "eslint": "^8.40.0",
     "nodemon": "^2.0.22",
-    "prisma": "^7.0.1"
+    "prisma": "^7.0.1",
+    "swagger-autogen": "^2.23.7"
   }
 }
