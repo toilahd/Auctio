@@ -27,47 +27,47 @@ enum UpgradeStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String // bcrypt hashed
-  fullName  String
-  address   String?
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String // bcrypt hashed
+  fullName    String
+  address     String?
   dateOfBirth DateTime?
-  role      UserRole @default(BIDDER)
+  role        UserRole  @default(BIDDER)
 
   // Rating system
   positiveRatings Int @default(0)
   negativeRatings Int @default(0)
 
   // Seller upgrade request
-  upgradeRequested Boolean @default(false)
+  upgradeRequested   Boolean        @default(false)
   upgradeRequestedAt DateTime?
-  upgradeStatus UpgradeStatus?
+  upgradeStatus      UpgradeStatus?
 
   // Email verification
-  isVerified Boolean @default(false)
+  isVerified        Boolean @default(false)
   verificationToken String?
 
   // Password reset
-  resetToken String?
+  resetToken       String?
   resetTokenExpiry DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  products Product[] @relation("SellerProducts")
-  currentWinningProducts Product[] @relation("ProductWinner")
-  bids Bid[]
-  watchList WatchList[]
-  questions Question[]
-  answers Answer[]
-  ratingsGiven Rating[] @relation("RatingFrom")
-  ratingsReceived Rating[] @relation("RatingTo")
-  orders Order[] @relation("BuyerOrders")
-  sellerOrders Order[] @relation("SellerOrders")
-  deniedBidders DeniedBidder[]
-  chatMessages ChatMessage[]
+  products               Product[]      @relation("SellerProducts")
+  currentWinningProducts Product[]      @relation("ProductWinner")
+  bids                   Bid[]
+  watchList              WatchList[]
+  questions              Question[]
+  answers                Answer[]
+  ratingsGiven           Rating[]       @relation("RatingFrom")
+  ratingsReceived        Rating[]       @relation("RatingTo")
+  orders                 Order[]        @relation("BuyerOrders")
+  sellerOrders           Order[]        @relation("SellerOrders")
+  deniedBidders          DeniedBidder[]
+  chatMessages           ChatMessage[]
 
   @@index([email])
   @@index([role])
@@ -78,9 +78,9 @@ model User {
 // =====================
 
 model Category {
-  id       String @id @default(uuid())
+  id       String  @id @default(uuid())
   name     String
-  slug     String @unique
+  slug     String  @unique
   parentId String?
 
   parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
@@ -105,59 +105,57 @@ enum ProductStatus {
 }
 
 model Product {
-  id          String   @id @default(uuid())
-  title       String
+  id            String   @id @default(uuid())
+  title         String
   titleNoAccent String // For Vietnamese search without accents
-  description String   @db.Text // WYSIWYG content
-  images      String[] // Array of image URLs
+  description   String   @db.Text // WYSIWYG content
+  images        String[] // Array of image URLs
 
   // Pricing
-  startPrice  Decimal  @db.Decimal(15, 2)
-  stepPrice   Decimal  @db.Decimal(15, 2)
-  buyNowPrice Decimal? @db.Decimal(15, 2)
-  currentPrice Decimal @db.Decimal(15, 2)
+  startPrice   Decimal  @db.Decimal(15, 2)
+  stepPrice    Decimal  @db.Decimal(15, 2)
+  buyNowPrice  Decimal? @db.Decimal(15, 2)
+  currentPrice Decimal  @db.Decimal(15, 2)
 
   // Auction settings
-  autoExtend Boolean @default(false)
+  autoExtend Boolean       @default(false)
   status     ProductStatus @default(ACTIVE)
   endTime    DateTime
 
   // Stats
-  bidCount   Int @default(0)
-  viewCount  Int @default(0)
+  bidCount  Int @default(0)
+  viewCount Int @default(0)
 
   // Relations
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
 
-  sellerId   String
-  seller     User @relation("SellerProducts", fields: [sellerId], references: [id])
+  sellerId String
+  seller   User   @relation("SellerProducts", fields: [sellerId], references: [id])
 
   currentWinnerId String?
-  currentWinner   User? @relation("ProductWinner", fields: [currentWinnerId], references: [id])
+  currentWinner   User?   @relation("ProductWinner", fields: [currentWinnerId], references: [id])
 
-  bids Bid[]
-  watchLists WatchList[]
-  questions Question[]
+  bids               Bid[]
+  watchLists         WatchList[]
+  questions          Question[]
   descriptionHistory DescriptionHistory[]
-  deniedBidders DeniedBidder[]
-  order Order?
+  deniedBidders      DeniedBidder[]
+  order              Order?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
 }
-
 
 // =====================
 // DESCRIPTION HISTORY
 // =====================
 
 model DescriptionHistory {
-  id        String   @id @default(uuid())
-  content   String   @db.Text
+  id        String  @id @default(uuid())
+  content   String  @db.Text
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -177,8 +175,8 @@ model Bid {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  bidderId  String
-  bidder    User @relation(fields: [bidderId], references: [id])
+  bidderId String
+  bidder   User   @relation(fields: [bidderId], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -192,10 +190,10 @@ model Bid {
 // =====================
 
 model WatchList {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId    String
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -212,16 +210,16 @@ model WatchList {
 // =====================
 
 model Question {
-  id        String   @id @default(uuid())
-  content   String   @db.Text
+  id      String @id @default(uuid())
+  content String @db.Text
 
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  askerId   String
-  asker     User @relation(fields: [askerId], references: [id])
+  askerId String
+  asker   User   @relation(fields: [askerId], references: [id])
 
-  answer    Answer?
+  answer Answer?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -231,17 +229,17 @@ model Question {
 }
 
 model Answer {
-  id         String   @id @default(uuid())
-  content    String   @db.Text
+  id      String @id @default(uuid())
+  content String @db.Text
 
   questionId String   @unique
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  sellerId   String
-  seller     User @relation(fields: [sellerId], references: [id])
+  sellerId String
+  seller   User   @relation(fields: [sellerId], references: [id])
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([questionId])
   @@index([sellerId])
@@ -252,15 +250,15 @@ model Answer {
 // =====================
 
 model DeniedBidder {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  bidderId  String
-  bidder    User @relation(fields: [bidderId], references: [id])
+  bidderId String
+  bidder   User   @relation(fields: [bidderId], references: [id])
 
-  reason    String?
+  reason String?
 
   createdAt DateTime @default(now())
 
@@ -279,21 +277,21 @@ enum RatingType {
 }
 
 model Rating {
-  id        String   @id @default(uuid())
-  type      RatingType
-  comment   String?  @db.Text
+  id      String     @id @default(uuid())
+  type    RatingType
+  comment String?    @db.Text
 
   fromUserId String
-  fromUser   User @relation("RatingFrom", fields: [fromUserId], references: [id])
+  fromUser   User   @relation("RatingFrom", fields: [fromUserId], references: [id])
 
-  toUserId   String
-  toUser     User @relation("RatingTo", fields: [toUserId], references: [id])
+  toUserId String
+  toUser   User   @relation("RatingTo", fields: [toUserId], references: [id])
 
-  orderId    String?
-  order      Order? @relation(fields: [orderId], references: [id])
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id])
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([fromUserId])
   @@index([toUserId])
@@ -322,42 +320,42 @@ enum PaymentMethod {
 }
 
 model Order {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  productId String   @unique
+  productId String  @unique
   product   Product @relation(fields: [productId], references: [id])
 
-  buyerId   String
-  buyer     User @relation("BuyerOrders", fields: [buyerId], references: [id])
+  buyerId String
+  buyer   User   @relation("BuyerOrders", fields: [buyerId], references: [id])
 
-  sellerId  String
-  seller    User @relation("SellerOrders", fields: [sellerId], references: [id])
+  sellerId String
+  seller   User   @relation("SellerOrders", fields: [sellerId], references: [id])
 
   finalPrice Decimal @db.Decimal(15, 2)
 
   // Payment
-  paymentMethod PaymentMethod?
+  paymentMethod        PaymentMethod?
   paymentTransactionId String?
-  isPaid Boolean @default(false)
-  paidAt DateTime?
+  isPaid               Boolean        @default(false)
+  paidAt               DateTime?
 
   // Shipping
   shippingAddress String?
-  trackingNumber String?
-  shippedAt DateTime?
+  trackingNumber  String?
+  shippedAt       DateTime?
 
   // Delivery
-  isDelivered Boolean @default(false)
+  isDelivered Boolean   @default(false)
   deliveredAt DateTime?
 
   status OrderStatus @default(PENDING_PAYMENT)
 
   // Cancellation
-  isCancelled Boolean @default(false)
-  cancelledAt DateTime?
+  isCancelled  Boolean   @default(false)
+  cancelledAt  DateTime?
   cancelReason String?
 
-  ratings Rating[]
+  ratings      Rating[]
   chatMessages ChatMessage[]
 
   createdAt DateTime @default(now())
@@ -374,16 +372,16 @@ model Order {
 // =====================
 
 model ChatMessage {
-  id        String   @id @default(uuid())
-  content   String   @db.Text
+  id      String @id @default(uuid())
+  content String @db.Text
 
-  orderId   String
-  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  senderId  String
-  sender    User @relation(fields: [senderId], references: [id])
+  senderId String
+  sender   User   @relation(fields: [senderId], references: [id])
 
-  isRead    Boolean @default(false)
+  isRead Boolean @default(false)
 
   createdAt DateTime @default(now())
 
