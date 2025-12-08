@@ -1,0 +1,413 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =====================
+// USER & AUTHENTICATION
+// =====================
+
+enum UserRole {
+  GUEST
+  BIDDER
+  SELLER
+  ADMIN
+}
+
+enum UpgradeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String // bcrypt hashed
+  fullName  String
+  address   String?
+  dateOfBirth DateTime?
+  role      UserRole @default(BIDDER)
+
+  // Rating system
+  positiveRatings Int @default(0)
+  negativeRatings Int @default(0)
+
+  // Seller upgrade request
+  upgradeRequested Boolean @default(false)
+  upgradeRequestedAt DateTime?
+  upgradeStatus UpgradeStatus?
+
+  // Email verification
+  isVerified Boolean @default(false)
+  verificationToken String?
+
+  // Password reset
+  resetToken String?
+  resetTokenExpiry DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  products Product[] @relation("SellerProducts")
+  currentWinningProducts Product[] @relation("ProductWinner")
+  bids Bid[]
+  watchList WatchList[]
+  questions Question[]
+  answers Answer[]
+  ratingsGiven Rating[] @relation("RatingFrom")
+  ratingsReceived Rating[] @relation("RatingTo")
+  orders Order[] @relation("BuyerOrders")
+  sellerOrders Order[] @relation("SellerOrders")
+  deniedBidders DeniedBidder[]
+  chatMessages ChatMessage[]
+
+  @@index([email])
+  @@index([role])
+}
+
+// =====================
+// CATEGORY
+// =====================
+
+model Category {
+  id       String @id @default(uuid())
+  name     String
+  slug     String @unique
+  parentId String?
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([slug])
+}
+
+// =====================
+// PRODUCT
+// =====================
+
+enum ProductStatus {
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  title       String
+  titleNoAccent String // For Vietnamese search without accents
+  description String   @db.Text // WYSIWYG content
+  images      String[] // Array of image URLs
+
+  // Pricing
+  startPrice  Decimal  @db.Decimal(15, 2)
+  stepPrice   Decimal  @db.Decimal(15, 2)
+  buyNowPrice Decimal? @db.Decimal(15, 2)
+  currentPrice Decimal @db.Decimal(15, 2)
+
+  // Auction settings
+  autoExtend Boolean @default(false)
+  status     ProductStatus @default(ACTIVE)
+  endTime    DateTime
+
+  // Stats
+  bidCount   Int @default(0)
+  viewCount  Int @default(0)
+
+  // Relations
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  sellerId   String
+  seller     User @relation("SellerProducts", fields: [sellerId], references: [id])
+
+  currentWinnerId String?
+  currentWinner   User? @relation("ProductWinner", fields: [currentWinnerId], references: [id])
+
+  bids Bid[]
+  watchLists WatchList[]
+  questions Question[]
+  descriptionHistory DescriptionHistory[]
+  deniedBidders DeniedBidder[]
+  order Order?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+
+// =====================
+// DESCRIPTION HISTORY
+// =====================
+
+model DescriptionHistory {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+// =====================
+// BID SYSTEM
+// =====================
+
+model Bid {
+  id        String   @id @default(uuid())
+  amount    Decimal  @db.Decimal(15, 2)
+  maxAmount Decimal? @db.Decimal(15, 2) // For auto-bidding
+  isAutoBid Boolean  @default(false)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  bidderId  String
+  bidder    User @relation(fields: [bidderId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([bidderId])
+  @@index([createdAt])
+}
+
+// =====================
+// WATCHLIST
+// =====================
+
+model WatchList {
+  id        String   @id @default(uuid())
+
+  userId    String
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+// =====================
+// Q&A SYSTEM
+// =====================
+
+model Question {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  askerId   String
+  asker     User @relation(fields: [askerId], references: [id])
+
+  answer    Answer?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([askerId])
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  content    String   @db.Text
+
+  questionId String   @unique
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  sellerId   String
+  seller     User @relation(fields: [sellerId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([questionId])
+  @@index([sellerId])
+}
+
+// =====================
+// DENIED BIDDERS
+// =====================
+
+model DeniedBidder {
+  id        String   @id @default(uuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  bidderId  String
+  bidder    User @relation(fields: [bidderId], references: [id])
+
+  reason    String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([productId, bidderId])
+  @@index([productId])
+  @@index([bidderId])
+}
+
+// =====================
+// RATING SYSTEM
+// =====================
+
+enum RatingType {
+  POSITIVE
+  NEGATIVE
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  type      RatingType
+  comment   String?  @db.Text
+
+  fromUserId String
+  fromUser   User @relation("RatingFrom", fields: [fromUserId], references: [id])
+
+  toUserId   String
+  toUser     User @relation("RatingTo", fields: [toUserId], references: [id])
+
+  orderId    String?
+  order      Order? @relation(fields: [orderId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([orderId])
+}
+
+// =====================
+// ORDER & PAYMENT
+// =====================
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  SHIPPING
+  DELIVERED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentMethod {
+  MOMO
+  ZALOPAY
+  VNPAY
+  STRIPE
+  PAYPAL
+}
+
+model Order {
+  id        String   @id @default(uuid())
+
+  productId String   @unique
+  product   Product @relation(fields: [productId], references: [id])
+
+  buyerId   String
+  buyer     User @relation("BuyerOrders", fields: [buyerId], references: [id])
+
+  sellerId  String
+  seller    User @relation("SellerOrders", fields: [sellerId], references: [id])
+
+  finalPrice Decimal @db.Decimal(15, 2)
+
+  // Payment
+  paymentMethod PaymentMethod?
+  paymentTransactionId String?
+  isPaid Boolean @default(false)
+  paidAt DateTime?
+
+  // Shipping
+  shippingAddress String?
+  trackingNumber String?
+  shippedAt DateTime?
+
+  // Delivery
+  isDelivered Boolean @default(false)
+  deliveredAt DateTime?
+
+  status OrderStatus @default(PENDING_PAYMENT)
+
+  // Cancellation
+  isCancelled Boolean @default(false)
+  cancelledAt DateTime?
+  cancelReason String?
+
+  ratings Rating[]
+  chatMessages ChatMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+}
+
+// =====================
+// CHAT SYSTEM
+// =====================
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+
+  orderId   String
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  senderId  String
+  sender    User @relation(fields: [senderId], references: [id])
+
+  isRead    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// =====================
+// ADMIN DASHBOARD
+// =====================
+
+model SystemConfig {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}
+
+// For storing auto-extend parameters
+// Example:
+// key: "AUTO_EXTEND_TIME_BEFORE_END" value: "5"
+// key: "AUTO_EXTEND_DURATION" value: "10"
