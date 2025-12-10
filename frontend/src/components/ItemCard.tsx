@@ -37,6 +37,7 @@ const ItemCard = ({
   startPrice,
   depositPrice,
   startTime,
+  onItemClick = () => null,
 }: {
   imgUrl?: string;
   title?: string;
@@ -45,9 +46,13 @@ const ItemCard = ({
   depositPrice?: Currency;
   startTime?: string;
   details?: string;
+  onItemClick?: () => void | null;
 }) => {
   return (
-    <Card className="w-full max-w-[20rem] min-w-[15rem] gap-4">
+    <Card
+      className="w-full max-w-[20rem] min-w-[15rem] gap-4"
+      onClick={onItemClick}
+    >
       <CardHeader className="p-0 py-0">
         <img
           src={imgUrl}

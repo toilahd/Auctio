@@ -1,4 +1,5 @@
 import ItemCard from "@/components/ItemCard";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const featuredItems = [
@@ -71,7 +72,7 @@ const HomePage = () => {
       details: "16:00 - 29/12/2024",
       startPrice: { symbol: "đ", price: 3000000 },
       depositPrice: { symbol: "đ", price: 600000 },
-    }
+    },
   ];
   return (
     <div>
@@ -100,6 +101,7 @@ const Section = ({
   items: any[];
   className?: string;
 }) => {
+  const navigate = useNavigate();
   return (
     <div className={className}>
       <h2>{sectionName}</h2>
@@ -113,6 +115,9 @@ const Section = ({
             details={item.details}
             startPrice={item.startPrice}
             depositPrice={item.depositPrice}
+            onItemClick={() => {
+              navigate(`/product/${index}`);
+            }}
           />
         ))}
       </div>
