@@ -47,7 +47,7 @@ const ItemCard = ({
   details?: string;
 }) => {
   return (
-    <Card className="w-full max-w-[20rem] shrink-0 gap-4">
+    <Card className="w-full max-w-[20rem] min-w-[15rem] gap-4">
       <CardHeader className="p-0 py-0">
         <img
           src={imgUrl}

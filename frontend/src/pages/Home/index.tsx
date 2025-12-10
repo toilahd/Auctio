@@ -27,6 +27,51 @@ const HomePage = () => {
       startPrice: { symbol: "đ", price: 40000000 },
       depositPrice: { symbol: "đ", price: 8000000 },
     },
+    {
+      imgUrl: "https://placehold.co/600x400",
+      title: "Đồng hồ thông minh Apple Watch Series 7",
+      description:
+        "Đồng hồ thông minh Apple Watch Series 7 GPS, 45mm, dây cao su",
+      details: "11:00 - 28/12/2024",
+      startPrice: { symbol: "đ", price: 12000000 },
+      depositPrice: { symbol: "đ", price: 2400000 },
+    },
+    {
+      imgUrl: "https://placehold.co/600x400",
+      title: "Tai nghe không dây Bose QuietComfort Earbuds",
+      description:
+        "Tai nghe không dây Bose QuietComfort Earbuds với chống ồn chủ động",
+      details: "15:00 - 22/12/2024",
+      startPrice: { symbol: "đ", price: 8000000 },
+      depositPrice: { symbol: "đ", price: 1600000 },
+    },
+    {
+      imgUrl: "https://placehold.co/600x400",
+      title: "Máy chơi game Sony PlayStation 5",
+      description:
+        "Máy chơi game Sony PlayStation 5 phiên bản tiêu chuẩn với ổ đĩa Blu-ray",
+      details: "13:00 - 27/12/2024",
+      startPrice: { symbol: "đ", price: 15000000 },
+      depositPrice: { symbol: "đ", price: 3000000 },
+    },
+    {
+      imgUrl: "https://placehold.co/600x400",
+      title: "Máy tính bảng iPad Pro 11 inch",
+      description:
+        "Máy tính bảng iPad Pro 11 inch (2021) với chip M1, 128GB, Wi-Fi",
+      details: "12:00 - 26/12/2024",
+      startPrice: { symbol: "đ", price: 20000000 },
+      depositPrice: { symbol: "đ", price: 4000000 },
+    },
+    {
+      imgUrl: "https://placehold.co/600x400",
+      title: "Loa thông minh Amazon Echo (4th Gen)",
+      description:
+        "Loa thông minh Amazon Echo (4th Gen) với âm thanh 360 độ và trợ lý ảo Alexa",
+      details: "16:00 - 29/12/2024",
+      startPrice: { symbol: "đ", price: 3000000 },
+      depositPrice: { symbol: "đ", price: 600000 },
+    }
   ];
   return (
     <div>
@@ -58,7 +103,7 @@ const Section = ({
   return (
     <div className={className}>
       <h2>{sectionName}</h2>
-      <div className="flex flex-row flex-wrap gap-2 overflow-auto">
+      <div className="flex flex-row gap-2 overflow-auto">
         {items.map((item, index) => (
           <ItemCard
             imgUrl={item.imgUrl}
