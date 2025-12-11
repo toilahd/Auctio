@@ -1,11 +1,11 @@
 {
   "name": "auction-backend",
   "version": "1.0.0",
-  "main": "src/app.js",
+  "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "node sapp.js",
+    "dev": "nodemon app.js",
     "lint": "eslint .."
   },
   "prisma": {

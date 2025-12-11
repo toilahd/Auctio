@@ -2,6 +2,7 @@ import express from 'express';
 import {getLogger} from "./config/logger.js";
 import {sendEmail} from "./config/email.js";
 import dotenv from 'dotenv';
+import {testDatabase} from "./config/prisma.js";
 
 dotenv.config()
 const app = express();
@@ -13,6 +14,8 @@ const startServer = async () => {
         app.listen(port, () => {
             appLogger.info(`Server is running on port ${port}`);
         });
+
+        testDatabase();
 
         // Send test email after server starts
         await sendEmail("qhuy180624@gmail.com", "Test Email", "This is a test email from the Node.js application.");

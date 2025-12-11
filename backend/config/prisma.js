@@ -11,7 +11,7 @@ process.on('beforeExit', async () => {
   await prisma.$disconnect();
 });
 
-async function testDatabase() {
+export async function testDatabase() {
   console.log('🔍 Testing database connection and seeded data...\n');
 
   try {
