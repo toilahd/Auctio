@@ -4,10 +4,17 @@ import {sendEmail} from "./config/email.js";
 import dotenv from 'dotenv';
 import {testDatabase} from "./config/prisma.js";
 
+// Routes
+import authRouter from "./routes/auth.routes.js"
+import docsRouter from "./routes/docs.routes.js"
+
 dotenv.config()
 const app = express();
 const port = process.env.PORT || 3000;
 const appLogger = getLogger('App');
+
+app.use(docsRouter);
+app.use(authRouter);
 
 const startServer = async () => {
     try {
@@ -28,7 +35,3 @@ const startServer = async () => {
 
 
 startServer();
-
-
-
-
