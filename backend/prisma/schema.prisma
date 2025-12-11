@@ -3,10 +3,12 @@
 
 generator client {
   provider = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // =====================
@@ -68,11 +70,7 @@ model User {
   sellerOrders           Order[]        @relation("SellerOrders")
   deniedBidders          DeniedBidder[]
   chatMessages           ChatMessage[]
-
-  @@index([email])
-  @@index([role])
 }
-
 // =====================
 // CATEGORY
 // =====================
@@ -80,7 +78,6 @@ model User {
 model Category {
   id       String  @id @default(uuid())
   name     String
-  slug     String  @unique
   parentId String?
 
   parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
@@ -89,9 +86,6 @@ model Category {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@index([parentId])
-  @@index([slug])
 }
 
 // =====================
