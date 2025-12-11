@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../config/prisma.js';
 
 export class BidModel {
   /**
@@ -85,7 +83,7 @@ export class BidModel {
   }
 
   /**
-   * Get highest bid for a product
+   * Get the highest bid for a product
    */
   static async getHighestBid(productId) {
     return prisma.bid.findFirst({

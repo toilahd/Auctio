@@ -3,579 +3,309 @@ import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-// Helper function to generate future date
-function futureDate(daysFromNow) {
-  const date = new Date();
-  date.setDate(date.getDate() + daysFromNow);
-  return date;
-}
-
-// Helper function to generate past date
-function pastDate(daysAgo) {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  return date;
-}
-
 async function main() {
-  console.log('🌱 Starting database seed...');
+  console.log('Starting database seed...\n');
 
-  // Clear existing data
-  console.log('🗑️  Clearing existing data...');
+  // Clean existing data
+  console.log('Cleaning existing data...');
   await prisma.chatMessage.deleteMany();
-  await prisma.rating.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.descriptionHistory.deleteMany();
-  await prisma.deniedBidder.deleteMany();
   await prisma.answer.deleteMany();
   await prisma.question.deleteMany();
+  await prisma.rating.deleteMany();
+  await prisma.deniedBidder.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.descriptionHistory.deleteMany();
   await prisma.watchList.deleteMany();
   await prisma.bid.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
-  await prisma.systemConfig.deleteMany();
+  console.log('Cleaned\n');
 
   // Create Users
-  console.log('👥 Creating users...');
+  console.log('Creating users...');
   const hashedPassword = await bcrypt.hash('password123', 10);
 
-  const users = await Promise.all([
-    // Admin
-    prisma.user.create({
-      data: {
-        email: 'admin@auction.com',
-        password: hashedPassword,
-        fullName: 'Admin User',
-        role: 'ADMIN',
-        isVerified: true,
-        address: '123 Admin Street, City',
-        dateOfBirth: new Date('1985-01-15'),
-      },
-    }),
-    // Sellers
-    prisma.user.create({
-      data: {
-        email: 'seller1@auction.com',
-        password: hashedPassword,
-        fullName: 'John Smith',
-        role: 'SELLER',
-        isVerified: true,
-        address: '456 Seller Ave, New York',
-        dateOfBirth: new Date('1990-05-20'),
-        positiveRatings: 45,
-        negativeRatings: 3,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'seller2@auction.com',
-        password: hashedPassword,
-        fullName: 'Emily Johnson',
-        role: 'SELLER',
-        isVerified: true,
-        address: '789 Market Street, Los Angeles',
-        dateOfBirth: new Date('1988-09-12'),
-        positiveRatings: 38,
-        negativeRatings: 2,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'seller3@auction.com',
-        password: hashedPassword,
-        fullName: 'Michael Brown',
-        role: 'SELLER',
-        isVerified: true,
-        address: '321 Commerce Blvd, Chicago',
-        dateOfBirth: new Date('1992-03-08'),
-        positiveRatings: 52,
-        negativeRatings: 1,
-      },
-    }),
-    // Bidders
-    prisma.user.create({
-      data: {
-        email: 'bidder1@auction.com',
-        password: hashedPassword,
-        fullName: 'Sarah Wilson',
-        role: 'BIDDER',
-        isVerified: true,
-        address: '654 Buyer Lane, Boston',
-        dateOfBirth: new Date('1995-07-22'),
-        positiveRatings: 15,
-        negativeRatings: 0,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'bidder2@auction.com',
-        password: hashedPassword,
-        fullName: 'David Lee',
-        role: 'BIDDER',
-        isVerified: true,
-        address: '987 Auction Road, Seattle',
-        dateOfBirth: new Date('1993-11-30'),
-        positiveRatings: 22,
-        negativeRatings: 1,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'bidder3@auction.com',
-        password: hashedPassword,
-        fullName: 'Lisa Martinez',
-        role: 'BIDDER',
-        isVerified: true,
-        address: '147 Bid Street, Miami',
-        dateOfBirth: new Date('1991-04-18'),
-        positiveRatings: 18,
-        negativeRatings: 0,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'bidder4@auction.com',
-        password: hashedPassword,
-        fullName: 'James Taylor',
-        role: 'BIDDER',
-        isVerified: true,
-        address: '258 Deal Avenue, Denver',
-        dateOfBirth: new Date('1994-08-25'),
-        positiveRatings: 12,
-        negativeRatings: 2,
-      },
-    }),
-    // User requesting upgrade
-    prisma.user.create({
-      data: {
-        email: 'upgrader@auction.com',
-        password: hashedPassword,
-        fullName: 'Robert Anderson',
-        role: 'BIDDER',
-        isVerified: true,
-        address: '369 Upgrade Path, Austin',
-        dateOfBirth: new Date('1989-12-10'),
-        upgradeRequested: true,
-        upgradeRequestedAt: new Date(),
-        upgradeStatus: 'PENDING',
-      },
-    }),
-    // Guest user
-    prisma.user.create({
-      data: {
-        email: 'guest@auction.com',
-        password: hashedPassword,
-        fullName: 'Guest User',
-        role: 'GUEST',
-        isVerified: false,
-        address: '999 Guest Street, Portland',
-      },
-    }),
-  ]);
+  const admin = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440001',
+      email: 'admin@auctio.com',
+      password: hashedPassword,
+      fullName: 'Admin User',
+      address: '123 Admin St',
+      dateOfBirth: new Date('1980-01-01'),
+      role: 'ADMIN',
+      isVerified: true,
+    },
+  });
 
-  const [admin, seller1, seller2, seller3, bidder1, bidder2, bidder3, bidder4, upgrader, guest] = users;
-  console.log(`✅ Created ${users.length} users`);
+  const seller1 = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440002',
+      email: 'seller1@example.com',
+      password: hashedPassword,
+      fullName: 'John Seller',
+      address: '456 Seller Ave',
+      dateOfBirth: new Date('1985-05-15'),
+      role: 'SELLER',
+      positiveRatings: 45,
+      negativeRatings: 2,
+      isVerified: true,
+    },
+  });
+
+  const seller2 = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440003',
+      email: 'seller2@example.com',
+      password: hashedPassword,
+      fullName: 'Jane Merchant',
+      address: '789 Commerce Rd',
+      dateOfBirth: new Date('1990-08-20'),
+      role: 'SELLER',
+      positiveRatings: 38,
+      negativeRatings: 1,
+      isVerified: true,
+    },
+  });
+
+  const bidder1 = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440005',
+      email: 'bidder1@example.com',
+      password: hashedPassword,
+      fullName: 'Alice Buyer',
+      address: '111 Bidder Ln',
+      dateOfBirth: new Date('1992-11-30'),
+      role: 'BIDDER',
+      positiveRatings: 12,
+      isVerified: true,
+    },
+  });
+
+  const bidder2 = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440006',
+      email: 'bidder2@example.com',
+      password: hashedPassword,
+      fullName: 'Charlie Collector',
+      address: '222 Auction Blvd',
+      dateOfBirth: new Date('1987-07-25'),
+      role: 'BIDDER',
+      positiveRatings: 28,
+      negativeRatings: 1,
+      isVerified: true,
+    },
+  });
+
+  console.log(`✅ Created ${await prisma.user.count()} users\n`);
 
   // Create Categories
   console.log('📁 Creating categories...');
   const electronics = await prisma.category.create({
-    data: { name: 'Electronics' },
+    data: {
+      id: 'cat-electronics-001',
+      name: 'Electronics',
+    },
   });
 
-  const electronicsSubcategories = await Promise.all([
-    prisma.category.create({ data: { name: 'Smartphones', parentId: electronics.id } }),
-    prisma.category.create({ data: { name: 'Laptops', parentId: electronics.id } }),
-    prisma.category.create({ data: { name: 'Cameras', parentId: electronics.id } }),
-    prisma.category.create({ data: { name: 'Audio Equipment', parentId: electronics.id } }),
-  ]);
+  const phones = await prisma.category.create({
+    data: {
+      id: 'cat-electronics-phones',
+      name: 'Smartphones',
+      parentId: electronics.id,
+    },
+  });
+
+  const laptops = await prisma.category.create({
+    data: {
+      id: 'cat-electronics-laptops',
+      name: 'Laptops',
+      parentId: electronics.id,
+    },
+  });
 
   const fashion = await prisma.category.create({
-    data: { name: 'Fashion' },
+    data: {
+      id: 'cat-fashion-002',
+      name: 'Fashion & Accessories',
+    },
   });
 
-  const fashionSubcategories = await Promise.all([
-    prisma.category.create({ data: { name: 'Watches', parentId: fashion.id } }),
-    prisma.category.create({ data: { name: 'Handbags', parentId: fashion.id } }),
-    prisma.category.create({ data: { name: 'Jewelry', parentId: fashion.id } }),
-  ]);
-
-  const collectibles = await prisma.category.create({
-    data: { name: 'Collectibles' },
+  const watches = await prisma.category.create({
+    data: {
+      id: 'cat-fashion-watches',
+      name: 'Watches',
+      parentId: fashion.id,
+    },
   });
 
-  const collectiblesSubcategories = await Promise.all([
-    prisma.category.create({ data: { name: 'Coins', parentId: collectibles.id } }),
-    prisma.category.create({ data: { name: 'Art', parentId: collectibles.id } }),
-    prisma.category.create({ data: { name: 'Vintage Items', parentId: collectibles.id } }),
-  ]);
-
-  const home = await prisma.category.create({
-    data: { name: 'Home & Garden' },
-  });
-
-  const homeSubcategories = await Promise.all([
-    prisma.category.create({ data: { name: 'Furniture', parentId: home.id } }),
-    prisma.category.create({ data: { name: 'Appliances', parentId: home.id } }),
-  ]);
-
-  console.log('✅ Created categories with subcategories');
+  console.log(`✅ Created ${await prisma.category.count()} categories\n`);
 
   // Create Products
   console.log('📦 Creating products...');
-  const products = await Promise.all([
-    prisma.product.create({
-      data: {
-        title: 'iPhone 15 Pro Max - 256GB Space Black',
-        titleNoAccent: 'iPhone 15 Pro Max - 256GB Space Black',
-        description: '<h2>Brand New iPhone 15 Pro Max</h2><p>Latest model with A17 Pro chip. Includes original box and accessories. Never used, sealed package.</p><ul><li>256GB Storage</li><li>Space Black Color</li><li>6.7-inch display</li><li>48MP camera system</li></ul>',
-        images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800', 'https://images.unsplash.com/photo-1695048133180-21d67f331b5c?w=800'],
-        startPrice: 800,
-        stepPrice: 50,
-        buyNowPrice: 1200,
-        currentPrice: 800,
-        autoExtend: true,
-        status: 'ACTIVE',
-        endTime: futureDate(3),
-        categoryId: electronicsSubcategories[0].id,
-        sellerId: seller1.id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        title: 'MacBook Pro 16" M3 Max - Like New',
-        titleNoAccent: 'MacBook Pro 16 M3 Max - Like New',
-        description: '<h2>MacBook Pro 16-inch</h2><p>M3 Max chip, barely used for 2 months. Comes with original charger and box.</p><ul><li>16-inch Liquid Retina XDR display</li><li>M3 Max chip</li><li>36GB RAM</li><li>1TB SSD</li></ul>',
-        images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800', 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800'],
-        startPrice: 2000,
-        stepPrice: 100,
-        buyNowPrice: 3500,
-        currentPrice: 2000,
-        autoExtend: false,
-        status: 'ACTIVE',
-        endTime: futureDate(5),
-        categoryId: electronicsSubcategories[1].id,
-        sellerId: seller1.id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        title: 'Sony Alpha A7 IV Mirrorless Camera Body',
-        titleNoAccent: 'Sony Alpha A7 IV Mirrorless Camera Body',
-        description: '<h2>Professional Camera</h2><p>Full-frame mirrorless camera with 33MP sensor. Excellent condition, low shutter count.</p><ul><li>33MP full-frame sensor</li><li>4K 60fps video</li><li>693-point AF system</li><li>Includes 2 batteries</li></ul>',
-        images: ['https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800', 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800'],
-        startPrice: 1500,
-        stepPrice: 75,
-        currentPrice: 1500,
-        autoExtend: true,
-        status: 'ACTIVE',
-        endTime: futureDate(7),
-        categoryId: electronicsSubcategories[2].id,
-        sellerId: seller1.id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        title: 'Rolex Submariner Date - Stainless Steel',
-        titleNoAccent: 'Rolex Submariner Date - Stainless Steel',
-        description: '<h2>Authentic Rolex Submariner</h2><p>2021 model, comes with box and papers. Excellent condition, regularly serviced.</p><ul><li>Automatic movement</li><li>Ceramic bezel</li><li>300m water resistance</li><li>All original parts</li></ul>',
-        images: ['https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=800', 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800'],
-        startPrice: 8000,
-        stepPrice: 500,
-        buyNowPrice: 12000,
-        currentPrice: 8000,
-        autoExtend: true,
-        status: 'ACTIVE',
-        endTime: futureDate(4),
-        categoryId: fashionSubcategories[0].id,
-        sellerId: seller2.id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        title: 'Louis Vuitton Neverfull MM - Monogram Canvas',
-        titleNoAccent: 'Louis Vuitton Neverfull MM - Monogram Canvas',
-        description: '<h2>Designer Handbag</h2><p>Authentic Louis Vuitton Neverfull in excellent condition. Date code verified.</p><ul><li>Monogram Canvas</li><li>MM Size</li><li>Includes pouch</li><li>Minor signs of use</li></ul>',
-        images: ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800', 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800'],
-        startPrice: 800,
-        stepPrice: 50,
-        currentPrice: 800,
-        autoExtend: false,
-        status: 'ACTIVE',
-        endTime: futureDate(2),
-        categoryId: fashionSubcategories[1].id,
-        sellerId: seller2.id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        title: 'Bose QuietComfort Ultra Headphones - Black',
-        titleNoAccent: 'Bose QuietComfort Ultra Headphones - Black',
-        description: '<h2>Premium Noise Cancelling Headphones</h2><p>Brand new, sealed in box. Latest model with spatial audio.</p><ul><li>World-class noise cancellation</li><li>Spatial audio</li><li>24-hour battery life</li><li>Premium materials</li></ul>',
-        images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800', 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800'],
-        startPrice: 200,
-        stepPrice: 20,
-        buyNowPrice: 350,
-        currentPrice: 200,
-        autoExtend: true,
-        status: 'ACTIVE',
-        endTime: futureDate(6),
-        categoryId: electronicsSubcategories[3].id,
-        sellerId: seller2.id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        title: 'Vintage 1960s Gibson Les Paul Standard',
-        titleNoAccent: 'Vintage 1960s Gibson Les Paul Standard',
-        description: '<h2>Rare Vintage Guitar</h2><p>Authentic 1960s Gibson Les Paul in excellent playing condition. Original parts, professionally maintained.</p><ul><li>Sunburst finish</li><li>Original pickups</li><li>Comes with hard case</li><li>Certificate of authenticity</li></ul>',
-        images: ['https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800', 'https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=800'],
-        startPrice: 3000,
-        stepPrice: 200,
-        currentPrice: 3000,
-        autoExtend: true,
-        status: 'ACTIVE',
-        endTime: futureDate(10),
-        categoryId: collectiblesSubcategories[2].id,
-        sellerId: seller3.id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        title: 'Original Picasso Limited Edition Print',
-        titleNoAccent: 'Original Picasso Limited Edition Print',
-        description: '<h2>Fine Art Collectible</h2><p>Authenticated limited edition print from 1955. Numbered and signed. Excellent investment piece.</p><ul><li>Certificate of authenticity</li><li>Professional framing</li><li>Edition 45/100</li><li>Museum quality</li></ul>',
-        images: ['https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800', 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800'],
-        startPrice: 5000,
-        stepPrice: 300,
-        currentPrice: 5000,
-        autoExtend: false,
-        status: 'ACTIVE',
-        endTime: futureDate(8),
-        categoryId: collectiblesSubcategories[1].id,
-        sellerId: seller3.id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        title: 'Samsung Galaxy S24 Ultra - 512GB Titanium',
-        titleNoAccent: 'Samsung Galaxy S24 Ultra - 512GB Titanium',
-        description: '<h2>Latest Samsung Flagship</h2><p>Brand new, unlocked. Top of the line model with S Pen.</p>',
-        images: ['https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800'],
-        startPrice: 900,
-        stepPrice: 50,
-        currentPrice: 900,
-        autoExtend: false,
-        status: 'ACTIVE',
-        endTime: futureDate(0.5),
-        categoryId: electronicsSubcategories[0].id,
-        sellerId: seller1.id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        title: 'Mid-Century Modern Dining Table Set',
-        titleNoAccent: 'Mid-Century Modern Dining Table Set',
-        description: '<h2>Beautiful Dining Set</h2><p>Solid walnut wood, seats 6. Excellent condition, minor wear consistent with age.</p>',
-        images: ['https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=800'],
-        startPrice: 600,
-        stepPrice: 50,
-        currentPrice: 600,
-        autoExtend: false,
-        status: 'ACTIVE',
-        endTime: futureDate(0.3),
-        categoryId: homeSubcategories[0].id,
-        sellerId: seller3.id,
-      },
-    }),
-  ]);
+  const iphone = await prisma.product.create({
+    data: {
+      id: 'prod-001',
+      title: 'iPhone 15 Pro Max 256GB - Like New',
+      titleNoAccent: 'iphone 15 pro max 256gb like new',
+      description: '<h2>iPhone 15 Pro Max</h2><p>Excellent condition, barely used.</p>',
+      images: ['https://picsum.photos/seed/iphone1/800/600', 'https://picsum.photos/seed/iphone2/800/600'],
+      startPrice: 800,
+      stepPrice: 50,
+      buyNowPrice: 1200,
+      currentPrice: 950,
+      autoExtend: true,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+      bidCount: 12,
+      viewCount: 245,
+      categoryId: phones.id,
+      sellerId: seller1.id,
+      currentWinnerId: bidder1.id,
+    },
+  });
 
-  console.log(`✅ Created ${products.length} products`);
+  const macbook = await prisma.product.create({
+    data: {
+      id: 'prod-002',
+      title: 'MacBook Pro 16" M3 Max 2024',
+      titleNoAccent: 'macbook pro 16 m3 max 2024',
+      description: '<h2>MacBook Pro 16-inch</h2><p>Latest M3 Max chip, perfect for professionals.</p>',
+      images: ['https://picsum.photos/seed/macbook1/800/600'],
+      startPrice: 2000,
+      stepPrice: 100,
+      buyNowPrice: 3500,
+      currentPrice: 2400,
+      autoExtend: true,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      bidCount: 8,
+      viewCount: 189,
+      categoryId: laptops.id,
+      sellerId: seller1.id,
+      currentWinnerId: bidder2.id,
+    },
+  });
+
+  const rolex = await prisma.product.create({
+    data: {
+      id: 'prod-004',
+      title: 'Rolex Submariner Date - 2023 Model',
+      titleNoAccent: 'rolex submariner date 2023 model',
+      description: '<h2>Rolex Submariner</h2><p>Authentic Rolex with box and papers.</p>',
+      images: ['https://picsum.photos/seed/rolex1/800/600'],
+      startPrice: 8000,
+      stepPrice: 500,
+      buyNowPrice: 12000,
+      currentPrice: 9500,
+      autoExtend: true,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      bidCount: 15,
+      viewCount: 567,
+      categoryId: watches.id,
+      sellerId: seller2.id,
+      currentWinnerId: bidder2.id,
+    },
+  });
+
+  console.log(`✅ Created ${await prisma.product.count()} products\n`);
 
   // Create Bids
   console.log('💰 Creating bids...');
-  const bids = await Promise.all([
-    prisma.bid.create({ data: { amount: 850, productId: products[0].id, bidderId: bidder1.id, createdAt: pastDate(2) } }),
-    prisma.bid.create({ data: { amount: 900, productId: products[0].id, bidderId: bidder2.id, createdAt: pastDate(1) } }),
-    prisma.bid.create({ data: { amount: 950, maxAmount: 1100, isAutoBid: true, productId: products[0].id, bidderId: bidder3.id, createdAt: pastDate(0.5) } }),
-    prisma.bid.create({ data: { amount: 2100, productId: products[1].id, bidderId: bidder2.id, createdAt: pastDate(3) } }),
-    prisma.bid.create({ data: { amount: 2200, productId: products[1].id, bidderId: bidder4.id, createdAt: pastDate(2) } }),
-    prisma.bid.create({ data: { amount: 8500, productId: products[3].id, bidderId: bidder1.id, createdAt: pastDate(1) } }),
-    prisma.bid.create({ data: { amount: 9000, maxAmount: 11000, isAutoBid: true, productId: products[3].id, bidderId: bidder2.id, createdAt: pastDate(0.2) } }),
-    prisma.bid.create({ data: { amount: 950, productId: products[8].id, bidderId: bidder3.id, createdAt: pastDate(0.2) } }),
-    prisma.bid.create({ data: { amount: 1000, productId: products[8].id, bidderId: bidder1.id, createdAt: pastDate(0.1) } }),
-  ]);
+  await prisma.bid.createMany({
+    data: [
+      {
+        id: 'bid-001',
+        amount: 800,
+        productId: iphone.id,
+        bidderId: bidder1.id,
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
+      {
+        id: 'bid-002',
+        amount: 850,
+        productId: iphone.id,
+        bidderId: bidder2.id,
+        createdAt: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000),
+      },
+      {
+        id: 'bid-003',
+        amount: 950,
+        maxAmount: 1000,
+        isAutoBid: true,
+        productId: iphone.id,
+        bidderId: bidder1.id,
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      },
+    ],
+  });
 
-  await Promise.all([
-    prisma.product.update({ where: { id: products[0].id }, data: { currentPrice: 950, currentWinnerId: bidder3.id, bidCount: 3 } }),
-    prisma.product.update({ where: { id: products[1].id }, data: { currentPrice: 2200, currentWinnerId: bidder4.id, bidCount: 2 } }),
-    prisma.product.update({ where: { id: products[3].id }, data: { currentPrice: 9000, currentWinnerId: bidder2.id, bidCount: 2 } }),
-    prisma.product.update({ where: { id: products[8].id }, data: { currentPrice: 1000, currentWinnerId: bidder1.id, bidCount: 2 } }),
-  ]);
+  console.log(`✅ Created ${await prisma.bid.count()} bids\n`);
 
-  console.log(`✅ Created ${bids.length} bids`);
+  // Create Watchlist
+  console.log('⭐ Creating watchlist items...');
+  await prisma.watchList.createMany({
+    data: [
+      { userId: bidder1.id, productId: iphone.id },
+      { userId: bidder1.id, productId: macbook.id },
+      { userId: bidder2.id, productId: rolex.id },
+    ],
+  });
 
-  // Create WatchLists
-  console.log('⭐ Creating watchlists...');
-  await Promise.all([
-    prisma.watchList.create({ data: { userId: bidder1.id, productId: products[1].id } }),
-    prisma.watchList.create({ data: { userId: bidder1.id, productId: products[3].id } }),
-    prisma.watchList.create({ data: { userId: bidder1.id, productId: products[7].id } }),
-    prisma.watchList.create({ data: { userId: bidder2.id, productId: products[0].id } }),
-    prisma.watchList.create({ data: { userId: bidder2.id, productId: products[6].id } }),
-    prisma.watchList.create({ data: { userId: bidder3.id, productId: products[4].id } }),
-    prisma.watchList.create({ data: { userId: bidder4.id, productId: products[2].id } }),
-  ]);
-  console.log('✅ Created watchlists');
+  console.log(`✅ Created ${await prisma.watchList.count()} watchlist items\n`);
 
-  // Create Questions and Answers
+  // Create Ratings
+  console.log('⭐ Creating ratings...');
+  await prisma.rating.createMany({
+    data: [
+      {
+        type: 'POSITIVE',
+        comment: 'Excellent seller! Fast shipping.',
+        fromUserId: bidder1.id,
+        toUserId: seller1.id,
+      },
+      {
+        type: 'POSITIVE',
+        comment: 'Item exactly as described.',
+        fromUserId: bidder2.id,
+        toUserId: seller1.id,
+      },
+      {
+        type: 'POSITIVE',
+        comment: 'Great communication!',
+        fromUserId: bidder1.id,
+        toUserId: seller2.id,
+      },
+    ],
+  });
+
+  console.log(`✅ Created ${await prisma.rating.count()} ratings\n`);
+
+  // Create Questions & Answers
   console.log('❓ Creating questions and answers...');
   const question1 = await prisma.question.create({
-    data: { content: 'Is the iPhone still under warranty?', productId: products[0].id, askerId: bidder2.id, createdAt: pastDate(1) },
+    data: {
+      content: 'Is the battery health really 100%?',
+      productId: iphone.id,
+      askerId: bidder2.id,
+    },
   });
+
   await prisma.answer.create({
-    data: { content: 'Yes, it has 11 months of Apple warranty remaining.', questionId: question1.id, sellerId: seller1.id },
-  });
-
-  const question2 = await prisma.question.create({
-    data: { content: 'Can you provide more photos of the watch face?', productId: products[3].id, askerId: bidder1.id, createdAt: pastDate(2) },
-  });
-  await prisma.answer.create({
-    data: { content: 'Sure, I will upload additional photos shortly.', questionId: question2.id, sellerId: seller2.id },
-  });
-
-  await prisma.question.create({
-    data: { content: 'What is the shipping method?', productId: products[1].id, askerId: bidder3.id, createdAt: pastDate(0.5) },
-  });
-
-  console.log('✅ Created questions and answers');
-
-  // Create Description History
-  console.log('📝 Creating description history...');
-  await Promise.all([
-    prisma.descriptionHistory.create({
-      data: { content: '<h2>Brand New iPhone 15 Pro Max</h2><p>Latest model with A17 Pro chip.</p>', productId: products[0].id, createdAt: pastDate(3) },
-    }),
-    prisma.descriptionHistory.create({
-      data: { content: '<h2>Brand New iPhone 15 Pro Max</h2><p>Latest model with A17 Pro chip. Includes original box.</p>', productId: products[0].id, createdAt: pastDate(2) },
-    }),
-  ]);
-  console.log('✅ Created description history');
-
-  // Create Orders
-  console.log('📋 Creating orders...');
-  const endedProduct = await prisma.product.create({
     data: {
-      title: 'iPad Pro 12.9" 2023 - 256GB WiFi',
-      titleNoAccent: 'iPad Pro 12.9 2023 - 256GB WiFi',
-      description: '<h2>iPad Pro</h2><p>Like new condition. M2 chip, Magic Keyboard included.</p>',
-      images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800'],
-      startPrice: 700,
-      stepPrice: 50,
-      currentPrice: 850,
-      status: 'ENDED',
-      endTime: pastDate(5),
-      categoryId: electronicsSubcategories[1].id,
+      content: 'Yes, I can verify it shows 100% in settings!',
+      questionId: question1.id,
       sellerId: seller1.id,
-      currentWinnerId: bidder1.id,
-      bidCount: 4,
     },
   });
 
-  const order1 = await prisma.order.create({
-    data: {
-      productId: endedProduct.id,
-      buyerId: bidder1.id,
-      sellerId: seller1.id,
-      finalPrice: 850,
-      paymentMethod: 'STRIPE',
-      paymentTransactionId: 'ch_3Abc123xyz',
-      isPaid: true,
-      paidAt: pastDate(4),
-      status: 'DELIVERED',
-      shippingAddress: '654 Buyer Lane, Boston, MA 02101',
-      trackingNumber: '1Z999AA10123456784',
-      shippedAt: pastDate(3),
-      isDelivered: true,
-      deliveredAt: pastDate(1),
-    },
-  });
+  console.log(`✅ Created questions and answers\n`);
 
-  await Promise.all([
-    prisma.rating.create({
-      data: { type: 'POSITIVE', comment: 'Great seller! Item as described, fast shipping.', fromUserId: bidder1.id, toUserId: seller1.id, orderId: order1.id },
-    }),
-    prisma.rating.create({
-      data: { type: 'POSITIVE', comment: 'Excellent buyer, quick payment!', fromUserId: seller1.id, toUserId: bidder1.id, orderId: order1.id },
-    }),
-  ]);
-
-  const pendingProduct = await prisma.product.create({
-    data: {
-      title: 'Nintendo Switch OLED - White',
-      titleNoAccent: 'Nintendo Switch OLED - White',
-      description: '<h2>Nintendo Switch OLED Model</h2><p>Brand new, sealed.</p>',
-      images: ['https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=800'],
-      startPrice: 250,
-      stepPrice: 25,
-      currentPrice: 300,
-      status: 'ENDED',
-      endTime: pastDate(2),
-      categoryId: electronicsSubcategories[0].id,
-      sellerId: seller2.id,
-      currentWinnerId: bidder2.id,
-      bidCount: 3,
-    },
-  });
-
-  await prisma.order.create({
-    data: {
-      productId: pendingProduct.id,
-      buyerId: bidder2.id,
-      sellerId: seller2.id,
-      finalPrice: 300,
-      status: 'PENDING_PAYMENT',
-      shippingAddress: '987 Auction Road, Seattle, WA 98101',
-    },
-  });
-
-  console.log('✅ Created orders and ratings');
-
-  // Create Chat Messages
-  console.log('💬 Creating chat messages...');
-  await Promise.all([
-    prisma.chatMessage.create({ data: { content: 'Hi, when can you ship the item?', orderId: order1.id, senderId: bidder1.id, isRead: true, createdAt: pastDate(3) } }),
-    prisma.chatMessage.create({ data: { content: 'I can ship it tomorrow morning!', orderId: order1.id, senderId: seller1.id, isRead: true, createdAt: pastDate(3) } }),
-    prisma.chatMessage.create({ data: { content: 'Perfect, thank you!', orderId: order1.id, senderId: bidder1.id, isRead: true, createdAt: pastDate(2.8) } }),
-  ]);
-  console.log('✅ Created chat messages');
-
-  // Create System Configs
-  console.log('⚙️  Creating system configurations...');
-  await Promise.all([
-    prisma.systemConfig.create({ data: { key: 'AUTO_EXTEND_MINUTES', value: '5' } }),
-    prisma.systemConfig.create({ data: { key: 'MIN_BID_INCREMENT', value: '1' } }),
-    prisma.systemConfig.create({ data: { key: 'MAX_IMAGES_PER_PRODUCT', value: '10' } }),
-    prisma.systemConfig.create({ data: { key: 'COMMISSION_RATE', value: '0.05' } }),
-  ]);
-  console.log('✅ Created system configurations');
-
-  // Create Denied Bidder
-  console.log('🚫 Creating denied bidder...');
-  await prisma.deniedBidder.create({
-    data: { productId: products[3].id, bidderId: bidder4.id, reason: 'Repeated non-payment in previous auctions' },
-  });
-  console.log('✅ Created denied bidder');
-
-  console.log('\n✨ Database seed completed successfully!');
-  console.log('\n📊 Summary:');
-  console.log(`   - Users: ${users.length}`);
-  console.log(`   - Products: ${products.length + 2}`);
-  console.log(`   - Bids: ${bids.length}`);
-  console.log(`   - Orders: 2`);
-  console.log(`   - Ratings: 2`);
-  console.log(`   - Questions: 3`);
-  console.log(`   - Watchlist items: 7\n`);
+  console.log('========================================');
+  console.log('✅ Database seeded successfully!');
+  console.log('========================================');
 }
 
 main()
