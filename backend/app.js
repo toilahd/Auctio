@@ -1,4 +1,5 @@
 import express from 'express';
+import cookie from "cookie-parser";
 import {getLogger} from "./config/logger.js";
 import {sendEmail} from "./config/email.js";
 import dotenv from 'dotenv';
@@ -12,6 +13,10 @@ dotenv.config()
 const app = express();
 const port = process.env.PORT || 3000;
 const appLogger = getLogger('App');
+
+app.use(express.json());
+app.use(cookie());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(docsRouter);
 app.use(authRouter);
