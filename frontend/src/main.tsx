@@ -4,10 +4,11 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 // import App from "./App.tsx";
 import HomePage from "./pages/Home/home";
-import Log from "./pages/Log/loggin";
+import LogPage from "./pages/Log/loggin";
 import SellerDashboardPage from "./pages/Seller/seller-dashboard";
 import CreateProductPage from "./pages/Seller/create-product";
 import ProductDetails from "./pages/Product/product";
+import SignUp from "./pages/Log/signup";
 
 const router = createBrowserRouter([
   {
@@ -15,8 +16,12 @@ const router = createBrowserRouter([
     element: <HomePage />,
   },
   {
-    path: "/log",
-    element: <Log />,
+    path: "/log-in",
+    element: <LogPage />,
+  },
+  {
+    path: "/sign-up",
+    element: <SignUp />,
   },
   {
     path: "/product/:id",
