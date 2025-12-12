@@ -88,6 +88,7 @@ export async function signup(req, res) {
     email: z.email(),
     password: z.string().max(20).min(3),
     fullName: z.string().max(100).min(1),
+    address: z.string().max(200),
   });
 
   // Validate input
@@ -100,7 +101,7 @@ export async function signup(req, res) {
     });
   }
 
-  const { email, password, fullName } = parseResult.data;
+  const { email, password, fullName, address } = parseResult.data;
 
   // Check if user already exists
   const existingUser = await prisma.user.findFirst({
@@ -121,6 +122,7 @@ export async function signup(req, res) {
       email: email,
       password: hashedPassword,
       fullName: fullName,
+      address: address,
       role: UserRole.BIDDER, // Default role
     },
   });
@@ -218,5 +220,39 @@ export async function refreshToken(req, res) {
       message: "Access token refreshed",
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
+    });
+}
+
+export function googleOAuthCallback(req, res) {
+  const user = req.user || null;
+  if (user === null) {
+    return res.status(401).json({ message: "Authentication failed" });
+  }
+
+  const userInfoPayload = {
+    userId: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    role: user.role,
+    isVerified: user.isVerified,
+  };
+
+  const accessToken = createJwt(userInfoPayload, {
+    expiresIn: ACCESS_TOKEN_AGE,
+  });
+
+  const refreshToken = createJwt(userInfoPayload, {
+    expiresIn: REFRESH_TOKEN_AGE,
+  });
+
+  UserModel.update(user.id, { resetToken: refreshToken });
+
+  res
+    .cookie("access", accessToken, { httpOnly: true })
+    .cookie("refresh", refreshToken, { httpOnly: true })
+    .json({
+      message: "Login via Google successful",
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     });
 }
