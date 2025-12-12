@@ -12,10 +12,10 @@ import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 
 /**
- * Login page for existing users
+ * Sign up page for new users
  * @returns
  */
-const Login = () => {
+const SignUp = () => {
   const googleLogin = async () => {
     window.location.href = "http://localhost:4000/login/federated/google";
   };
@@ -24,6 +24,7 @@ const Login = () => {
     register,
     handleSubmit,
   } = useForm<{
+    username: string;
     email: string;
     password: string;
   }>();
@@ -37,14 +38,31 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-xl p-6">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold tracking-tight">
-            Welcome back
+            Create an account
           </CardTitle>
           <CardDescription className="text-base">
-            Sign in to your account to continue
+            Enter your information to get started
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="username"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Username
+              </label>
+              <Input
+                {...register("username", { required: true })}
+                type="text"
+                placeholder="Your username"
+                id="username"
+                name="username"
+                required
+                className="h-11"
+              />
+            </div>
             <div className="space-y-2">
               <label
                 htmlFor="email"
@@ -63,17 +81,12 @@ const Login = () => {
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Password
-                </label>
-                <a href="#" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </a>
-              </div>
+              <label
+                htmlFor="password"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Password
+              </label>
               <Input
                 {...register("password", { required: true })}
                 type="password"
@@ -85,7 +98,7 @@ const Login = () => {
               />
             </div>
             <Button type="submit" className="w-full h-11 text-base font-semibold">
-              Sign in
+              Create account
             </Button>
           </form>
 
@@ -106,16 +119,16 @@ const Login = () => {
             className="w-full h-11 text-base font-semibold"
           >
             <GoogleIcon />
-            Sign in with Google
+            Sign up with Google
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Already have an account?{" "}
             <a
-              href="/sign-up"
+              href="/log-in"
               className="font-semibold text-primary hover:underline"
             >
-              Sign up
+              Sign in
             </a>
           </p>
         </CardContent>
@@ -124,4 +137,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignUp;

@@ -1,5 +1,10 @@
 import { decodeJwt } from "./jwtUtil.js";
 
+/**
+ * Middleware to extract user information from JWT in cookies or Authorization header.
+ * If a valid token is found, attaches the user info to req.user.
+ * If no valid token is found, sets req.user to null and req.tokenError with the error message.
+ */
 const getUserFromJwt = (req, res, next) => {
   console.log("All cookies:", req.cookies);
   const accessToken = req.cookies ? req.cookies.access : null;
