@@ -16,18 +16,17 @@ import type { SubmitHandler } from "react-hook-form";
  * @returns
  */
 const Login = () => {
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
   const googleLogin = async () => {
-    window.location.href = "http://localhost:4000/login/federated/google";
+    window.location.href = `${BACKEND_URL}/login/federated/google`;
   };
 
-  const {
-    register,
-    handleSubmit,
-  } = useForm<{
+  const { register, handleSubmit } = useForm<{
     email: string;
     password: string;
   }>();
-  
+
   const onSubmit: SubmitHandler<any> = (data) => {
     console.log(data);
   };
@@ -84,7 +83,10 @@ const Login = () => {
                 className="h-11"
               />
             </div>
-            <Button type="submit" className="w-full h-11 text-base font-semibold">
+            <Button
+              type="submit"
+              className="w-full h-11 text-base font-semibold"
+            >
               Sign in
             </Button>
           </form>

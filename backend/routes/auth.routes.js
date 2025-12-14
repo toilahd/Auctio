@@ -1,5 +1,6 @@
 import { Router } from "express";
 import passport from "passport";
+import cors from "cors";
 import GoogleStrategy from "passport-google-oauth20";
 import {
   whoAmI,
@@ -13,6 +14,8 @@ import getUserFromJwt from "../utils/getUserFromJwtMiddleware.js";
 import UserModel from "../models/User.js";
 
 const router = Router();
+
+router.use(cors());
 
 router.get("/whoami", getUserFromJwt, whoAmI);
 

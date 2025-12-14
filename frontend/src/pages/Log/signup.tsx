@@ -16,19 +16,20 @@ import type { SubmitHandler } from "react-hook-form";
  * @returns
  */
 const SignUp = () => {
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
   const googleLogin = async () => {
-    window.location.href = "http://localhost:4000/login/federated/google";
+    window.location.href = `${BACKEND_URL}/login/federated/google`;
   };
 
-  const {
-    register,
-    handleSubmit,
-  } = useForm<{
+  const { register, handleSubmit } = useForm<{
     username: string;
     email: string;
     password: string;
+    address: string;
+    confirmPassword: string;
   }>();
-  
+
   const onSubmit: SubmitHandler<any> = (data) => {
     console.log(data);
   };
@@ -38,10 +39,10 @@ const SignUp = () => {
       <Card className="w-full max-w-md shadow-xl p-6">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold tracking-tight">
-            Create an account
+            Tạo tài khoản
           </CardTitle>
           <CardDescription className="text-base">
-            Enter your information to get started
+            Nhập thông tin của bạn để bắt đầu
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -51,12 +52,12 @@ const SignUp = () => {
                 htmlFor="username"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                Username
+                Họ và tên
               </label>
               <Input
                 {...register("username", { required: true })}
                 type="text"
-                placeholder="Your username"
+                placeholder="Nguyễn A"
                 id="username"
                 name="username"
                 required
@@ -73,7 +74,7 @@ const SignUp = () => {
               <Input
                 {...register("email", { required: true })}
                 type="email"
-                placeholder="name@example.com"
+                placeholder="nguyena@example.com"
                 id="email"
                 name="email"
                 required
@@ -97,7 +98,44 @@ const SignUp = () => {
                 className="h-11"
               />
             </div>
-            <Button type="submit" className="w-full h-11 text-base font-semibold">
+            {/* <div className="space-y-2">
+              <label
+                htmlFor="confirmPassword"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Confirm Password
+              </label>
+              <Input
+                {...register("confirmPassword", { required: true })}
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="••••••••"
+                required
+                className="h-11"
+              />
+            </div> */}
+            <div className="space-y-2">
+              <label
+                htmlFor="address"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Địa chỉ
+              </label>
+              <Input
+                {...register("address", { required: true })}
+                type="text"
+                placeholder="123 Đường ABC, Quận 1, TP.HCM"
+                id="address"
+                name="address"
+                required
+                className="h-11"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full h-11 text-base font-semibold"
+            >
               Create account
             </Button>
           </form>
