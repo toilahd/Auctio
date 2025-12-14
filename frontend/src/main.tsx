@@ -9,6 +9,7 @@ import SellerDashboardPage from "./pages/Seller/seller-dashboard";
 import CreateProductPage from "./pages/Seller/create-product";
 import ProductDetails from "./pages/Product/product";
 import SignUp from "./pages/Log/signup";
+import AccountPage from "./pages/Account/account";
 
 const router = createBrowserRouter([
   {
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
   {
     path: "/product/:id",
     element: <ProductDetails />,
+  },
+  {
+    path: "/me",
+    element: <AccountPage isSelf={true} />,
   },
 
   // Seler routes

@@ -16,7 +16,12 @@ import UserModel from "../models/User.js";
 
 const router = Router();
 
-router.use(cors());
+router.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
 
 router.get("/whoami", getUserFromJwt, whoAmI);
 

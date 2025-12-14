@@ -10,12 +10,14 @@ import {
 import GoogleIcon from "./google";
 import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Login page for existing users
  * @returns
  */
 const Login = () => {
+  const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
   const googleLogin = async () => {
@@ -31,8 +33,27 @@ const Login = () => {
     password: string;
   }>();
 
-  const onSubmit: SubmitHandler<any> = (data) => {
-    console.log(data);
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const responseData = await response.json();
+      console.log("Login successful:", responseData);
+      navigate("/");
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
 
   return (

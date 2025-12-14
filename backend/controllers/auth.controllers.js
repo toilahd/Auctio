@@ -251,20 +251,15 @@ export function googleOAuthCallback(req, res) {
     return res
       .cookie("access", accessToken, { httpOnly: true })
       .cookie("refresh", refreshToken, { httpOnly: true })
+      .redirect(FRONTEND_URL);
+  } else {
+    res
+      .cookie("access", accessToken, { httpOnly: true })
+      .cookie("refresh", refreshToken, { httpOnly: true })
       .json({
         message: "Login via Google successful",
         accessToken: accessToken,
         refreshToken: refreshToken,
-      })
-      .redirect(FRONTEND_URL);
+      });
   }
-
-  res
-    .cookie("access", accessToken, { httpOnly: true })
-    .cookie("refresh", refreshToken, { httpOnly: true })
-    .json({
-      message: "Login via Google successful",
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    });
 }
