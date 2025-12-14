@@ -1,6 +1,7 @@
 import { Router } from "express";
 import passport from "passport";
 import cors from "cors";
+import bcrypt from "bcrypt";
 import GoogleStrategy from "passport-google-oauth20";
 import {
   whoAmI,

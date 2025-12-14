@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 const ACCESS_TOKEN_AGE = "2min";
 const REFRESH_TOKEN_AGE = "30d";
 
-const validRefreshTokens = new Set();
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
 export function whoAmI(req, res) {
   return res.json({ user: req.user, error: req.tokenError });
@@ -246,6 +246,18 @@ export function googleOAuthCallback(req, res) {
   });
 
   UserModel.update(user.id, { resetToken: refreshToken });
+
+  if (FRONTEND_URL) {
+    return res
+      .cookie("access", accessToken, { httpOnly: true })
+      .cookie("refresh", refreshToken, { httpOnly: true })
+      .json({
+        message: "Login via Google successful",
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      })
+      .redirect(FRONTEND_URL);
+  }
 
   res
     .cookie("access", accessToken, { httpOnly: true })
