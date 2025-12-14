@@ -22,7 +22,11 @@ const SignUp = () => {
     window.location.href = `${BACKEND_URL}/login/federated/google`;
   };
 
-  const { register, handleSubmit } = useForm<{
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<{
     username: string;
     email: string;
     password: string;
@@ -42,7 +46,8 @@ const SignUp = () => {
             Tạo tài khoản
           </CardTitle>
           <CardDescription className="text-base">
-            Nhập thông tin của bạn để bắt đầu
+            Nhập thông tin của bạn để bắt đầu đấu giá và mua sắm các sản phẩm
+            yêu thích.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -54,8 +59,19 @@ const SignUp = () => {
               >
                 Họ và tên
               </label>
+              {/* User name must have at least two words and appropriate error message */}
               <Input
-                {...register("username", { required: true })}
+                {...register("username", {
+                  required: true,
+                  minLength: {
+                    value: 3,
+                    message: "Họ và tên phải có ít nhất 3 ký tự",
+                  },
+                  pattern: {
+                    value: /^[a-zA-Z]+ [a-zA-Z]+/,
+                    message: "Họ và tên phải có ít nhất hai từ",
+                  },
+                })}
                 type="text"
                 placeholder="Nguyễn A"
                 id="username"
@@ -63,7 +79,13 @@ const SignUp = () => {
                 required
                 className="h-11"
               />
+              {errors.username && (
+                <p className="text-sm text-red-600">
+                  {errors.username.message as string}
+                </p>
+              )}
             </div>
+
             <div className="space-y-2">
               <label
                 htmlFor="email"
@@ -72,7 +94,13 @@ const SignUp = () => {
                 Email
               </label>
               <Input
-                {...register("email", { required: true })}
+                {...register("email", {
+                  required: true,
+                  pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: "Địa chỉ email không hợp lệ",
+                  },
+                })}
                 type="email"
                 placeholder="nguyena@example.com"
                 id="email"
@@ -81,15 +109,23 @@ const SignUp = () => {
                 className="h-11"
               />
             </div>
+
             <div className="space-y-2">
               <label
                 htmlFor="password"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                Password
+                Mật khẩu
               </label>
               <Input
-                {...register("password", { required: true })}
+                {...register("password", {
+                  required: true,
+                  pattern: {
+                    value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
+                    message:
+                      "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ cái và số",
+                  },
+                })}
                 type="password"
                 id="password"
                 name="password"
@@ -97,6 +133,11 @@ const SignUp = () => {
                 required
                 className="h-11"
               />
+              {errors.password && (
+                <p className="text-sm text-red-600">
+                  {errors.password.message as string}
+                </p>
+              )}
             </div>
             {/* <div className="space-y-2">
               <label
@@ -115,6 +156,7 @@ const SignUp = () => {
                 className="h-11"
               />
             </div> */}
+
             <div className="space-y-2">
               <label
                 htmlFor="address"
@@ -132,11 +174,12 @@ const SignUp = () => {
                 className="h-11"
               />
             </div>
+
             <Button
               type="submit"
               className="w-full h-11 text-base font-semibold"
             >
-              Create account
+              Tạo tài khoản
             </Button>
           </form>
 
@@ -146,7 +189,7 @@ const SignUp = () => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
+                Hoặc tiếp tục với
               </span>
             </div>
           </div>
@@ -157,16 +200,16 @@ const SignUp = () => {
             className="w-full h-11 text-base font-semibold"
           >
             <GoogleIcon />
-            Sign up with Google
+            Đăng ký với Google
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            Bạn đã có tài khoản?{" "}
             <a
               href="/log-in"
               className="font-semibold text-primary hover:underline"
             >
-              Sign in
+              Đăng nhập
             </a>
           </p>
         </CardContent>

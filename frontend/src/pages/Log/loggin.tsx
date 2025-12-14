@@ -22,7 +22,11 @@ const Login = () => {
     window.location.href = `${BACKEND_URL}/login/federated/google`;
   };
 
-  const { register, handleSubmit } = useForm<{
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<{
     email: string;
     password: string;
   }>();
@@ -36,10 +40,11 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-xl p-6">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold tracking-tight">
-            Welcome back
+            Đăng nhập
           </CardTitle>
           <CardDescription className="text-base">
-            Sign in to your account to continue
+            Đăng nhập vào tài khoản của bạn để đấu giá và mua sắm các sản phẩm
+            yêu thích.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -52,29 +57,48 @@ const Login = () => {
                 Email
               </label>
               <Input
-                {...register("email", { required: true })}
+                {...register("email", {
+                  required: true,
+                  pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: "Địa chỉ email không hợp lệ",
+                  },
+                })}
                 type="email"
-                placeholder="name@example.com"
+                placeholder="nguyena@example.com"
                 id="email"
                 name="email"
                 required
                 className="h-11"
               />
+              {errors.email && (
+                <p className="text-sm text-red-600">
+                  {errors.email.message as string}
+                </p>
+              )}
             </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="password"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  Password
+                  Mật khẩu
                 </label>
                 <a href="#" className="text-sm text-primary hover:underline">
-                  Forgot password?
+                  Quên mật khẩu?
                 </a>
               </div>
               <Input
-                {...register("password", { required: true })}
+                {...register("password", {
+                  required: true,
+                  pattern: {
+                    value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
+                    message:
+                      "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ cái và số",
+                  },
+                })}
                 type="password"
                 id="password"
                 name="password"
@@ -82,12 +106,18 @@ const Login = () => {
                 required
                 className="h-11"
               />
+              {errors.password && (
+                <p className="text-sm text-red-600">
+                  {errors.password.message as string}
+                </p>
+              )}
             </div>
+
             <Button
               type="submit"
               className="w-full h-11 text-base font-semibold"
             >
-              Sign in
+              Đăng nhập
             </Button>
           </form>
 
@@ -97,7 +127,7 @@ const Login = () => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
+                Hoặc tiếp tục với
               </span>
             </div>
           </div>
@@ -108,16 +138,16 @@ const Login = () => {
             className="w-full h-11 text-base font-semibold"
           >
             <GoogleIcon />
-            Sign in with Google
+            Đăng nhập với Google
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Bạn chưa có tài khoản?{" "}
             <a
               href="/sign-up"
               className="font-semibold text-primary hover:underline"
             >
-              Sign up
+              Đăng ký
             </a>
           </p>
         </CardContent>
