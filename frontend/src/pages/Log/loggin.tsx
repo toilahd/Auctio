@@ -1,3 +1,4 @@
+import ReCAPTCHA from "react-google-recaptcha";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,13 +13,10 @@ import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
-/**
- * Login page for existing users
- * @returns
- */
 const Login = () => {
   const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+  const RE_SITE_KEY = import.meta.env.VITE_RE_SITE_KEY;
 
   const googleLogin = async () => {
     window.location.href = `${BACKEND_URL}/login/federated/google`;
@@ -132,6 +130,15 @@ const Login = () => {
                   {errors.password.message as string}
                 </p>
               )}
+            </div>
+
+            <div className="space-y-2 flex justify-center">
+              <ReCAPTCHA
+                sitekey={RE_SITE_KEY}
+                onChange={(value: any) => {
+                  console.log(value);
+                }}
+              />
             </div>
 
             <Button

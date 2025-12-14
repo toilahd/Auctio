@@ -1,3 +1,4 @@
+import ReCAPTCHA from "react-google-recaptcha";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,12 +12,9 @@ import GoogleIcon from "./google";
 import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 
-/**
- * Sign up page for new users
- * @returns
- */
 const SignUp = () => {
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+  const RE_SITE_KEY = import.meta.env.VITE_RE_SITE_KEY;
 
   const googleLogin = async () => {
     window.location.href = `${BACKEND_URL}/login/federated/google`;
@@ -172,6 +170,15 @@ const SignUp = () => {
                 name="address"
                 required
                 className="h-11"
+              />
+            </div>
+
+            <div className="space-y-2 flex justify-center">
+              <ReCAPTCHA
+                sitekey={RE_SITE_KEY}
+                onChange={(value: any) => {
+                  console.log(value);
+                }}
               />
             </div>
 
