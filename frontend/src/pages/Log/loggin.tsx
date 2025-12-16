@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import GoogleIcon from "./google";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
@@ -25,11 +25,21 @@ const Login = () => {
   const {
     register,
     handleSubmit,
+    setValue,
+    trigger,
+    control,
     formState: { errors },
   } = useForm<{
     email: string;
     password: string;
+    captcha: string;
   }>();
+
+  const onChangeCaptcha = (value: string | null) => {
+    console.log("Captcha value:", value);
+    setValue("captcha", value || "", { shouldValidate: true });
+    trigger("captcha");
+  };
 
   const onSubmit: SubmitHandler<any> = async (data) => {
     try {
@@ -132,13 +142,24 @@ const Login = () => {
               )}
             </div>
 
-            <div className="space-y-2 flex justify-center">
-              <ReCAPTCHA
-                sitekey={RE_SITE_KEY}
-                onChange={(value: any) => {
-                  console.log(value);
-                }}
+            <div className="space-y-2 flex flex-col items-center">
+              <Controller
+                name={"captcha"}
+                control={control}
+                rules={{ required: "Phải thực hiện reCAPTCHA" }}
+                render={({ field }) => (
+                  <ReCAPTCHA
+                    sitekey={RE_SITE_KEY}
+                    {...field}
+                    onChange={onChangeCaptcha}
+                  />
+                )}
               />
+              {errors.captcha && (
+                <p className="text-sm text-red-600">
+                  {errors.captcha.message as string}
+                </p>
+              )}
             </div>
 
             <Button

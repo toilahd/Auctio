@@ -9,10 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import GoogleIcon from "./google";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
   const RE_SITE_KEY = import.meta.env.VITE_RE_SITE_KEY;
 
@@ -23,17 +25,51 @@ const SignUp = () => {
   const {
     register,
     handleSubmit,
+    setValue,
+    trigger,
+    control,
     formState: { errors },
   } = useForm<{
     username: string;
     email: string;
     password: string;
     address: string;
-    confirmPassword: string;
+    captcha: string;
   }>();
 
-  const onSubmit: SubmitHandler<any> = (data) => {
-    console.log(data);
+  const onChangeCaptcha = (value: string | null) => {
+    console.log("Captcha value:", value);
+    setValue("captcha", value || "", { shouldValidate: true });
+    trigger("captcha");
+  };
+
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          fullName: data.username,
+          email: data.email,
+          password: data.password,
+          address: data.address,
+          captcha: data.captcha,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const responseData = await response.json();
+      console.log("Signup successful:", responseData);
+      navigate("/");
+    } catch (error) {
+      console.error("Signup failed:", error);
+    }
   };
 
   return (
@@ -106,6 +142,11 @@ const SignUp = () => {
                 required
                 className="h-11"
               />
+              {errors.email && (
+                <p className="text-sm text-red-600">
+                  {errors.email.message as string}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -163,7 +204,13 @@ const SignUp = () => {
                 Địa chỉ
               </label>
               <Input
-                {...register("address", { required: true })}
+                {...register("address", {
+                  required: true,
+                  minLength: {
+                    value: 10,
+                    message: "Địa chỉ phải có ít nhất 10 ký tự",
+                  },
+                })}
                 type="text"
                 placeholder="123 Đường ABC, Quận 1, TP.HCM"
                 id="address"
@@ -171,15 +218,31 @@ const SignUp = () => {
                 required
                 className="h-11"
               />
+              {errors.address && (
+                <p className="text-sm text-red-600">
+                  {errors.address.message as string}
+                </p>
+              )}
             </div>
 
-            <div className="space-y-2 flex justify-center">
-              <ReCAPTCHA
-                sitekey={RE_SITE_KEY}
-                onChange={(value: any) => {
-                  console.log(value);
-                }}
+            <div className="space-y-2 flex flex-col items-center">
+              <Controller
+                name={"captcha"}
+                control={control}
+                rules={{ required: "Phải thực hiện reCAPTCHA" }}
+                render={({ field }) => (
+                  <ReCAPTCHA
+                    sitekey={RE_SITE_KEY}
+                    {...field}
+                    onChange={onChangeCaptcha}
+                  />
+                )}
               />
+              {errors.captcha && (
+                <p className="text-sm text-red-600">
+                  {errors.captcha.message as string}
+                </p>
+              )}
             </div>
 
             <Button

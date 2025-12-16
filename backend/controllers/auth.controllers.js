@@ -20,6 +20,7 @@ export async function login(req, res) {
   const loginSchema = z.object({
     email: z.email(),
     password: z.string().max(20).min(3),
+    captcha: z.string().min(1),
   });
 
   // Validate input
@@ -30,6 +31,32 @@ export async function login(req, res) {
       message: "Invalid input",
       errors: JSON.parse(parseResult.error.message),
     });
+  }
+
+  // Verify reCAPTCHA
+  try {
+    const captchaResponse = parseResult.data.captcha;
+    const secretKey = process.env.RE_SECRET_KEY;
+
+    const response = await fetch(process.env.RE_VERIFY, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: `secret=${secretKey}&response=${captchaResponse}`,
+    });
+
+    const captchaResult = await response.json();
+    console.log("reCAPTCHA verification result:", captchaResult);
+    if (!captchaResult.success || captchaResult.success !== true) {
+      console.log("reCAPTCHA verification failed:", captchaResult);
+      return res.status(400).json({ message: "reCAPTCHA verification failed" });
+    }
+
+    console.log("reCAPTCHA verification succeeded");
+  } catch (error) {
+    console.log("reCAPTCHA verification failed:", error);
+    return res.status(500).json({ message: "reCAPTCHA verification failed" });
   }
 
   // Continue with login logic
@@ -89,6 +116,7 @@ export async function signup(req, res) {
     password: z.string().max(20).min(3),
     fullName: z.string().max(100).min(1),
     address: z.string().max(200),
+    captcha: z.string().min(1),
   });
 
   // Validate input
@@ -99,6 +127,32 @@ export async function signup(req, res) {
       message: "Invalid input",
       errors: JSON.parse(parseResult.error.message),
     });
+  }
+
+  // Verify reCAPTCHA
+  try {
+    const captchaResponse = parseResult.data.captcha;
+    const secretKey = process.env.RE_SECRET_KEY;
+
+    const response = await fetch(process.env.RE_VERIFY, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: `secret=${secretKey}&response=${captchaResponse}`,
+    });
+
+    const captchaResult = await response.json();
+    console.log("reCAPTCHA verification result:", captchaResult);
+    if (!captchaResult.success || captchaResult.success !== true) {
+      console.log("reCAPTCHA verification failed:", captchaResult);
+      return res.status(400).json({ message: "reCAPTCHA verification failed" });
+    }
+
+    console.log("reCAPTCHA verification succeeded");
+  } catch (error) {
+    console.log("reCAPTCHA verification failed:", error);
+    return res.status(500).json({ message: "reCAPTCHA verification failed" });
   }
 
   const { email, password, fullName, address } = parseResult.data;
