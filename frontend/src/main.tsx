@@ -8,6 +8,7 @@ import LogPage from "./pages/Log/loggin";
 import SellerDashboardPage from "./pages/Seller/seller-dashboard";
 import CreateProductPage from "./pages/Seller/create-product";
 import ProductDetails from "./pages/Product/product";
+import ProductListPage from "./pages/Product/product-list";
 import SignUp from "./pages/Log/signup";
 import VerifyEmail from "./pages/Log/verify-email";
 import ForgotPassword from "./pages/Log/forgot-password";
@@ -40,6 +41,10 @@ const router = createBrowserRouter([
   {
     path: "/reset-password",
     element: <ResetPassword />,
+  },
+  {
+    path: "/products",
+    element: <ProductListPage />,
   },
   {
     path: "/product/:id",

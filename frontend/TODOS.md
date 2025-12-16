@@ -9,6 +9,10 @@
 - [x] Edit profile page
 - [x] Change password page
 - [x] Routing configuration
+- [x] Home/Landing Page with hero, 3 featured sections (ending soon, most bid, highest price)
+- [x] Navigation & Layout Components (Header with search, user menu, Footer)
+- [x] Reusable AuctionCard component
+- [x] Product List Page with pagination, sorting, and filtering
 
 ---
 
@@ -17,7 +21,7 @@
 ### 🏠 Core Pages (High Priority)
 
 #### 1. Home/Landing Page
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create home page with 3 sections: top-5 ending soon auctions, top-5 most-bid auctions, top-5 highest-price auctions. Include header/navigation, hero section, reusable auction card component, and footer.
 
 #### 2. Category Listing Page
@@ -25,7 +29,7 @@
 **Description:** Build category listing page showing 2-level category structure. Allow users to browse and select categories to view products.
 
 #### 3. Product List Page
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create product listing page with pagination, sorting (by end time, price, newness), and filtering. Reuse auction card components. Support both category browsing and search results.
 
 #### 4. Search Functionality
@@ -33,7 +37,7 @@
 **Description:** Implement full-text search with Vietnamese support (without diacritics) and category filters. Integrate with product list page.
 
 #### 5. Product Detail Page
-**Status:** Not Started  
+**Status:** 🚧 In Progress  
 **Description:** Build comprehensive product detail page with: image gallery (main + thumbnails), bid history (masked names), current price, buy now price, seller info, related items, Q&A section, and bid placement UI.
 
 #### 6. Bidding Interface
@@ -121,7 +125,7 @@
 **Description:** Create notification center showing: bid updates, outbid alerts, auction won/lost, question answered, etc. Include real-time updates.
 
 #### 23. Navigation & Layout Components
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build shared components: header/navbar with role-based menu, footer, sidebar (for dashboards), breadcrumbs, and mobile responsive navigation.
 
 #### 24. Authentication Context & Protected Routes
