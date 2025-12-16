@@ -115,7 +115,7 @@ const Login = () => {
                 >
                   Mật khẩu
                 </label>
-                <a href="#" className="text-sm text-primary hover:underline">
+                <a href="/forgot-password" className="text-sm text-primary hover:underline">
                   Quên mật khẩu?
                 </a>
               </div>

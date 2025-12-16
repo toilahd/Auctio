@@ -66,9 +66,11 @@ const SignUp = () => {
 
       const responseData = await response.json();
       console.log("Signup successful:", responseData);
-      navigate("/");
+      // Redirect to email verification page after successful signup
+      navigate("/verify-email");
     } catch (error) {
       console.error("Signup failed:", error);
+      alert("Đăng ký thất bại. Vui lòng thử lại.");
     }
   };
 
