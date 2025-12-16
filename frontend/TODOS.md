@@ -13,6 +13,7 @@
 - [x] Navigation & Layout Components (Header with search, user menu, Footer)
 - [x] Reusable AuctionCard component
 - [x] Product List Page with pagination, sorting, and filtering
+- [x] Product Detail Page with image gallery, bid history, Q&A, seller info
 
 ---
 
@@ -37,11 +38,11 @@
 **Description:** Implement full-text search with Vietnamese support (without diacritics) and category filters. Integrate with product list page.
 
 #### 5. Product Detail Page
-**Status:** 🚧 In Progress  
+**Status:** ✅ Completed  
 **Description:** Build comprehensive product detail page with: image gallery (main + thumbnails), bid history (masked names), current price, buy now price, seller info, related items, Q&A section, and bid placement UI.
 
 #### 6. Bidding Interface
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create bid placement component on product detail page. Include bid amount input, validation (min bid + increment), confirmation modal, and real-time bid updates.
 
 ---
