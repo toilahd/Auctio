@@ -23,6 +23,8 @@
 - [x] Post-Auction Order Finalization page with payment, shipping, chat
 - [x] Category Listing Page with 2-level hierarchy and Lucide icons
 - [x] Search Functionality with Vietnamese support and filters
+- [x] Won Auctions / Purchase History with order tracking
+- [x] User Profile Page with ratings and reviews
 
 ---
 
@@ -69,12 +71,14 @@
 **Description:** Create page showing user's active bids with auction status, current price, user's bid amount, and time remaining.
 
 #### 9. Won Auctions / Purchase History
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build page displaying auctions won by user with order status, payment info, and access to finalization flow.
+**Navigation from:** Header "Đã thắng" menu item, navigates to /won-auctions
 
 #### 10. User Profile Page
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create profile page showing user info, rating/reviews, edit profile button, and evaluation history. Include both self-view and public view.
+**Navigation from:** Various places linking to user profiles, /profile/:id for public view
 
 ---
 

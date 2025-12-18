@@ -15,6 +15,8 @@ import ProductListPage from "./pages/Product/product-list";
 import ProductDetailPage from "./pages/Product/product-detail";
 import WatchlistPage from "./pages/Bidder/watchlist";
 import MyBidsPage from "./pages/Bidder/my-bids";
+import WonAuctionsPage from "./pages/Bidder/won-auctions";
+import UserProfilePage from "./pages/Bidder/user-profile";
 import CategoriesPage from "./pages/categories";
 import SearchPage from "./pages/search";
 import SignUp from "./pages/Log/signup";
@@ -85,6 +87,14 @@ const router = createBrowserRouter([
   {
     path: "/my-bids",
     element: <MyBidsPage />,
+  },
+  {
+    path: "/won-auctions",
+    element: <WonAuctionsPage />,
+  },
+  {
+    path: "/profile/:id",
+    element: <UserProfilePage />,
   },
   // Seller routes
   {
