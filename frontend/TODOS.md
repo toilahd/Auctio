@@ -14,6 +14,8 @@
 - [x] Reusable AuctionCard component
 - [x] Product List Page with pagination, sorting, and filtering
 - [x] Product Detail Page with image gallery, bid history, Q&A, seller info
+- [x] Watch List / Favorites Page
+- [x] My Bids / Active Auctions Page
 
 ---
 
@@ -50,11 +52,11 @@
 ### 👤 Bidder Pages
 
 #### 7. Watch List / Favorites Page
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build watch list page showing bookmarked products. Include add/remove functionality and empty state design.
 
 #### 8. My Bids / Active Auctions Page
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create page showing user's active bids with auction status, current price, user's bid amount, and time remaining.
 
 #### 9. Won Auctions / Purchase History

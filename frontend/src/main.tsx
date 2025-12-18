@@ -10,6 +10,8 @@ import CreateProductPage from "./pages/Seller/create-product";
 import ProductDetails from "./pages/Product/product";
 import ProductListPage from "./pages/Product/product-list";
 import ProductDetailPage from "./pages/Product/product-detail";
+import WatchlistPage from "./pages/Bidder/watchlist";
+import MyBidsPage from "./pages/Bidder/my-bids";
 import SignUp from "./pages/Log/signup";
 import VerifyEmail from "./pages/Log/verify-email";
 import ForgotPassword from "./pages/Log/forgot-password";
@@ -63,7 +65,14 @@ const router = createBrowserRouter([
     path: "/change-password",
     element: <ChangePassword />,
   },
-
+  {
+    path: "/watchlist",
+    element: <WatchlistPage />,
+  },
+  {
+    path: "/my-bids",
+    element: <MyBidsPage />,
+  },
   // Seler routes
   {
     path: "/seller",
