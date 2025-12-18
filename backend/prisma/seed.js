@@ -98,10 +98,10 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created ${await prisma.user.count()} users\n`);
+  console.log(`Created ${await prisma.user.count()} users\n`);
 
   // Create Categories
-  console.log('📁 Creating categories...');
+  console.log('Creating categories...');
   const electronics = await prisma.category.create({
     data: {
       id: 'cat-electronics-001',
@@ -140,10 +140,49 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created ${await prisma.category.count()} categories\n`);
+  const clothing = await prisma.category.create({
+    data: {
+      id: 'cat-fashion-clothing',
+      name: 'Clothing',
+      parentId: fashion.id,
+    },
+  });
+
+  const bags = await prisma.category.create({
+    data: {
+      id: 'cat-fashion-bags',
+      name: 'Bags & Accessories',
+      parentId: fashion.id,
+    },
+  });
+
+  const home = await prisma.category.create({
+    data: {
+      id: 'cat-home-001',
+      name: 'Home & Living',
+    },
+  });
+
+  const art = await prisma.category.create({
+    data: {
+      id: 'cat-home-art',
+      name: 'Art & Paintings',
+      parentId: home.id,
+    },
+  });
+
+  const decor = await prisma.category.create({
+    data: {
+      id: 'cat-home-decor',
+      name: 'Decor',
+      parentId: home.id,
+    },
+  });
+
+  console.log(`Created ${await prisma.category.count()} categories\n`);
 
   // Create Products
-  console.log('📦 Creating products...');
+  console.log('reating products...');
   const iphone = await prisma.product.create({
     data: {
       id: 'prod-001',
@@ -210,42 +249,116 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created ${await prisma.product.count()} products\n`);
-
-  // Create Bids
-  console.log('💰 Creating bids...');
-  await prisma.bid.createMany({
-    data: [
-      {
-        id: 'bid-001',
-        amount: 800,
-        productId: iphone.id,
-        bidderId: bidder1.id,
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      },
-      {
-        id: 'bid-002',
-        amount: 850,
-        productId: iphone.id,
-        bidderId: bidder2.id,
-        createdAt: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000),
-      },
-      {
-        id: 'bid-003',
-        amount: 950,
-        maxAmount: 1000,
-        isAutoBid: true,
-        productId: iphone.id,
-        bidderId: bidder1.id,
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      },
-    ],
+  const aoDai = await prisma.product.create({
+    data: {
+      id: 'prod-005',
+      title: 'Áo dài Việt Nam truyền thống - Lụa cao cấp',
+      titleNoAccent: 'ao dai viet nam truyen thong lua cao cap',
+      description: '<h2>Áo dài truyền thống</h2><p>Chất liệu lụa cao cấp, thêu hoa văn tinh xảo. Màu đỏ tươi, size M.</p><ul><li>Chất liệu: 100% lụa tơ tằm</li><li>Thêu tay thủ công</li><li>Bảo quản theo hướng dẫn</li></ul>',
+      images: ['https://picsum.photos/seed/aodai1/800/600'],
+      startPrice: 150,
+      stepPrice: 10,
+      buyNowPrice: 300,
+      currentPrice: 150,
+      autoExtend: true,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      bidCount: 0,
+      viewCount: 89,
+      categoryId: clothing.id,
+      sellerId: seller2.id,
+    },
   });
 
-  console.log(`✅ Created ${await prisma.bid.count()} bids\n`);
+  const tranh = await prisma.product.create({
+    data: {
+      id: 'prod-006',
+      title: 'Tranh sơn mài Hà Nội phố cổ - Tác phẩm nghệ thuật',
+      titleNoAccent: 'tranh son mai ha noi pho co tac pham nghe thuat',
+      description: '<h2>Tranh sơn mài truyền thống</h2><p>Tranh vẽ phố cổ Hà Nội với kỹ thuật sơn mài truyền thống. Kích thước 60x80cm, có khung gỗ cao cấp.</p><ul><li>Họa sĩ: Nguyễn Văn A</li><li>Năm sáng tác: 2023</li><li>Kỹ thuật: Sơn mài truyền thống</li></ul>',
+      images: ['https://picsum.photos/seed/painting1/800/600'],
+      startPrice: 500,
+      stepPrice: 50,
+      buyNowPrice: 1500,
+      currentPrice: 500,
+      autoExtend: true,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+      bidCount: 0,
+      viewCount: 123,
+      categoryId: art.id,
+      sellerId: seller1.id,
+    },
+  });
+
+  const binhGom = await prisma.product.create({
+    data: {
+      id: 'prod-007',
+      title: 'Bình gốm sứ Bát Tràng - Hoa văn rồng phượng',
+      titleNoAccent: 'binh gom su bat trang hoa van rong phuong',
+      description: '<h2>Bình gốm Bát Tràng</h2><p>Sản phẩm gốm sứ cao cấp từ làng nghề Bát Tràng. Hoa văn rồng phượng vẽ tay, men xanh cổ.</p><ul><li>Xuất xứ: Bát Tràng, Hà Nội</li><li>Cao: 45cm</li><li>Thủ công 100%</li></ul>',
+      images: ['https://picsum.photos/seed/pottery1/800/600'],
+      startPrice: 200,
+      stepPrice: 20,
+      buyNowPrice: 600,
+      currentPrice: 200,
+      autoExtend: true,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+      bidCount: 0,
+      viewCount: 67,
+      categoryId: decor.id,
+      sellerId: seller2.id,
+    },
+  });
+
+  const dongHo = await prisma.product.create({
+    data: {
+      id: 'prod-008',
+      title: 'Đồng hồ Orient Bambino - Phiên bản Việt Nam',
+      titleNoAccent: 'dong ho orient bambino phien ban viet nam',
+      description: '<h2>Đồng hồ Orient</h2><p>Đồng hồ cơ automatic Orient Bambino, phiên bản đặc biệt cho thị trường Việt Nam.</p><ul><li>Máy cơ tự động</li><li>Chống nước 5ATM</li><li>Bảo hành 2 năm</li></ul>',
+      images: ['https://picsum.photos/seed/orient1/800/600'],
+      startPrice: 180,
+      stepPrice: 10,
+      buyNowPrice: 350,
+      currentPrice: 180,
+      autoExtend: true,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+      bidCount: 0,
+      viewCount: 156,
+      categoryId: watches.id,
+      sellerId: seller1.id,
+    },
+  });
+
+  const tuiXach = await prisma.product.create({
+    data: {
+      id: 'prod-009',
+      title: 'Túi xách da thật handmade - Phong cách Sài Gòn',
+      titleNoAccent: 'tui xach da that handmade phong cach sai gon',
+      description: '<h2>Túi xách da thật</h2><p>Túi xách da bò thật 100%, làm thủ công tại TP.HCM. Thiết kế hiện đại, phong cách Sài Gòn.</p><ul><li>Da bò thật</li><li>Handmade</li><li>Nhiều ngăn tiện dụng</li></ul>',
+      images: ['https://picsum.photos/seed/bag1/800/600'],
+      startPrice: 120,
+      stepPrice: 10,
+      buyNowPrice: 250,
+      currentPrice: 120,
+      autoExtend: true,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      bidCount: 0,
+      viewCount: 234,
+      categoryId: bags.id,
+      sellerId: seller2.id,
+    },
+  });
+
+  console.log(`Created ${await prisma.product.count()} products\n`);
+
 
   // Create Watchlist
-  console.log('⭐ Creating watchlist items...');
+  console.log('Creating watchlist items...');
   await prisma.watchList.createMany({
     data: [
       { userId: bidder1.id, productId: iphone.id },
@@ -254,10 +367,10 @@ async function main() {
     ],
   });
 
-  console.log(`✅ Created ${await prisma.watchList.count()} watchlist items\n`);
+  console.log('Created ${await prisma.watchList.count()} watchlist items\n');
 
   // Create Ratings
-  console.log('⭐ Creating ratings...');
+  console.log('Creating ratings...');
   await prisma.rating.createMany({
     data: [
       {
@@ -281,10 +394,11 @@ async function main() {
     ],
   });
 
-  console.log(`✅ Created ${await prisma.rating.count()} ratings\n`);
+
+  console.log(`Created ${await prisma.rating.count()} ratings\n`);
 
   // Create Questions & Answers
-  console.log('❓ Creating questions and answers...');
+  console.log('Creating questions and answers...');
   const question1 = await prisma.question.create({
     data: {
       content: 'Is the battery health really 100%?',
@@ -301,11 +415,91 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created questions and answers\n`);
+  console.log(`Created questions and answers\n`);
+
+
+  console.log('Creating auto-bidding test data...');
+
+  // Create additional bidders for testing (Bidder #3 and #4)
+  const bidder3 = await prisma.user.upsert({
+    where: { id: '550e8400-e29b-41d4-a716-446655440007' },
+    update: {},
+    create: {
+      id: '550e8400-e29b-41d4-a716-446655440007',
+      email: 'bidder3@example.com',
+      password: hashedPassword,
+      fullName: 'Bidder #3',
+      address: '333 Test St',
+      dateOfBirth: new Date('1995-03-15'),
+      role: 'BIDDER',
+      isVerified: true,
+    }
+  });
+
+  const bidder4 = await prisma.user.upsert({
+    where: { id: '550e8400-e29b-41d4-a716-446655440008' },
+    update: {},
+    create: {
+      id: '550e8400-e29b-41d4-a716-446655440008',
+      email: 'bidder4@example.com',
+      password: hashedPassword,
+      fullName: 'Bidder #4',
+      address: '444 Test Ave',
+      dateOfBirth: new Date('1993-06-20'),
+      role: 'BIDDER',
+      isVerified: true,
+    }
+  });
+
+  // Ensure test category
+  const testCategory = await prisma.category.upsert({
+    where: { id: 'cat-auto-bid-test' },
+    update: {},
+    create: {
+      id: 'cat-auto-bid-test',
+      name: 'Auto Bid Test'
+    }
+  });
+
+  // Create fresh bidding test product (Vietnamese example scenario)
+  const biddingTestProduct = await prisma.product.upsert({
+    where: { id: 'prod-auto-bid-test' },
+    update: {
+      currentPrice: 10_000_000,
+      bidCount: 0,
+      currentWinnerId: null,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    },
+    create: {
+      id: 'prod-auto-bid-test',
+      title: 'Vintage Watch - Auto Bidding Test',
+      titleNoAccent: 'vintage watch auto bidding test',
+      description: '<h2>Vintage Watch</h2><p>For testing auto-bidding scenario with Vietnamese example</p><ul><li>Starting Price: 10,000,000 VND</li><li>Step Price: 100,000 VND</li><li>Auto-bidding enabled</li></ul>',
+      images: ['https://picsum.photos/seed/watch-test/800/600'],
+      startPrice: 10_000_000,
+      stepPrice: 100_000,
+      currentPrice: 10_000_000,
+      buyNowPrice: 50_000_000,
+      autoExtend: true,
+      status: 'ACTIVE',
+      endTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      bidCount: 0,
+      viewCount: 0,
+      categoryId: testCategory.id,
+      sellerId: seller1.id,
+    }
+  });
 
   console.log('========================================');
   console.log('✅ Database seeded successfully!');
   console.log('========================================');
+  console.log('\n📋 Summary:');
+  console.log(`   Users: ${await prisma.user.count()}`);
+  console.log(`   Categories: ${await prisma.category.count()}`);
+  console.log(`   Products: ${await prisma.product.count()}`);
+  console.log(`   Bids: ${await prisma.bid.count()}`);
+  console.log('\n🧪 Run bidding test with: ./test-bidding.sh');
 }
 
 main()
