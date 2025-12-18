@@ -8,14 +8,14 @@ import { initializeSocket } from "./config/socket.js";
 import { testDatabase } from "./config/prisma.js";
 import biddingRoutes from "./routes/biddingRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
-
 dotenv.config();
+
+const PORT = process.env.PORT || 3000;
 
 // Routes
 import authRouter from "./routes/auth.routes.js";
 import docsRouter from "./routes/docs.routes.js";
 
-dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 const appLogger = getLogger("App");
@@ -40,8 +40,8 @@ app.use(authRouter);
 
 const startServer = async () => {
   try {
-    app.listen(port, () => {
-      appLogger.info(`Server is running on port ${port}`);
+    app.listen(PORT, () => {
+      appLogger.info(`Server is running on port ${PORT}`);
     });
   } catch (error) {
     appLogger.error("Failed to start server:", error);
@@ -82,11 +82,10 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   appLogger.info(`Server is running on port ${PORT}`);
 });
 
 export default app;
 
-startServer();
+// startServer();
