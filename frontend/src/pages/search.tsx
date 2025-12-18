@@ -41,6 +41,21 @@ export default function SearchPage() {
   const [priceRange, setPriceRange] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("relevance");
 
+  // Calculate end times once at component mount
+  const [productEndTimes] = useState(() => {
+    const now = Date.now();
+    return {
+      product1: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
+      product2: new Date(now + 4 * 60 * 60 * 1000).toISOString(),
+      product3: new Date(now + 6 * 60 * 60 * 1000).toISOString(),
+      product4: new Date(now + 1 * 60 * 60 * 1000).toISOString(),
+      product5: new Date(now + 8 * 60 * 60 * 1000).toISOString(),
+      product6: new Date(now + 12 * 60 * 60 * 1000).toISOString(),
+      product7: new Date(now + 3 * 60 * 60 * 1000).toISOString(),
+      product8: new Date(now + 5 * 60 * 60 * 1000).toISOString(),
+    };
+  });
+
   // Mock product data
   // TODO: Replace with API call to search products
   const allProducts: Product[] = useMemo(() => [
@@ -49,7 +64,7 @@ export default function SearchPage() {
       title: "iPhone 15 Pro Max 256GB Titan Tự Nhiên",
       currentPrice: 25000000,
       image: "https://via.placeholder.com/400x300",
-      endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      endTime: productEndTimes.product1,
       totalBids: 45,
       category: "electronics",
       subcategory: "phone",
@@ -60,7 +75,7 @@ export default function SearchPage() {
       title: "MacBook Pro 14 inch M3 Pro 18GB 512GB",
       currentPrice: 45000000,
       image: "https://via.placeholder.com/400x300",
-      endTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+      endTime: productEndTimes.product2,
       totalBids: 32,
       category: "electronics",
       subcategory: "laptop",
@@ -71,7 +86,7 @@ export default function SearchPage() {
       title: "Đồng hồ Rolex Submariner Date Automatic",
       currentPrice: 180000000,
       image: "https://via.placeholder.com/400x300",
-      endTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
+      endTime: productEndTimes.product3,
       totalBids: 28,
       category: "fashion",
       subcategory: "watches",
@@ -82,7 +97,7 @@ export default function SearchPage() {
       title: "iPad Pro 12.9 inch M2 256GB WiFi",
       currentPrice: 18000000,
       image: "https://via.placeholder.com/400x300",
-      endTime: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(),
+      endTime: productEndTimes.product4,
       totalBids: 18,
       category: "electronics",
       subcategory: "tablet",
@@ -93,7 +108,7 @@ export default function SearchPage() {
       title: "Mercedes-Benz C200 2020 màu đen",
       currentPrice: 950000000,
       image: "https://via.placeholder.com/400x300",
-      endTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+      endTime: productEndTimes.product5,
       totalBids: 12,
       category: "vehicles",
       subcategory: "car",
@@ -104,7 +119,7 @@ export default function SearchPage() {
       title: "Tranh sơn dầu phong cảnh Hạ Long 120x80cm",
       currentPrice: 15000000,
       image: "https://via.placeholder.com/400x300",
-      endTime: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+      endTime: productEndTimes.product6,
       totalBids: 8,
       category: "art",
       subcategory: "painting",
@@ -115,7 +130,7 @@ export default function SearchPage() {
       title: "Tai nghe AirPods Pro 2 USB-C",
       currentPrice: 4500000,
       image: "https://via.placeholder.com/400x300",
-      endTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+      endTime: productEndTimes.product7,
       totalBids: 23,
       category: "electronics",
       subcategory: "headphone",
@@ -126,13 +141,13 @@ export default function SearchPage() {
       title: "Túi xách Louis Vuitton Neverfull MM",
       currentPrice: 28000000,
       image: "https://via.placeholder.com/400x300",
-      endTime: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+      endTime: productEndTimes.product8,
       totalBids: 15,
       category: "fashion",
       subcategory: "bags",
       description: "Túi Louis Vuitton authentic kèm hóa đơn và hộp",
     },
-  ], []);
+  ], [productEndTimes]);
 
   // Vietnamese text normalization for search
   // TODO: Implement proper Vietnamese diacritics removal

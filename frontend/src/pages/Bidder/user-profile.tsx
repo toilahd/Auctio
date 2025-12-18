@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,19 @@ export default function UserProfilePage() {
   const isSelfView = !id || id === currentUserId;
   const profileUserId = id || currentUserId;
 
+  // Calculate dates once at component mount
+  const [profileDates] = useState(() => {
+    const now = Date.now();
+    return {
+      joinedAt: new Date(now - 365 * 24 * 60 * 60 * 1000).toISOString(),
+      review1: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      review2: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      review3: new Date(now - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      review4: new Date(now - 20 * 24 * 60 * 60 * 1000).toISOString(),
+      review5: new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+  });
+
   // Mock user profile data
   // TODO: Replace with API call to fetch user profile
   const userProfile: UserProfile = useMemo(
@@ -75,7 +88,7 @@ export default function UserProfilePage() {
       address: isSelfView
         ? "123 Đường ABC, Quận 1, TP.HCM"
         : "Quận 3, TP.HCM",
-      joinedAt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+      joinedAt: profileDates.joinedAt,
       role: isSelfView ? "SELLER" : "BIDDER",
       isVerified: true,
       bio: isSelfView
@@ -93,7 +106,7 @@ export default function UserProfilePage() {
         total: isSelfView ? 45 : 23,
       },
     }),
-    [profileUserId, isSelfView]
+    [profileUserId, isSelfView, profileDates]
   );
 
   // Mock reviews data
@@ -106,7 +119,7 @@ export default function UserProfilePage() {
         fromUserName: "Lê V***",
         type: "positive",
         comment: "Người bán uy tín, giao hàng nhanh, đóng gói cẩn thận. Sẽ ủng hộ tiếp!",
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: profileDates.review1,
         orderId: "order1",
         productTitle: "iPhone 15 Pro Max 256GB",
       },
@@ -116,7 +129,7 @@ export default function UserProfilePage() {
         fromUserName: "Hoàng T***",
         type: "positive",
         comment: "Sản phẩm đúng mô tả, giao dịch nhanh chóng.",
-        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: profileDates.review2,
         orderId: "order2",
         productTitle: "MacBook Pro 14 inch M3",
       },
@@ -126,7 +139,7 @@ export default function UserProfilePage() {
         fromUserName: "Phạm H***",
         type: "positive",
         comment: "Rất hài lòng với sản phẩm và người bán.",
-        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: profileDates.review3,
         orderId: "order3",
         productTitle: "iPad Pro 12.9 inch",
       },
@@ -136,7 +149,7 @@ export default function UserProfilePage() {
         fromUserName: "Võ M***",
         type: "negative",
         comment: "Giao hàng hơi chậm so với thỏa thuận.",
-        createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: profileDates.review4,
         orderId: "order4",
         productTitle: "AirPods Pro 2",
       },
@@ -146,12 +159,12 @@ export default function UserProfilePage() {
         fromUserName: "Đỗ K***",
         type: "positive",
         comment: "Shop nhiệt tình, sản phẩm chất lượng tốt.",
-        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: profileDates.review5,
         orderId: "order5",
         productTitle: "Samsung Galaxy S24 Ultra",
       },
     ],
-    []
+    [profileDates]
   );
 
   const formatDate = (dateString: string) => {

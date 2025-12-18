@@ -2,7 +2,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Gavel, Package, DollarSign, Star, Eye, Heart } from "lucide-react";
 
 interface Product {
@@ -31,6 +31,19 @@ const SellerDashboardPage = () => {
     totalWatchers: 345,
   };
 
+  // Calculate end times once at component mount
+  const [productDates] = useState(() => {
+    const now = Date.now();
+    return {
+      active1: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
+      active2: new Date(now + 4 * 60 * 60 * 1000).toISOString(),
+      active3: new Date(now + 6 * 60 * 60 * 1000).toISOString(),
+      ended1: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      ended2: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      ended3: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+  });
+
   const activeProducts: Product[] = [
     {
       id: "1",
@@ -39,7 +52,7 @@ const SellerDashboardPage = () => {
       currentPrice: 25000000,
       startingPrice: 20000000,
       totalBids: 45,
-      endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      endTime: productDates.active1,
       status: "active",
       views: 1250,
       watchers: 89,
@@ -51,7 +64,7 @@ const SellerDashboardPage = () => {
       currentPrice: 35000000,
       startingPrice: 30000000,
       totalBids: 32,
-      endTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+      endTime: productDates.active2,
       status: "active",
       views: 980,
       watchers: 67,
@@ -63,7 +76,7 @@ const SellerDashboardPage = () => {
       currentPrice: 6500000,
       startingPrice: 5000000,
       totalBids: 18,
-      endTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
+      endTime: productDates.active3,
       status: "active",
       views: 560,
       watchers: 34,
@@ -78,7 +91,7 @@ const SellerDashboardPage = () => {
       currentPrice: 12000000,
       startingPrice: 10000000,
       totalBids: 28,
-      endTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      endTime: productDates.ended1,
       status: "sold",
       views: 850,
       watchers: 45,
@@ -90,7 +103,7 @@ const SellerDashboardPage = () => {
       currentPrice: 4500000,
       startingPrice: 4000000,
       totalBids: 15,
-      endTime: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      endTime: productDates.ended2,
       status: "sold",
       views: 420,
       watchers: 28,
@@ -102,7 +115,7 @@ const SellerDashboardPage = () => {
       currentPrice: 3000000,
       startingPrice: 3000000,
       totalBids: 0,
-      endTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      endTime: productDates.ended3,
       status: "unsold",
       views: 125,
       watchers: 8,

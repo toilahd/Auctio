@@ -18,13 +18,23 @@ const EditProductPage = () => {
   const [newDescription, setNewDescription] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Calculate dates once at component mount
+  const [productDates] = useState(() => {
+    const now = Date.now();
+    return {
+      endTime: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
+      history1: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      history2: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+  });
+
   // Mock product data - TODO: Fetch from backend
   const product = useMemo(() => ({
     id: id || "1",
     title: "iPhone 15 Pro Max 256GB - Nguyên seal, chưa kích hoạt",
     currentPrice: 25000000,
     totalBids: 45,
-    endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    endTime: productDates.endTime,
     status: "active",
     currentDescription: `<h3>Thông tin sản phẩm</h3>
 <p>iPhone 15 Pro Max 256GB màu Titan Tự Nhiên, nguyên seal chưa kích hoạt bảo hành 12 tháng chính hãng Apple Việt Nam.</p>
@@ -36,22 +46,22 @@ const EditProductPage = () => {
   <li>RAM: 8GB</li>
   <li>Dung lượng: 256GB</li>
 </ul>`,
-  }), [id]);
+  }), [id, productDates]);
 
   const descriptionHistory: DescriptionHistory[] = useMemo(() => [
     {
       id: "1",
       content: "Cập nhật: Sản phẩm còn nguyên seal 100%, chưa mở hộp.",
-      addedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      addedAt: productDates.history1,
       addedBy: "TechStore VN",
     },
     {
       id: "2",
       content: "Bổ sung: Bảo hành chính hãng 12 tháng tại tất cả trung tâm Apple.",
-      addedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      addedAt: productDates.history2,
       addedBy: "TechStore VN",
     },
-  ], []);
+  ], [productDates]);
 
   const formatDateTime = (dateString: string) => {
     return new Intl.DateTimeFormat("vi-VN", {

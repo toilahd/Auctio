@@ -19,6 +19,8 @@ import WonAuctionsPage from "./pages/Bidder/won-auctions";
 import UserProfilePage from "./pages/Bidder/user-profile";
 import CategoriesPage from "./pages/categories";
 import SearchPage from "./pages/search";
+import ReviewOrderPage from "./pages/review-order";
+import SellerUpgradeRequestPage from "./pages/seller-upgrade-request";
 import SignUp from "./pages/Log/signup";
 import VerifyEmail from "./pages/Log/verify-email";
 import ForgotPassword from "./pages/Log/forgot-password";
@@ -95,6 +97,14 @@ const router = createBrowserRouter([
   {
     path: "/profile/:id",
     element: <UserProfilePage />,
+  },
+  {
+    path: "/review/:orderId",
+    element: <ReviewOrderPage />,
+  },
+  {
+    path: "/seller-upgrade-request",
+    element: <SellerUpgradeRequestPage />,
   },
   // Seller routes
   {

@@ -23,6 +23,20 @@ const QAManagementPage = () => {
   const [activeTab, setActiveTab] = useState<"pending" | "answered">("pending");
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
+  // Calculate dates once at component mount
+  const [questionDates] = useState(() => {
+    const now = Date.now();
+    return {
+      q1Asked: new Date(now - 1 * 60 * 60 * 1000).toISOString(),
+      q2Asked: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
+      q3Asked: new Date(now - 5 * 60 * 60 * 1000).toISOString(),
+      q4Asked: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      q4Answered: new Date(now - 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(),
+      q5Asked: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      q5Answered: new Date(now - 3 * 24 * 60 * 60 * 1000 + 1 * 60 * 60 * 1000).toISOString(),
+    };
+  });
+
   // Mock data - TODO: Fetch from backend
   const pendingQuestions: Question[] = useMemo(() => [
     {
@@ -32,7 +46,7 @@ const QAManagementPage = () => {
       productImage: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500",
       asker: "Nguyễn V***",
       question: "Máy có bảo hành chính hãng Apple không ạ? Bảo hành bao lâu?",
-      askedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+      askedAt: questionDates.q1Asked,
       status: "pending",
     },
     {
@@ -42,7 +56,7 @@ const QAManagementPage = () => {
       productImage: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500",
       asker: "Trần T***",
       question: "Shop có hỗ trợ trả góp không? Qua công ty tài chính nào?",
-      askedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+      askedAt: questionDates.q2Asked,
       status: "pending",
     },
     {
@@ -52,10 +66,10 @@ const QAManagementPage = () => {
       productImage: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500",
       asker: "Lê H***",
       question: "Có thể xem máy trực tiếp không ạ? Shop ở đâu?",
-      askedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      askedAt: questionDates.q3Asked,
       status: "pending",
     },
-  ], []);
+  ], [questionDates]);
 
   const answeredQuestions: Question[] = useMemo(() => [
     {
@@ -66,8 +80,8 @@ const QAManagementPage = () => {
       asker: "Phạm M***",
       question: "Máy có kèm sạc nhanh không ạ?",
       answer: "Dạ không ạ, theo chính sách của Apple thì máy chỉ kèm cáp USB-C. Nếu cần sạc nhanh, shop có thể hỗ trợ giá tốt cho anh/chị.",
-      askedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      answeredAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(),
+      askedAt: questionDates.q4Asked,
+      answeredAt: questionDates.q4Answered,
       status: "answered",
     },
     {
@@ -78,11 +92,11 @@ const QAManagementPage = () => {
       asker: "Hoàng N***",
       question: "Máy đã nâng cấp RAM chưa ạ?",
       answer: "Dạ chưa ạ, máy còn nguyên cấu hình gốc 8GB RAM. Nếu anh/chị cần nâng cấp, shop có thể tư vấn sau khi mua.",
-      askedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      answeredAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 1 * 60 * 60 * 1000).toISOString(),
+      askedAt: questionDates.q5Asked,
+      answeredAt: questionDates.q5Answered,
       status: "answered",
     },
-  ], []);
+  ], [questionDates]);
 
   const getTimeAgo = (dateString: string) => {
     const now = Date.now();

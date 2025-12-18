@@ -65,6 +65,17 @@ const OrderFinalizationPage = () => {
     note: "",
   });
 
+  // Calculate dates once at component mount
+  const [orderDates] = useState(() => {
+    const now = Date.now();
+    return {
+      endedAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+      msg1: new Date(now - 1 * 60 * 60 * 1000).toISOString(),
+      msg2: new Date(now - 50 * 60 * 1000).toISOString(),
+      msg3: new Date(now - 45 * 60 * 1000).toISOString(),
+    };
+  });
+
   // Mock data - TODO: Fetch from backend
   const order: OrderDetails = useMemo(() => ({
     id: id || "ord1",
@@ -76,9 +87,9 @@ const OrderFinalizationPage = () => {
     winnerName: "Nguyễn Văn A",
     sellerId: "seller1",
     sellerName: "TechStore VN",
-    endedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    endedAt: orderDates.endedAt,
     status: "payment_confirmed",
-  }), [id]);
+  }), [id, orderDates]);
 
   // Determine if current user is buyer or seller - TODO: Get from auth context
   const currentUserRole: "buyer" | "seller" = "buyer";
@@ -90,7 +101,7 @@ const OrderFinalizationPage = () => {
       senderId: "seller1",
       senderName: "TechStore VN",
       content: "Xin chào anh/chị! Cảm ơn đã đấu giá thành công. Shop sẽ liên hệ với anh/chị để xác nhận đơn hàng ạ.",
-      sentAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+      sentAt: orderDates.msg1,
       role: "seller",
     },
     {
@@ -98,7 +109,7 @@ const OrderFinalizationPage = () => {
       senderId: "buyer1",
       senderName: "Nguyễn Văn A",
       content: "Dạ em cảm ơn shop. Em muốn nhận hàng vào cuối tuần được không ạ?",
-      sentAt: new Date(Date.now() - 50 * 60 * 1000).toISOString(),
+      sentAt: orderDates.msg2,
       role: "buyer",
     },
     {
@@ -106,10 +117,10 @@ const OrderFinalizationPage = () => {
       senderId: "seller1",
       senderName: "TechStore VN",
       content: "Dạ được ạ, shop sẽ gửi hàng vào thứ 6 để anh/chị nhận vào cuối tuần.",
-      sentAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+      sentAt: orderDates.msg3,
       role: "seller",
     },
-  ], []);
+  ], [orderDates]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {

@@ -49,6 +49,22 @@ export default function WonAuctionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Calculate dates once at component mount
+  const [orderDates] = useState(() => {
+    const now = Date.now();
+    return {
+      order1Won: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+      order1Deadline: new Date(now + 22 * 60 * 60 * 1000).toISOString(),
+      order2Won: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      order3Won: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      order3Delivered: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      order4Won: new Date(now - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      order4Delivered: new Date(now - 8 * 24 * 60 * 60 * 1000).toISOString(),
+      order5Won: new Date(now - 30 * 60 * 1000).toISOString(),
+      order5Deadline: new Date(now + 23.5 * 60 * 60 * 1000).toISOString(),
+    };
+  });
+
   // Mock won auctions data
   // TODO: Replace with API call to fetch user's won auctions
   const wonAuctions: WonAuction[] = useMemo(
@@ -59,11 +75,11 @@ export default function WonAuctionsPage() {
         productTitle: "iPhone 15 Pro Max 256GB Titan Tự Nhiên",
         productImage: "https://via.placeholder.com/400x300",
         finalPrice: 25000000,
-        wonAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        wonAt: orderDates.order1Won,
         sellerId: "seller1",
         sellerName: "TechStore VN",
         orderStatus: "payment_confirmed",
-        paymentDeadline: new Date(Date.now() + 22 * 60 * 60 * 1000).toISOString(),
+        paymentDeadline: orderDates.order1Deadline,
       },
       {
         id: "order2",
@@ -71,7 +87,7 @@ export default function WonAuctionsPage() {
         productTitle: "MacBook Pro 14 inch M3 Pro 18GB 512GB",
         productImage: "https://via.placeholder.com/400x300",
         finalPrice: 45000000,
-        wonAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        wonAt: orderDates.order2Won,
         sellerId: "seller2",
         sellerName: "Apple Premium",
         orderStatus: "shipping",
@@ -83,11 +99,11 @@ export default function WonAuctionsPage() {
         productTitle: "Đồng hồ Rolex Submariner Date Automatic",
         productImage: "https://via.placeholder.com/400x300",
         finalPrice: 180000000,
-        wonAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        wonAt: orderDates.order3Won,
         sellerId: "seller3",
         sellerName: "Luxury Watches",
         orderStatus: "delivered",
-        deliveredAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        deliveredAt: orderDates.order3Delivered,
       },
       {
         id: "order4",
@@ -95,11 +111,11 @@ export default function WonAuctionsPage() {
         productTitle: "iPad Pro 12.9 inch M2 256GB WiFi",
         productImage: "https://via.placeholder.com/400x300",
         finalPrice: 18000000,
-        wonAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+        wonAt: orderDates.order4Won,
         sellerId: "seller1",
         sellerName: "TechStore VN",
         orderStatus: "completed",
-        deliveredAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+        deliveredAt: orderDates.order4Delivered,
       },
       {
         id: "order5",
@@ -107,14 +123,14 @@ export default function WonAuctionsPage() {
         productTitle: "Sony WH-1000XM5 Wireless Headphones",
         productImage: "https://via.placeholder.com/400x300",
         finalPrice: 6500000,
-        wonAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        wonAt: orderDates.order5Won,
         sellerId: "seller4",
         sellerName: "Audio Store",
         orderStatus: "pending_payment",
-        paymentDeadline: new Date(Date.now() + 23.5 * 60 * 60 * 1000).toISOString(),
+        paymentDeadline: orderDates.order5Deadline,
       },
     ],
-    []
+    [orderDates]
   );
 
   const getStatusBadge = (status: WonAuction["orderStatus"]) => {

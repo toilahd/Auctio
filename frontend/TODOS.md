@@ -25,6 +25,8 @@
 - [x] Search Functionality with Vietnamese support and filters
 - [x] Won Auctions / Purchase History with order tracking
 - [x] User Profile Page with ratings and reviews
+- [x] Review/Rating System for post-transaction feedback
+- [x] Seller Upgrade Request with form and status tracking
 
 ---
 
@@ -108,12 +110,14 @@
 **Navigation from:** Seller Dashboard "Hoàn tất" button (for sold items), My Bids "Hoàn tất đơn hàng" button
 
 #### 16. Review/Rating System
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create UI for sellers to review buyers (positive/negative feedback) and vice versa. Display ratings on profiles.
+**Navigation from:** Order finalization page after delivery, /review/:orderId
 
 #### 17. Seller Upgrade Request
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build page/modal for bidders to request upgrade to seller status. Show pending request status and history.
+**Navigation from:** /seller-upgrade-request, accessible from user menu or settings
 
 ---
 
