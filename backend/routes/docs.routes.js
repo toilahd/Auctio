@@ -8,7 +8,12 @@ const router = Router();
 router.use(
   "/docs",
   swaggerUi.serve,
-  swaggerUi.setup(swaggerDoc)
+  swaggerUi.setup(swaggerDoc, {
+    swaggerOptions: {
+      withCredentials: true,
+    },
+    customSiteTitle: "Auctio API Documentation",
+  })
 );
 
 export default router;

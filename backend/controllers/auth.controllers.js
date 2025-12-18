@@ -11,11 +11,97 @@ const REFRESH_TOKEN_AGE = "30d";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
+// Endpoint with Swagger autogen notation, this endpoint uses the cookies or authentication header set by the client to identify the user
 export function whoAmI(req, res) {
+  /*
+    #swagger.summary = 'Get current user info'
+    #swagger.description = 'Authenticate a user. Token can be provided via Authorization header or HttpOnly cookies.'
+
+    #swagger.security = [
+      { "bearerAuth": [] },
+      { "cookieAuth": [] }
+    ]
+
+    #swagger.parameters['Authorization'] = {
+      in: 'header',
+      description: 'Bearer access token (optional)',
+      required: false,
+      type: 'string',
+      example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    }
+
+    #swagger.parameters['access'] = {
+      in: 'cookie',
+      description: 'Access token cookie (optional)',
+      required: false,
+      type: 'string'
+    }
+
+    #swagger.responses[200] = {
+      description: 'User info retrieved successfully or token error.',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              user: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', example: '123e4567-e89b-12d3-a456-426614174000' },
+                  email: { type: 'string', example: 'user@example.com' },
+                  fullName: { type: 'string', example: 'John Doe' },
+                  role: { type: 'string', example: 'BIDDER' },
+                  address: { type: 'string', example: '123 Main St, City, Country' },
+                  createdAt: { type: 'string', format: 'date-time', example: '2023-10-01T12:34:56Z' },
+                  updatedAt: { type: 'string', format: 'date-time', example: '2023-10-10T08:21:45Z' }
+                }
+              },
+              error: { type: 'string', example: null }
+            }
+          }
+        }
+      }
+    }
+  */
   return res.json({ user: req.user, error: req.tokenError });
 }
 
 export async function login(req, res) {
+  /*
+    #swagger.summary = 'User login'
+    #swagger.description = 'Authenticate a user and provide access and refresh tokens.'
+    #swagger.parameters['body'] = {
+      in: 'body',
+      description: 'User login credentials',
+      required: true,
+      schema: {
+        email: 'nguyena@mail.com',
+        password: 'yourPassword',
+        captcha: 'reCAPTCHA response token'
+      }
+    }
+    #swagger.responses[200] = {
+      description: 'Login successful.',
+      schema: {
+        message: 'Login successful',
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+      }
+    }
+    #swagger.responses[400] = {
+      description: 'Invalid input or reCAPTCHA verification failed.',
+      schema: { message: 'Invalid input' }
+    }
+    #swagger.responses[401] = {
+      description: 'Invalid credentials.',
+      schema: { message: 'Invalid credentials' }
+    }
+    #swagger.responses[500] = {
+      description: 'reCAPTCHA verification failed.',
+      schema: { message: 'reCAPTCHA verification failed' }
+    }
+  */
+
   // Make validation schema
   const loginSchema = z.object({
     email: z.email(),
@@ -110,6 +196,43 @@ export async function login(req, res) {
 }
 
 export async function signup(req, res) {
+  /*
+    #swagger.summary = 'User signup'
+    #swagger.description = 'Register a new user account.'
+    #swagger.parameters['body'] = {
+      in: 'body',
+      description: 'User signup details',
+      required: true,
+      schema: {
+        email: 'nguyena@mail.com',
+        password: 'yourPassword',
+        fullName: 'Nguyen A',
+        address: '123 Main St, City, Country',
+        captcha: 'reCAPTCHA response token'
+      }
+    }
+    #swagger.responses[201] = {
+      description: 'Signup successful.',
+      schema: {
+        message: 'Signup successful',
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+      }
+    }
+    #swagger.responses[400] = {
+      description: 'Invalid input or reCAPTCHA verification failed.',
+      schema: { message: 'Invalid input' }
+    }
+    #swagger.responses[409] = {
+      description: 'Email already in use.',
+      schema: { message: 'Email already in use' }
+    }
+    #swagger.responses[500] = {
+      description: 'reCAPTCHA verification failed.',
+      schema: { message: 'reCAPTCHA verification failed' }
+    }
+  */
+
   // Make validation schema
   const signupSchema = z.object({
     email: z.email(),
@@ -217,6 +340,18 @@ export async function signup(req, res) {
 }
 
 export function logout(req, res) {
+  /*
+    #swagger.summary = 'User logout'
+    #swagger.description = 'Logout the current user by clearing authentication cookies.'
+    #swagger.responses[200] = {
+      description: 'Logged out successfully.',
+      schema: { message: 'Logged out successfully' }
+    }
+    #swagger.responses[401] = {
+      description: 'Not authenticated.',
+      schema: { message: 'Not authenticated' }
+    }
+  */
   const user = req.user || null;
   if (user === null) {
     return res.status(401).json({ message: "Not authenticated" });
@@ -230,6 +365,35 @@ export function logout(req, res) {
 }
 
 export async function refreshToken(req, res) {
+  /*
+    #swagger.summary = 'Refresh access token'
+    #swagger.description = 'Refresh the access token using a valid refresh token.'
+    #swagger.parameters['refresh'] = {
+      in: 'cookie',
+      description: 'Refresh token cookie',
+      required: false,
+      schema: { refresh: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
+    }
+    #swagger.parameters['body'] = {
+      in: 'body',
+      description: 'Refresh token in request body (optional)',
+      required: false,
+      schema: { token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
+    }
+    #swagger.responses[200] = {
+      description: 'Access token refreshed successfully.',
+      schema: {
+        message: 'Access token refreshed',
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+      }
+    }
+    #swagger.responses[401] = {
+      description: 'Invalid or missing refresh token.',
+      schema: { message: 'Invalid refresh token' }
+    }
+  */
+
   const bodyRefreshToken = req.body.token;
   const refreshToken = req.cookies.refresh || bodyRefreshToken;
 

@@ -13,6 +13,20 @@ const doc = {
     description: "API documentation for the Auctio application",
   },
   host: `localhost:${port}`,
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+      cookieAuth: {
+        type: "apiKey",
+        in: "cookie",
+        name: "access",
+      },
+    },
+  },
 };
 
 const outputFile = "./swagger.json";
