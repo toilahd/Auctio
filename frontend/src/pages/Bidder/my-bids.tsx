@@ -301,7 +301,9 @@ const MyBidsPage = () => {
                               )}
                               {activeTab === "won" && (
                                 <>
-                                  <Button>Hoàn tất đơn hàng</Button>
+                                  <Button onClick={() => (window.location.href = `/order/${bid.productId}`)}>
+                                    Hoàn tất đơn hàng
+                                  </Button>
                                   <Button variant="outline">Liên hệ người bán</Button>
                                 </>
                               )}

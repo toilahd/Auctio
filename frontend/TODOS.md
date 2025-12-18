@@ -16,6 +16,11 @@
 - [x] Product Detail Page with image gallery, bid history, Q&A, seller info
 - [x] Watch List / Favorites Page
 - [x] My Bids / Active Auctions Page
+- [x] Seller Dashboard with stats, active/ended auctions table
+- [x] Product Creation/Listing Form with validation, image upload, pricing
+- [x] Product Edit Page with append-only description
+- [x] Seller Q&A Management page with pending/answered tabs
+- [x] Post-Auction Order Finalization page with payment, shipping, chat
 
 ---
 
@@ -72,24 +77,27 @@
 ### 🛒 Seller Pages
 
 #### 11. Seller Dashboard
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build seller dashboard showing: active auctions, auction history, won/lost auctions, products posted, and quick stats.
 
 #### 12. Product Creation/Listing Form
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create comprehensive product listing form with: name, image upload (≥3), starting price, bid increment, buy-now price, WYSIWYG description editor, auto-extend option, category selection, and validation.
 
 #### 13. Product Edit Page
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build product edit page allowing sellers to append description (append-only, not replace). Show edit history.
+**Navigation from:** Seller Dashboard "Sửa" button
 
 #### 14. Seller Q&A Management
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create interface for sellers to view and answer questions on their products. Include notifications for new questions.
+**Navigation from:** Seller Dashboard "Q&A" button
 
 #### 15. Post-Auction Order Finalization
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build order completion page for buyer and seller: payment details, shipping info, status tracking, chat interface, and confirmation flow.
+**Navigation from:** Seller Dashboard "Hoàn tất" button (for sold items), My Bids "Hoàn tất đơn hàng" button
 
 #### 16. Review/Rating System
 **Status:** Not Started  
@@ -185,3 +193,9 @@
 - Add TODO comments for backend integration points
 - Follow responsive design principles
 - Ensure form validation on all input pages
+
+## ⚠️ IMPORTANT REMINDERS
+
+- **Use Lucide React icons only** - NO emojis anywhere in the UI
+- **Navigation tracking** - For every navigation to a non-existing page, add it to this TODO list so when it's implemented, we can update all pages that navigate to it
+- **Use `useNavigate()` hook** - Always use React Router's `useNavigate()` hook for navigation instead of `window.location.href` or `<a>` tags

@@ -7,7 +7,10 @@ import HomePage from "./pages/Home/home";
 import LogPage from "./pages/Log/loggin";
 import SellerDashboardPage from "./pages/Seller/seller-dashboard";
 import CreateProductPage from "./pages/Seller/create-product";
-import ProductDetails from "./pages/Product/product";
+import EditProductPage from "./pages/Seller/edit-product";
+import QAManagementPage from "./pages/Seller/qa-management";
+import OrderFinalizationPage from "./pages/Seller/order-finalization";
+// import ProductDetails from "./pages/Product/product";
 import ProductListPage from "./pages/Product/product-list";
 import ProductDetailPage from "./pages/Product/product-detail";
 import WatchlistPage from "./pages/Bidder/watchlist";
@@ -73,7 +76,7 @@ const router = createBrowserRouter([
     path: "/my-bids",
     element: <MyBidsPage />,
   },
-  // Seler routes
+  // Seller routes
   {
     path: "/seller",
     children: [
@@ -85,7 +88,19 @@ const router = createBrowserRouter([
         path: "create-product",
         element: <CreateProductPage />,
       },
+      {
+        path: "edit-product/:id",
+        element: <EditProductPage />,
+      },
+      {
+        path: "qa-management",
+        element: <QAManagementPage />,
+      },
     ],
+  },
+  {
+    path: "/order/:id",
+    element: <OrderFinalizationPage />,
   },
 ]);
 
