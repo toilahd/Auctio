@@ -15,6 +15,8 @@ import ProductListPage from "./pages/Product/product-list";
 import ProductDetailPage from "./pages/Product/product-detail";
 import WatchlistPage from "./pages/Bidder/watchlist";
 import MyBidsPage from "./pages/Bidder/my-bids";
+import CategoriesPage from "./pages/categories";
+import SearchPage from "./pages/search";
 import SignUp from "./pages/Log/signup";
 import VerifyEmail from "./pages/Log/verify-email";
 import ForgotPassword from "./pages/Log/forgot-password";
@@ -51,6 +53,14 @@ const router = createBrowserRouter([
   {
     path: "/products",
     element: <ProductListPage />,
+  },
+  {
+    path: "/categories",
+    element: <CategoriesPage />,
+  },
+  {
+    path: "/search",
+    element: <SearchPage />,
   },
   {
     path: "/product/:id",

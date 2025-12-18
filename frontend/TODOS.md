@@ -21,6 +21,8 @@
 - [x] Product Edit Page with append-only description
 - [x] Seller Q&A Management page with pending/answered tabs
 - [x] Post-Auction Order Finalization page with payment, shipping, chat
+- [x] Category Listing Page with 2-level hierarchy and Lucide icons
+- [x] Search Functionality with Vietnamese support and filters
 
 ---
 
@@ -33,16 +35,18 @@
 **Description:** Create home page with 3 sections: top-5 ending soon auctions, top-5 most-bid auctions, top-5 highest-price auctions. Include header/navigation, hero section, reusable auction card component, and footer.
 
 #### 2. Category Listing Page
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build category listing page showing 2-level category structure. Allow users to browse and select categories to view products.
+**Navigation from:** Header "Danh mục" button, navigates to /products with category filters
 
 #### 3. Product List Page
 **Status:** ✅ Completed  
 **Description:** Create product listing page with pagination, sorting (by end time, price, newness), and filtering. Reuse auction card components. Support both category browsing and search results.
 
 #### 4. Search Functionality
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Implement full-text search with Vietnamese support (without diacritics) and category filters. Integrate with product list page.
+**Navigation from:** Header search bar (form submission), navigates to /search?q=query
 
 #### 5. Product Detail Page
 **Status:** ✅ Completed  

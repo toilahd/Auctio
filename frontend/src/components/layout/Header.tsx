@@ -66,14 +66,17 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center space-x-2">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center space-x-2"
+            >
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">A</span>
               </div>
               <span className="text-xl font-bold text-gray-900 dark:text-white">
                 Auctio
               </span>
-            </a>
+            </button>
           </div>
 
           {/* Search bar */}
@@ -114,8 +117,8 @@ const Header = () => {
             {user ? (
               <>
                 {/* Watchlist */}
-                <a
-                  href="/watchlist"
+                <button
+                  onClick={() => navigate("/watchlist")}
                   className="text-gray-700 dark:text-gray-300 hover:text-primary"
                   title="Danh sách yêu thích"
                 >
@@ -132,7 +135,7 @@ const Header = () => {
                       d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                     />
                   </svg>
-                </a>
+                </button>
 
                 {/* Notifications */}
                 <button
@@ -189,42 +192,42 @@ const Header = () => {
                           {user.email}
                         </p>
                       </div>
-                      <a
-                        href="/me"
-                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      <button
+                        onClick={() => navigate("/me")}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         Tài khoản của tôi
-                      </a>
-                      <a
-                        href="/my-bids"
-                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      </button>
+                      <button
+                        onClick={() => navigate("/my-bids")}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         Đấu giá của tôi
-                      </a>
-                      <a
-                        href="/won-auctions"
-                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      </button>
+                      <button
+                        onClick={() => navigate("/won-auctions")}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         Đã thắng
-                      </a>
+                      </button>
                       {(user.role === "SELLER" || user.role === "ADMIN") && (
                         <>
                           <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                          <a
-                            href="/seller"
-                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          <button
+                            onClick={() => navigate("/seller")}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
                             Bảng điều khiển Seller
-                          </a>
+                          </button>
                         </>
                       )}
                       {user.role === "ADMIN" && (
-                        <a
-                          href="/admin"
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        <button
+                          onClick={() => navigate("/admin")}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                           Quản trị viên
-                        </a>
+                        </button>
                       )}
                       <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                       <button
@@ -259,30 +262,30 @@ const Header = () => {
 
         {/* Navigation */}
         <nav className="flex space-x-8 h-12 items-center border-t border-gray-200 dark:border-gray-800">
-          <a
-            href="/categories"
+          <button
+            onClick={() => navigate("/categories")}
             className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
           >
             Danh mục
-          </a>
-          <a
-            href="/products"
+          </button>
+          <button
+            onClick={() => navigate("/products")}
             className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
           >
             Đấu giá
-          </a>
-          <a
-            href="/about"
+          </button>
+          <button
+            onClick={() => navigate("/about")}
             className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
           >
             Về chúng tôi
-          </a>
-          <a
-            href="/contact"
+          </button>
+          <button
+            onClick={() => navigate("/contact")}
             className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
           >
             Liên hệ
-          </a>
+          </button>
         </nav>
       </div>
     </header>
