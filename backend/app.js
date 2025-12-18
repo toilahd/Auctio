@@ -29,30 +29,20 @@ testDatabase();
 // Middlewares
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "*",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(docsRouter);
-app.use(authRouter);
-
-const startServer = async () => {
-  try {
-    app.listen(PORT, () => {
-      appLogger.info(`Server is running on port ${PORT}`);
-    });
-  } catch (error) {
-    appLogger.error("Failed to start server:", error);
-  }
-};
 
 // Initialize Socket.IO
 const io = initializeSocket(httpServer);
 app.set("io", io); // Make io accessible in routes
 
 // Routes
+app.use(docsRouter);
+app.use(authRouter);
 app.use("/api/bids", biddingRoutes);
 app.use("/api/products", productRoutes);
 
@@ -87,5 +77,3 @@ httpServer.listen(PORT, () => {
 });
 
 export default app;
-
-// startServer();
