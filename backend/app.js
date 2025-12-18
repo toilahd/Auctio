@@ -10,6 +10,11 @@ import productRoutes from './routes/productRoutes.js';
 
 dotenv.config();
 
+// Routes
+import authRouter from "./routes/auth.routes.js"
+import docsRouter from "./routes/docs.routes.js"
+
+dotenv.config()
 const app = express();
 const httpServer = createServer(app);
 const appLogger = getLogger('App');
@@ -23,6 +28,14 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(docsRouter);
+app.use(authRouter);
+
+const startServer = async () => {
+    try {
+        app.listen(port, () => {
+            appLogger.info(`Server is running on port ${port}`);
+        });
 
 // Initialize Socket.IO
 const io = initializeSocket(httpServer);
@@ -62,3 +75,4 @@ httpServer.listen(PORT, () => {
 
 export default app;
 
+startServer();
