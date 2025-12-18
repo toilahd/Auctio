@@ -13,7 +13,7 @@ import { useForm, Controller } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const SignUp = () => {
   const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
   const RE_SITE_KEY = import.meta.env.VITE_RE_SITE_KEY;
@@ -30,8 +30,10 @@ const Login = () => {
     control,
     formState: { errors },
   } = useForm<{
+    username: string;
     email: string;
     password: string;
+    address: string;
     captcha: string;
   }>();
 
@@ -43,13 +45,19 @@ const Login = () => {
 
   const onSubmit: SubmitHandler<any> = async (data) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/login`, {
+      const response = await fetch(`${BACKEND_URL}/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          fullName: data.username,
+          email: data.email,
+          password: data.password,
+          address: data.address,
+          captcha: data.captcha,
+        }),
       });
 
       if (!response.ok) {
@@ -57,10 +65,12 @@ const Login = () => {
       }
 
       const responseData = await response.json();
-      console.log("Login successful:", responseData);
-      navigate("/");
+      console.log("Signup successful:", responseData);
+      // Redirect to email verification page after successful signup
+      navigate("/verify-email");
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Signup failed:", error);
+      alert("Đăng ký thất bại. Vui lòng thử lại.");
     }
   };
 
@@ -69,15 +79,49 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-xl p-6">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold tracking-tight">
-            Đăng nhập
+            Tạo tài khoản
           </CardTitle>
           <CardDescription className="text-base">
-            Đăng nhập vào tài khoản của bạn để đấu giá và mua sắm các sản phẩm
+            Nhập thông tin của bạn để bắt đầu đấu giá và mua sắm các sản phẩm
             yêu thích.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="username"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Họ và tên
+              </label>
+              {/* User name must have at least two words and appropriate error message */}
+              <Input
+                {...register("username", {
+                  required: true,
+                  minLength: {
+                    value: 3,
+                    message: "Họ và tên phải có ít nhất 3 ký tự",
+                  },
+                  pattern: {
+                    value: /^[a-zA-Z]+ [a-zA-Z]+/,
+                    message: "Họ và tên phải có ít nhất hai từ",
+                  },
+                })}
+                type="text"
+                placeholder="Nguyễn A"
+                id="username"
+                name="username"
+                required
+                className="h-11"
+              />
+              {errors.username && (
+                <p className="text-sm text-red-600">
+                  {errors.username.message as string}
+                </p>
+              )}
+            </div>
+
             <div className="space-y-2">
               <label
                 htmlFor="email"
@@ -108,17 +152,12 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Mật khẩu
-                </label>
-                <a href="/forgot-password" className="text-sm text-primary hover:underline">
-                  Quên mật khẩu?
-                </a>
-              </div>
+              <label
+                htmlFor="password"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Mật khẩu
+              </label>
               <Input
                 {...register("password", {
                   required: true,
@@ -138,6 +177,52 @@ const Login = () => {
               {errors.password && (
                 <p className="text-sm text-red-600">
                   {errors.password.message as string}
+                </p>
+              )}
+            </div>
+            {/* <div className="space-y-2">
+              <label
+                htmlFor="confirmPassword"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Confirm Password
+              </label>
+              <Input
+                {...register("confirmPassword", { required: true })}
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="••••••••"
+                required
+                className="h-11"
+              />
+            </div> */}
+
+            <div className="space-y-2">
+              <label
+                htmlFor="address"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Địa chỉ
+              </label>
+              <Input
+                {...register("address", {
+                  required: true,
+                  minLength: {
+                    value: 10,
+                    message: "Địa chỉ phải có ít nhất 10 ký tự",
+                  },
+                })}
+                type="text"
+                placeholder="123 Đường ABC, Quận 1, TP.HCM"
+                id="address"
+                name="address"
+                required
+                className="h-11"
+              />
+              {errors.address && (
+                <p className="text-sm text-red-600">
+                  {errors.address.message as string}
                 </p>
               )}
             </div>
@@ -166,7 +251,7 @@ const Login = () => {
               type="submit"
               className="w-full h-11 text-base font-semibold"
             >
-              Đăng nhập
+              Tạo tài khoản
             </Button>
           </form>
 
@@ -187,16 +272,16 @@ const Login = () => {
             className="w-full h-11 text-base font-semibold"
           >
             <GoogleIcon />
-            Đăng nhập với Google
+            Đăng ký với Google
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Bạn chưa có tài khoản?{" "}
+            Bạn đã có tài khoản?{" "}
             <a
-              href="/sign-up"
+              href="/log-in"
               className="font-semibold text-primary hover:underline"
             >
-              Đăng ký
+              Đăng nhập
             </a>
           </p>
         </CardContent>
@@ -205,4 +290,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignUp;
