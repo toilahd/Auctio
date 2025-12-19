@@ -10,6 +10,10 @@ import CreateProductPage from "./pages/Seller/create-product";
 import EditProductPage from "./pages/Seller/edit-product";
 import QAManagementPage from "./pages/Seller/qa-management";
 import OrderFinalizationPage from "./pages/Seller/order-finalization";
+import AdminDashboardPage from "./pages/Admin/admin-dashboard";
+import CategoryManagementPage from "./pages/Admin/category-management";
+import ProductManagementPage from "./pages/Admin/product-management";
+import UserManagementPage from "./pages/Admin/user-management";
 // import ProductDetails from "./pages/Product/product";
 import ProductListPage from "./pages/Product/product-list";
 import ProductDetailPage from "./pages/Product/product-detail";
@@ -131,6 +135,28 @@ const router = createBrowserRouter([
   {
     path: "/order/:id",
     element: <OrderFinalizationPage />,
+  },
+  // Admin routes
+  {
+    path: "/admin",
+    children: [
+      {
+        path: "",
+        element: <AdminDashboardPage />,
+      },
+      {
+        path: "categories",
+        element: <CategoryManagementPage />,
+      },
+      {
+        path: "products",
+        element: <ProductManagementPage />,
+      },
+      {
+        path: "users",
+        element: <UserManagementPage />,
+      },
+    ],
   },
 ]);
 

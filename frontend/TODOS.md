@@ -27,6 +27,10 @@
 - [x] User Profile Page with ratings and reviews
 - [x] Review/Rating System for post-transaction feedback
 - [x] Seller Upgrade Request with form and status tracking
+- [x] Admin Dashboard with stats and quick actions
+- [x] Admin Category Management with CRUD operations
+- [x] Admin Product Management with filtering and moderation
+- [x] Admin User Management with seller upgrade approval
 
 ---
 
@@ -124,20 +128,24 @@
 ### 🛠️ Admin Pages
 
 #### 18. Admin Dashboard
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create admin control panel with stats: new auctions, revenue, new users, upgrade requests, and system metrics.
+**Navigation from:** Header admin menu, /admin
 
 #### 19. Admin Category Management
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build CRUD interface for categories (create, update, delete with constraint checking). Support 2-level hierarchy.
+**Navigation from:** Admin Dashboard quick actions, /admin/categories
 
 #### 20. Admin Product Management
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Create interface for admins to view, remove, or deactivate products. Include filtering and search.
+**Navigation from:** Admin Dashboard quick actions, /admin/products
 
 #### 21. Admin User Management
-**Status:** Not Started  
+**Status:** ✅ Completed  
 **Description:** Build user management page: list users, view details, approve/deny seller upgrade requests, manage roles.
+**Navigation from:** Admin Dashboard quick actions, /admin/users
 
 ---
 
