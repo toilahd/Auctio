@@ -139,13 +139,35 @@ class ProductService {
       const product = await prisma.product.findUnique({
         where: { id },
         include: {
-          category: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+              parent: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              }
+            }
+          },
           seller: {
             select: {
               id: true,
               fullName: true,
               email: true,
-              address: true
+              address: true,
+              positiveRatings: true,
+              negativeRatings: true
+            }
+          },
+          currentWinner: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              positiveRatings: true,
+              negativeRatings: true
             }
           },
           bids: {
@@ -155,16 +177,37 @@ class ProductService {
               bidder: {
                 select: {
                   id: true,
-                  fullName: true
+                  fullName: true,
+                  email: true
                 }
               }
             }
           },
-          currentWinner: {
+          questions: {
+            orderBy: { createdAt: 'desc' },
+            include: {
+              asker: {
+                select: {
+                  id: true,
+                  fullName: true
+                }
+              },
+              answer: {
+                include: {
+                  seller: {
+                    select: {
+                      id: true,
+                      fullName: true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          _count: {
             select: {
-              id: true,
-              fullName: true,
-              email: true
+              bids: true,
+              questions: true
             }
           }
         }
@@ -174,25 +217,167 @@ class ProductService {
         return null;
       }
 
+      // Calculate time left
       const now = new Date();
       const timeLeft = new Date(product.endTime) - now;
+      const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+      const hoursLeft = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+      // Get 5 related products from same category
+      const relatedProducts = await prisma.product.findMany({
+        where: {
+          categoryId: product.categoryId,
+          id: { not: product.id },
+          status: 'ACTIVE'
+        },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          images: true,
+          currentPrice: true,
+          endTime: true,
+          bidCount: true
+        }
+      });
 
       return {
         ...product,
         timeLeft: {
-          hours: Math.floor(timeLeft / (1000 * 60 * 60)),
-          minutes: Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((timeLeft % (1000 * 60)) / 1000),
-          total: timeLeft
+          days: daysLeft,
+          hours: hoursLeft,
+          minutes: minutesLeft,
+          total: timeLeft,
+          isLessThan3Days: daysLeft < 3
         },
-        isEnded: timeLeft <= 0
+        bidCount: product._count.bids,
+        questionCount: product._count.questions,
+        relatedProducts
       };
     } catch (error) {
       logger.error('Error getting product by ID:', error);
       throw error;
     }
   }
+
+  /**
+   * Get top 5 products by criteria for homepage
+   */
+  async getTopProducts(criteria = 'ending_soon') {
+    try {
+      let orderBy;
+      let where = { status: 'ACTIVE' };
+
+      switch (criteria) {
+        case 'ending_soon':
+          orderBy = { endTime: 'asc' };
+          break;
+        case 'most_bids':
+          orderBy = { bidCount: 'desc' };
+          break;
+        case 'highest_price':
+          orderBy = { currentPrice: 'desc' };
+          break;
+        default:
+          orderBy = { endTime: 'asc' };
+      }
+
+      const products = await prisma.product.findMany({
+        where,
+        take: 5,
+        orderBy,
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          currentWinner: {
+            select: {
+              id: true,
+              fullName: true
+            }
+          },
+          _count: {
+            select: {
+              bids: true
+            }
+          }
+        }
+      });
+
+      return products.map(p => ({
+        ...p,
+        bidCount: p._count.bids
+      }));
+    } catch (error) {
+      logger.error('Error getting top products:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get products by category with pagination
+   */
+  async getProductsByCategory(categoryId, page = 1, limit = 20) {
+    try {
+      const skip = (page - 1) * limit;
+
+      const [products, total] = await Promise.all([
+        prisma.product.findMany({
+          where: {
+            categoryId,
+            status: 'ACTIVE'
+          },
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            currentWinner: {
+              select: {
+                id: true,
+                fullName: true
+              }
+            },
+            _count: {
+              select: {
+                bids: true
+              }
+            }
+          }
+        }),
+        prisma.product.count({
+          where: {
+            categoryId,
+            status: 'ACTIVE'
+          }
+        })
+      ]);
+
+      return {
+        products: products.map(p => ({ ...p, bidCount: p._count.bids })),
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          hasMore: skip + products.length < total
+        }
+      };
+    } catch (error) {
+      logger.error('Error getting products by category:', error);
+      throw error;
+    }
+  }
 }
 
 export default new ProductService();
-

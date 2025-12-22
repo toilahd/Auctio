@@ -19,6 +19,20 @@ const router = express.Router();
 router.get('/search', productController.searchProducts);
 
 /**
+ * GET /api/products/top/:criteria
+ * Get top 5 products for homepage
+ * Params: criteria = ending_soon|most_bids|highest_price
+ */
+router.get('/top/:criteria', productController.getTopProducts);
+
+/**
+ * GET /api/products/category/:categoryId
+ * Get products by category with pagination
+ * Query params: page, limit
+ */
+router.get('/category/:categoryId', productController.getProductsByCategory);
+
+/**
  * GET /api/products/:id
  * Get product by ID
  */
