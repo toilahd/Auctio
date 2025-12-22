@@ -72,6 +72,23 @@ class BiddingService {
       if (new Date() > product.endTime) throw new Error('Auction ended');
       if (product.sellerId === bidderId) throw new Error('Seller cannot bid');
 
+      // Check bidder rating
+      const bidder = await tx.user.findUnique({
+        where: { id: bidderId },
+        select: {
+          positiveRatings: true,
+          negativeRatings: true
+        }
+      });
+
+      const totalRatings = bidder.positiveRatings + bidder.negativeRatings;
+      if (totalRatings > 0) {
+        const ratingPercentage = (bidder.positiveRatings / totalRatings) * 100;
+        if (ratingPercentage < 80) {
+          throw new Error(`Rating too low: ${Math.round(ratingPercentage)}% (${bidder.positiveRatings}/${totalRatings}). Minimum required: 80%`);
+        }
+      }
+
       const step = Number(product.stepPrice);
       const lastBid = product.bids[0];
 
@@ -147,6 +164,7 @@ class BiddingService {
 
   /**
    * Get bid history for a product
+   * Masks bidder names for privacy (e.g., "John Doe" -> "****Doe")
    */
   async getBidHistory(productId, limit = 20, offset = 0) {
     try {
@@ -168,8 +186,37 @@ class BiddingService {
 
       const total = await prisma.bid.count({ where: { productId } });
 
+      // Mask bidder names for privacy
+      const maskedBids = bids.map(bid => {
+        const fullName = bid.bidder.fullName;
+        const nameParts = fullName.trim().split(' ');
+        let maskedName;
+
+        if (nameParts.length === 1) {
+          // Single name: show last 3 chars
+          maskedName = '****' + fullName.slice(-3);
+        } else {
+          // Multiple names: mask all except last name
+          const lastName = nameParts[nameParts.length - 1];
+          maskedName = '****' + lastName;
+        }
+
+        return {
+          id: bid.id,
+          amount: bid.amount,
+          maxAmount: null, // Don't expose max amount
+          isAutoBid: bid.isAutoBid,
+          createdAt: bid.createdAt,
+          bidder: {
+            id: bid.bidder.id,
+            fullName: maskedName,
+            email: null // Don't expose email
+          }
+        };
+      });
+
       return {
-        bids,
+        bids: maskedBids,
         total,
         limit,
         offset

@@ -8,6 +8,10 @@ import { initializeSocket } from "./config/socket.js";
 import { testDatabase } from "./config/prisma.js";
 import biddingRoutes from "./routes/biddingRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
+import watchlistRoutes from "./routes/watchlistRoutes.js";
+import questionRoutes from "./routes/questionRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
@@ -45,6 +49,10 @@ app.use(docsRouter);
 app.use(authRouter);
 app.use("/api/bids", biddingRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/watchlist", watchlistRoutes);
+app.use("/api/questions", questionRoutes);
+app.use("/api/users", userRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
