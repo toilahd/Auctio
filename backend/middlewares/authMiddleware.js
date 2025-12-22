@@ -36,7 +36,11 @@ export const authenticateToken = async (req, res, next) => {
   return next();
 };
 
+// Alias for consistency
+export const authenticate = authenticateToken;
+
 export default {
-  authenticateToken
+  authenticateToken,
+  authenticate
 };
 
