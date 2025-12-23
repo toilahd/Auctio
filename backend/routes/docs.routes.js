@@ -1,5 +1,5 @@
-import swaggerUi from "swagger-ui-express";
 import swaggerDoc from "./../swagger.json" with { type: 'json' };
+import { apiReference } from '@scalar/express-api-reference';
 
 import {Router} from "express"
 
@@ -7,13 +7,12 @@ const router = Router();
 
 router.use(
   "/docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerDoc, {
-    swaggerOptions: {
-      withCredentials: true,
-    },
-    customSiteTitle: "Auctio API Documentation",
-  })
+  apiReference({
+    content: swaggerDoc,
+    metaData: {
+      title: "Auction API Documentation",
+    }
+  }),
 );
 
 export default router;
