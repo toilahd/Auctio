@@ -3,12 +3,17 @@ import hmac
 import hashlib
 import json
 import requests
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # ================== CONFIG ==================
-ZALOPAY_ENDPOINT = "https://sandbox.zalopay.com.vn/v001/tpe/createorder"
+ZALOPAY_ENDPOINT = os.getenv("ZALOPAY_ENDPOINT", "https://sb-openapi.zalopay.vn/v2/create")
 
-APPID = "554" # Định danh cho ứng dụng đã được cấp bởi ZaloPay.
-KEY1 = "8NdU5pG5R2spGHGhyO99HN1OhD8IQJBn"  # Mac Key do ZaloPay cung cấp
+APPID = os.getenv("ZALOPAY_APPID")  # Định danh cho ứng dụng đã được cấp bởi ZaloPay.
+KEY1 = os.getenv("ZALOPAY_KEY1")  # Mac Key do ZaloPay cung cấp
 
 APPUSER = "demo" # Thông tin người dùng như: id/username/tên/số điện thoại/email của user. 50 ký tự
 AMOUNT = "50000"
@@ -17,11 +22,13 @@ DESCRIPTION = "Demo thanh toán ZaloPay"
 
 # ================== AUTO GENERATED ==================
 APPTIME = str(int(time.time() * 1000))  # milliseconds
-APPTRANSID = time.strftime("%y%m%d") + "_000005" # Mã đơn hàng bên phía ứng dụng, format yymmdd của ngày hiện tại. Mã giao dịch nên theo format yymmdd_Mã đơn hàng thanh toán. Tạo lỗi -68 duplicate nếu trùng?
+APPTRANSID = time.strftime("%y%m%d") + "_0002" # Mã đơn hàng bên phía ứng dụng, format yymmdd của ngày hiện tại. Mã giao dịch nên theo format yymmdd_Mã đơn hàng thanh toán. Tạo lỗi -68 duplicate nếu trùng?
 
 EMBEDDATA = json.dumps({
     "promotioninfo": "",
-    "merchantinfo": "du lieu rieng cua ung dung"
+    "merchantinfo": "du lieu rieng cua ung dung",
+    "redirecturl": "https://docs.zalopay.vn/result",
+    "preferred_payment_method": []
 }, separators=(",", ":"))
 
 ITEM = json.dumps([
@@ -52,15 +59,15 @@ mac = hmac.new(
 
 # ================== REQUEST DATA ==================
 payload = {
-    "appid": APPID,
-    "apptransid": APPTRANSID,
-    "appuser": APPUSER,
-    "apptime": APPTIME,
+    "app_id": APPID,
+    "app_trans_id": APPTRANSID,
+    "app_user": APPUSER,
+    "app_time": APPTIME,
     "amount": AMOUNT,
-    "embeddata": EMBEDDATA,
+    "embed_data": EMBEDDATA,
     "item": ITEM,
     "mac": mac,
-    "bankcode": BANKCODE,
+    "bank_code": BANKCODE,
     "description": DESCRIPTION
 }
 
