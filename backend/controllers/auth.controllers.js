@@ -63,7 +63,22 @@ export function whoAmI(req, res) {
       }
     }
   */
-  return res.json({ user: req.user, error: req.tokenError });
+  if (req.user) {
+    return res.json({
+      user: {
+        id: req.user.userId,
+        email: req.user.email,
+        fullName: req.user.fullName,
+        role: req.user.role,
+      },
+      error: null,
+    });
+  } else {
+    return res.status(401).json({
+      user: null,
+      error: "No valid authentication token provided",
+    });
+  }
 }
 
 export async function login(req, res) {

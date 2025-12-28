@@ -1,42 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface User {
-  userId: string;
-  fullName: string;
-  email: string;
-  role: "GUEST" | "BIDDER" | "SELLER" | "ADMIN";
-  isVerified: boolean;
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { Search } from "lucide-react";
 
 const Header = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isAuthenticated, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-  useEffect(() => {
-    // Fetch user info to determine login status
-    const fetchUser = async () => {
-      try {
-        const response = await fetch(`${BACKEND_URL}/whoami`, {
-          credentials: "include",
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.user) {
-            setUser(data.user);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-
-    fetchUser();
-  }, [BACKEND_URL]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,17 +18,8 @@ const Header = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      await fetch(`${BACKEND_URL}/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-      setUser(null);
-      navigate("/");
-      window.location.reload();
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+    await logout();
+    navigate("/");
   };
 
   return (
@@ -94,19 +57,7 @@ const Header = () => {
                   type="submit"
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
+                  <Search className="w-5 h-5" />
                 </button>
               </div>
             </form>
@@ -114,11 +65,11 @@ const Header = () => {
 
           {/* User actions */}
           <div className="flex items-center space-x-4">
-            {user ? (
+            {isAuthenticated ? (
               <>
                 {/* Watchlist */}
                 <button
-                  onClick={() => navigate("/watchlist")}
+                  onClick={() => navigate("/bidder/watchlist")}
                   className="text-gray-700 dark:text-gray-300 hover:text-primary"
                   title="Danh sách yêu thích"
                 >
@@ -163,7 +114,7 @@ const Header = () => {
                   <button className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary">
                     <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
                       <span className="text-sm font-semibold">
-                        {user.fullName.charAt(0).toUpperCase()}
+                        {user?.fullName.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <svg
@@ -186,31 +137,31 @@ const Header = () => {
                     <div className="py-2">
                       <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {user.fullName}
+                          {user?.fullName}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {user.email}
+                          {user?.email}
                         </p>
                       </div>
                       <button
-                        onClick={() => navigate("/me")}
+                        onClick={() => navigate("/bidder/profile")}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         Tài khoản của tôi
                       </button>
                       <button
-                        onClick={() => navigate("/my-bids")}
+                        onClick={() => navigate("/bidder/my-bids")}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         Đấu giá của tôi
                       </button>
                       <button
-                        onClick={() => navigate("/won-auctions")}
+                        onClick={() => navigate("/bidder/won-auctions")}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         Đã thắng
                       </button>
-                      {(user.role === "SELLER" || user.role === "ADMIN") && (
+                      {(user?.role === "SELLER" || user?.role === "ADMIN") && (
                         <>
                           <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                           <button
@@ -221,7 +172,7 @@ const Header = () => {
                           </button>
                         </>
                       )}
-                      {user.role === "ADMIN" && (
+                      {user?.role === "ADMIN" && (
                         <button
                           onClick={() => navigate("/admin")}
                           className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"

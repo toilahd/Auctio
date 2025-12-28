@@ -1,10 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import "./index.css";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 // import App from "./App.tsx";
 import HomePage from "./pages/Home/home";
 import LogPage from "./pages/Log/loggin";
+import UnauthorizedPage from "./pages/unauthorized";
 import SellerDashboardPage from "./pages/Seller/seller-dashboard";
 import CreateProductPage from "./pages/Seller/create-product";
 import EditProductPage from "./pages/Seller/edit-product";
@@ -37,6 +40,10 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <HomePage />,
+  },
+  {
+    path: "/unauthorized",
+    element: <UnauthorizedPage />,
   },
   {
     path: "/log-in",
@@ -86,17 +93,32 @@ const router = createBrowserRouter([
     path: "/change-password",
     element: <ChangePassword />,
   },
+  // Bidder routes (protected)
   {
-    path: "/watchlist",
-    element: <WatchlistPage />,
-  },
-  {
-    path: "/my-bids",
-    element: <MyBidsPage />,
-  },
-  {
-    path: "/won-auctions",
-    element: <WonAuctionsPage />,
+    path: "/bidder",
+    element: <ProtectedRoute allowedRoles={['BIDDER', 'SELLER', 'ADMIN']}><Outlet /></ProtectedRoute>,
+    children: [
+      {
+        path: "watchlist",
+        element: <WatchlistPage />,
+      },
+      {
+        path: "my-bids",
+        element: <MyBidsPage />,
+      },
+      {
+        path: "won-auctions",
+        element: <WonAuctionsPage />,
+      },
+      {
+        path: "profile",
+        element: <UserProfilePage />,
+      },
+      {
+        path: "upgrade-request",
+        element: <SellerUpgradeRequestPage />,
+      },
+    ],
   },
   {
     path: "/profile/:id",
@@ -104,15 +126,12 @@ const router = createBrowserRouter([
   },
   {
     path: "/review/:orderId",
-    element: <ReviewOrderPage />,
+    element: <ProtectedRoute allowedRoles={['BIDDER', 'SELLER', 'ADMIN']}><ReviewOrderPage /></ProtectedRoute>,
   },
-  {
-    path: "/seller-upgrade-request",
-    element: <SellerUpgradeRequestPage />,
-  },
-  // Seller routes
+  // Seller routes (protected)
   {
     path: "/seller",
+    element: <ProtectedRoute allowedRoles={['SELLER', 'ADMIN']}><Outlet /></ProtectedRoute>,
     children: [
       {
         path: "",
@@ -134,11 +153,12 @@ const router = createBrowserRouter([
   },
   {
     path: "/order/:id",
-    element: <OrderFinalizationPage />,
+    element: <ProtectedRoute allowedRoles={['SELLER', 'ADMIN']}><OrderFinalizationPage /></ProtectedRoute>,
   },
-  // Admin routes
+  // Admin routes (protected)
   {
     path: "/admin",
+    element: <ProtectedRoute allowedRoles={['ADMIN']}><Outlet /></ProtectedRoute>,
     children: [
       {
         path: "",
@@ -162,6 +182,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>
 );
