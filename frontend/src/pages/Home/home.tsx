@@ -4,7 +4,14 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Clock, Flame, Gem, Search, Sparkles } from "lucide-react";
+import {
+  ChevronRight,
+  Clock,
+  Flame,
+  Gem,
+  Search,
+  Sparkles,
+} from "lucide-react";
 
 interface Product {
   id: string;
@@ -154,9 +161,9 @@ const HomePage = () => {
               </div>
               <Button
                 variant="outline"
-                onClick={() => navigate("/search?sort=ending")}
+                onClick={() => navigate("/search?sortBy=endTime&order=asc")}
               >
-                Xem tất cả <ArrowRight className="w-4 h-4" />
+                Xem tất cả <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -192,9 +199,9 @@ const HomePage = () => {
               </div>
               <Button
                 variant="outline"
-                onClick={() => navigate("/search?sort=bids")}
+                onClick={() => navigate("/search?sortBy=bidCount&order=desc")}
               >
-                Xem tất cả <ArrowRight className="w-4 h-4" />
+                Xem tất cả <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -230,9 +237,9 @@ const HomePage = () => {
               </div>
               <Button
                 variant="outline"
-                onClick={() => navigate("/search?sort=price")}
+                onClick={() => navigate("/search?sortBy=price&order=desc")}
               >
-                Xem tất cả <ArrowRight className="w-4 h-4" />
+                Xem tất cả <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">

@@ -1,12 +1,17 @@
 // controllers/categoryController.js
-import CategoryModel from '../models/Category.js';
-import { getLogger } from '../config/logger.js';
+import CategoryModel from "../models/Category.js";
+import { getLogger } from "../config/logger.js";
 
-const logger = getLogger('CategoryController');
+const logger = getLogger("CategoryController");
 
 class CategoryController {
-  // GET /api/categories/menu
   async getMenu(req, res) {
+    /*
+     * GET /api/categories/menu
+     * #swagger.tags = ['Categories']
+     * #swagger.summary = 'Get category menu hierarchy'
+     * #swagger.description = 'Get all root categories with their children and product counts'
+     */
     try {
       const roots = await CategoryModel.getRootCategories();
       const data = roots.map((parent) => ({
@@ -21,11 +26,12 @@ class CategoryController {
       }));
       return res.status(200).json({ success: true, data });
     } catch (error) {
-      logger.error('Error getMenu:', error);
-      return res.status(500).json({ success: false, message: 'Failed to load categories' });
+      logger.error("Error getMenu:", error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to load categories" });
     }
   }
 }
 
 export default new CategoryController();
-

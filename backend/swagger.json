@@ -515,9 +515,6 @@
           "400": {
             "description": "Bad Request"
           },
-          "401": {
-            "description": "Unauthorized"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -563,9 +560,6 @@
           "200": {
             "description": "OK"
           },
-          "401": {
-            "description": "Unauthorized"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -592,9 +586,6 @@
           "200": {
             "description": "OK"
           },
-          "401": {
-            "description": "Unauthorized"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -620,9 +611,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
           },
           "500": {
             "description": "Internal Server Error"
@@ -865,7 +853,11 @@
     },
     "/api/categories/menu": {
       "get": {
-        "description": "",
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Get category menu hierarchy",
+        "description": "Get all root categories with their children and product counts",
         "responses": {
           "200": {
             "description": "OK"

@@ -66,14 +66,18 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
   const initialCategory = searchParams.get("categoryId") || "all";
+  const initialSortBy = searchParams.get("sortBy") || "endTime";
+  const initialOrder = searchParams.get("order") || "asc";
+  const initialPage = parseInt(searchParams.get("page") || "1");
 
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] =
     useState<string>(initialCategory);
-  const [sortBy, setSortBy] = useState<string>("endTime");
-  const [order, setOrder] = useState<string>("asc");
-  const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<string>(initialSortBy);
+  const [order, setOrder] = useState<string>(initialOrder);
+  const [page, setPage] = useState(initialPage);
   const [limit] = useState(12);
+  const [highlightMinutes, setHighlightMinutes] = useState(30);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -131,7 +135,7 @@ export default function SearchPage() {
         params.append("limit", limit.toString());
         params.append("sortBy", sortBy);
         params.append("order", order);
-        params.append("highlightMinutes", "30");
+        params.append("highlightMinutes", highlightMinutes.toString());
 
         const response = await fetch(
           `http://localhost:3000/api/products/search?${params.toString()}`
@@ -153,7 +157,7 @@ export default function SearchPage() {
     };
 
     fetchProducts();
-  }, [searchQuery, selectedCategory, page, limit, sortBy, order]);
+  }, [searchQuery, selectedCategory, page, limit, sortBy, order, highlightMinutes]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,10 +167,14 @@ export default function SearchPage() {
     if (searchQuery) params.set("q", searchQuery);
     if (selectedCategory && selectedCategory !== "all")
       params.set("categoryId", selectedCategory);
+    params.set("sortBy", sortBy);
+    params.set("order", order);
+    params.set("page", "1");
     setSearchParams(params);
   };
 
   const handleClearFilters = () => {
+    setSearchQuery("");
     setSelectedCategory("all");
     setSortBy("endTime");
     setOrder("asc");
@@ -177,6 +185,15 @@ export default function SearchPage() {
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
     setPage(1);
+    // Update URL params
+    const params = new URLSearchParams(searchParams);
+    if (value !== "all") {
+      params.set("categoryId", value);
+    } else {
+      params.delete("categoryId");
+    }
+    params.set("page", "1");
+    setSearchParams(params);
   };
 
   const handleSortChange = (value: string) => {
@@ -185,10 +202,24 @@ export default function SearchPage() {
     setSortBy(sortField);
     setOrder(sortOrder || "asc");
     setPage(1);
+    // Update URL params
+    const params = new URLSearchParams(searchParams);
+    params.set("sortBy", sortField);
+    params.set("order", sortOrder || "asc");
+    params.set("page", "1");
+    setSearchParams(params);
   };
 
   const handleProductClick = (productId: string) => {
     navigate(`/product/${productId}`);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    const params = new URLSearchParams(searchParams);
+    params.set("page", newPage.toString());
+    setSearchParams(params);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const totalPages = Math.ceil(totalProducts / limit);
@@ -211,7 +242,7 @@ export default function SearchPage() {
         </div>
 
         {/* Search Bar */}
-        <Card className="p-6 mb-8 shadow-sm">
+        {/* <Card className="p-6 mb-8 shadow-sm">
           <form onSubmit={handleSearch} className="flex gap-4">
             <div className="flex-1 relative">
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -227,7 +258,7 @@ export default function SearchPage() {
               Tìm kiếm
             </Button>
           </form>
-        </Card>
+        </Card> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
@@ -237,12 +268,19 @@ export default function SearchPage() {
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Filter className="w-5 h-5" />
                   Bộ lọc
+                  {(selectedCategory !== "all" || sortBy !== "endTime" || order !== "asc") && (
+                    <span className="ml-2 px-2 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                      {[selectedCategory !== "all", sortBy !== "endTime" || order !== "asc"]
+                        .filter(Boolean).length}
+                    </span>
+                  )}
                 </h2>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleClearFilters}
                   className="text-sm"
+                  disabled={selectedCategory === "all" && sortBy === "endTime" && order === "asc" && !searchQuery}
                 >
                   <X className="w-4 h-4 mr-1" />
                   Xóa
@@ -250,6 +288,45 @@ export default function SearchPage() {
               </div>
 
               <div className="space-y-6">
+                {/* Active Filters Summary */}
+                {(selectedCategory !== "all" || searchQuery) && (
+                  <div className="pb-4 border-b border-border">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      Bộ lọc đang áp dụng:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {searchQuery && (
+                        <div className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded">
+                          <SearchIcon className="w-3 h-3" />
+                          "{searchQuery}"
+                          <button
+                            onClick={() => {
+                              setSearchQuery("");
+                              const params = new URLSearchParams(searchParams);
+                              params.delete("q");
+                              setSearchParams(params);
+                            }}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                      {selectedCategory !== "all" && (
+                        <div className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded">
+                          {categories.find(c => c.value === selectedCategory)?.label}
+                          <button
+                            onClick={() => handleCategoryChange("all")}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Category Filter */}
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
@@ -286,7 +363,7 @@ export default function SearchPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="endTime-asc">Sắp kết thúc</SelectItem>
-                      <SelectItem value="endTime-desc">Mới nhất</SelectItem>
+                      <SelectItem value="newest-desc">Mới nhất</SelectItem>
                       <SelectItem value="price-asc">
                         Giá thấp đến cao
                       </SelectItem>
@@ -357,7 +434,7 @@ export default function SearchPage() {
                   <div className="mt-8 flex justify-center gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      onClick={() => handlePageChange(Math.max(1, page - 1))}
                       disabled={page === 1}
                     >
                       Trước
@@ -380,7 +457,7 @@ export default function SearchPage() {
                             <Button
                               key={pageNum}
                               variant={page === pageNum ? "default" : "outline"}
-                              onClick={() => setPage(pageNum)}
+                              onClick={() => handlePageChange(pageNum)}
                             >
                               {pageNum}
                             </Button>
@@ -390,9 +467,7 @@ export default function SearchPage() {
                     </div>
                     <Button
                       variant="outline"
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
+                      onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
                       disabled={page === totalPages}
                     >
                       Sau
