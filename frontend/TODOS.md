@@ -32,6 +32,11 @@
 - [x] Admin Product Management with filtering and moderation
 - [x] Admin User Management with seller upgrade approval
 
+## Additional fix:
+- [] Update backend search reponse to add highest bidder info
+- [] Update backend search response to use timestamp instead of always-changing time left
+- [] 
+
 ---
 
 ## 📋 To Do

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ProductCard from "@/components/ProductCard";
 import {
   Search as SearchIcon,
   Filter,
@@ -67,17 +68,18 @@ export default function SearchPage() {
   const initialCategory = searchParams.get("categoryId") || "all";
 
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>(initialCategory);
   const [sortBy, setSortBy] = useState<string>("endTime");
   const [order, setOrder] = useState<string>("asc");
   const [page, setPage] = useState(1);
   const [limit] = useState(12);
-  
+
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [categories, setCategories] = useState<{ value: string; label: string }[]>([
-    { value: "all", label: "Tất cả danh mục" },
-  ]);
+  const [categories, setCategories] = useState<
+    { value: string; label: string }[]
+  >([{ value: "all", label: "Tất cả danh mục" }]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,11 +121,12 @@ export default function SearchPage() {
     const fetchProducts = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const params = new URLSearchParams();
         if (searchQuery) params.append("q", searchQuery);
-        if (selectedCategory && selectedCategory !== "all") params.append("categoryId", selectedCategory);
+        if (selectedCategory && selectedCategory !== "all")
+          params.append("categoryId", selectedCategory);
         params.append("page", page.toString());
         params.append("limit", limit.toString());
         params.append("sortBy", sortBy);
@@ -158,7 +161,8 @@ export default function SearchPage() {
     // Update URL params
     const params = new URLSearchParams();
     if (searchQuery) params.set("q", searchQuery);
-    if (selectedCategory && selectedCategory !== "all") params.set("categoryId", selectedCategory);
+    if (selectedCategory && selectedCategory !== "all")
+      params.set("categoryId", selectedCategory);
     setSearchParams(params);
   };
 
@@ -187,46 +191,19 @@ export default function SearchPage() {
     navigate(`/product/${productId}`);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
-  };
-
-  const getTimeRemaining = (endTime: string) => {
-    const end = new Date(endTime).getTime();
-    const now = Date.now();
-    const diff = end - now;
-
-    if (diff <= 0) return "Đã kết thúc";
-
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      return `${days} ngày`;
-    }
-    if (hours > 0) {
-      return `${hours} giờ ${minutes} phút`;
-    }
-    return `${minutes} phút`;
-  };
-
   const totalPages = Math.ceil(totalProducts / limit);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <div className="container mx-auto px-4 py-8">
         {/* Search Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground mb-3">
             Tìm kiếm sản phẩm
           </h1>
-          <p className="text-gray-600">
+          <p className="text-lg text-muted-foreground">
             {searchQuery
               ? `Kết quả tìm kiếm cho "${searchQuery}"`
               : "Nhập từ khóa để tìm kiếm sản phẩm"}
@@ -234,10 +211,10 @@ export default function SearchPage() {
         </div>
 
         {/* Search Bar */}
-        <Card className="p-6 mb-6">
+        <Card className="p-6 mb-8 shadow-sm">
           <form onSubmit={handleSearch} className="flex gap-4">
             <div className="flex-1 relative">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
               <Input
                 type="text"
                 placeholder="Tìm kiếm sản phẩm đấu giá..."
@@ -246,16 +223,18 @@ export default function SearchPage() {
                 className="pl-10"
               />
             </div>
-            <Button type="submit">Tìm kiếm</Button>
+            <Button type="submit" size="lg">
+              Tìm kiếm
+            </Button>
           </form>
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Card className="p-6 sticky top-4 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Filter className="w-5 h-5" />
                   Bộ lọc
                 </h2>
@@ -273,10 +252,13 @@ export default function SearchPage() {
               <div className="space-y-6">
                 {/* Category Filter */}
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label className="text-sm font-medium text-foreground mb-2 block">
                     Danh mục
                   </label>
-                  <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={handleCategoryChange}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -292,11 +274,11 @@ export default function SearchPage() {
 
                 {/* Sort By */}
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label className="text-sm font-medium text-foreground mb-2 block">
                     Sắp xếp
                   </label>
-                  <Select 
-                    value={`${sortBy}-${order}`} 
+                  <Select
+                    value={`${sortBy}-${order}`}
                     onValueChange={handleSortChange}
                   >
                     <SelectTrigger>
@@ -305,9 +287,15 @@ export default function SearchPage() {
                     <SelectContent>
                       <SelectItem value="endTime-asc">Sắp kết thúc</SelectItem>
                       <SelectItem value="endTime-desc">Mới nhất</SelectItem>
-                      <SelectItem value="price-asc">Giá thấp đến cao</SelectItem>
-                      <SelectItem value="price-desc">Giá cao đến thấp</SelectItem>
-                      <SelectItem value="bidCount-desc">Nhiều lượt đấu giá</SelectItem>
+                      <SelectItem value="price-asc">
+                        Giá thấp đến cao
+                      </SelectItem>
+                      <SelectItem value="price-desc">
+                        Giá cao đến thấp
+                      </SelectItem>
+                      <SelectItem value="bidCount-desc">
+                        Nhiều lượt đấu giá
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -318,29 +306,35 @@ export default function SearchPage() {
           {/* Results */}
           <div className="lg:col-span-3">
             {/* Results Count */}
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-gray-600">
-                Tìm thấy <strong>{totalProducts}</strong> sản phẩm
+            <div className="mb-6 flex items-center justify-between">
+              <p className="text-base text-muted-foreground">
+                Tìm thấy{" "}
+                <span className="font-semibold text-foreground">
+                  {totalProducts}
+                </span>{" "}
+                sản phẩm
               </p>
             </div>
 
             {/* Loading State */}
             {loading && (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
               </div>
             )}
 
             {/* Error State */}
             {error && (
-              <Card className="p-12">
+              <Card className="p-12 shadow-sm">
                 <div className="text-center">
-                  <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <AlertCircle className="w-16 h-16 text-destructive mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     Đã xảy ra lỗi
                   </h3>
-                  <p className="text-gray-600 mb-6">{error}</p>
-                  <Button onClick={() => window.location.reload()}>Thử lại</Button>
+                  <p className="text-muted-foreground mb-6">{error}</p>
+                  <Button onClick={() => window.location.reload()}>
+                    Thử lại
+                  </Button>
                 </div>
               </Card>
             )}
@@ -350,54 +344,11 @@ export default function SearchPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {products.map((product) => (
-                    <Card
+                    <ProductCard
                       key={product.id}
-                      className={`overflow-hidden cursor-pointer hover:shadow-lg transition-shadow ${
-                        product.isNew ? "ring-2 ring-yellow-400" : ""
-                      }`}
-                      onClick={() => handleProductClick(product.id)}
-                    >
-                      <div className="relative">
-                        <img
-                          src={
-                            product.images && product.images.length > 0
-                              ? product.images[0]
-                              : "https://via.placeholder.com/400x300"
-                          }
-                          alt={product.title}
-                          className="w-full h-48 object-cover"
-                        />
-                        <div className="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded text-sm font-medium">
-                          {getTimeRemaining(product.endTime)}
-                        </div>
-                        {product.isNew && (
-                          <div className="absolute top-2 left-2 bg-yellow-400 text-gray-900 px-2 py-1 rounded text-sm font-bold">
-                            MỚI
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                          {product.title}
-                        </h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Giá hiện tại</span>
-                            <span className="text-lg font-bold text-primary">
-                              {formatPrice(parseFloat(product.currentPrice))}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm text-gray-600">
-                            <span>{product._count?.bids || 0} lượt đấu giá</span>
-                            {product.category && (
-                              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                {product.category.name}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
+                      product={product}
+                      onClick={handleProductClick}
+                    />
                   ))}
                 </div>
 
@@ -412,31 +363,36 @@ export default function SearchPage() {
                       Trước
                     </Button>
                     <div className="flex items-center gap-2">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (page <= 3) {
-                          pageNum = i + 1;
-                        } else if (page >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = page - 2 + i;
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (page <= 3) {
+                            pageNum = i + 1;
+                          } else if (page >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = page - 2 + i;
+                          }
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={page === pageNum ? "default" : "outline"}
+                              onClick={() => setPage(pageNum)}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
                         }
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={page === pageNum ? "default" : "outline"}
-                            onClick={() => setPage(pageNum)}
-                          >
-                            {pageNum}
-                          </Button>
-                        );
-                      })}
+                      )}
                     </div>
                     <Button
                       variant="outline"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={page === totalPages}
                     >
                       Sau
@@ -448,13 +404,13 @@ export default function SearchPage() {
 
             {/* Empty State */}
             {!loading && !error && products.length === 0 && (
-              <Card className="p-12">
+              <Card className="p-12 shadow-sm">
                 <div className="text-center">
-                  <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     Không tìm thấy sản phẩm
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-muted-foreground mb-6">
                     Không có sản phẩm nào phù hợp với từ khóa tìm kiếm của bạn.
                     <br />
                     Vui lòng thử lại với từ khóa khác hoặc điều chỉnh bộ lọc.
