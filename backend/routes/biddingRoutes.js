@@ -8,7 +8,7 @@ import { authenticateToken } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 // All routes require authentication
-// router.use(authenticateToken);
+router.use(authenticateToken);
 
 /**
  * @route   POST /api/bids

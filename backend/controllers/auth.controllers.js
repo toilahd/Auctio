@@ -6,7 +6,7 @@ import UserModel from "../models/User.js";
 
 const prisma = new PrismaClient();
 
-const ACCESS_TOKEN_AGE = "2min";
+const ACCESS_TOKEN_AGE = "30s";
 const REFRESH_TOKEN_AGE = "30d";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -66,7 +66,7 @@ export function whoAmI(req, res) {
   if (req.user) {
     return res.json({
       user: {
-        id: req.user.userId,
+        id: req.user.id,
         email: req.user.email,
         fullName: req.user.fullName,
         role: req.user.role,
@@ -182,7 +182,7 @@ export async function login(req, res) {
 
   // All good, create tokens
   const userInfoPayload = {
-    userId: foundUser.id,
+    id: foundUser.id,
     fullName: foundUser.fullName,
     email: foundUser.email,
     role: foundUser.role,
@@ -325,7 +325,7 @@ export async function signup(req, res) {
   // If there is a OTP screen, update the JWT with correct isVerified
   // TODO: OTP logic
   const userInfoPayload = {
-    userId: newUser.id,
+    id: newUser.id,
     fullName: newUser.fullName,
     email: newUser.email,
     role: newUser.role,
@@ -372,7 +372,7 @@ export function logout(req, res) {
     return res.status(401).json({ message: "Not authenticated" });
   }
 
-  UserModel.update(user.userId, { resetToken: null });
+  UserModel.update(user.id, { resetToken: null });
 
   res.clearCookie("access");
   res.clearCookie("refresh");
@@ -421,14 +421,14 @@ export async function refreshToken(req, res) {
     return res.status(401).json({ message: "Invalid refresh token" });
   }
 
-  const storedUser = await UserModel.findById(user.userId);
+  const storedUser = await UserModel.findById(user.id);
 
   if (!storedUser || storedUser.resetToken !== refreshToken) {
     return res.status(401).json({ message: "Invalid refresh token" });
   }
 
   const userInfoPayload = {
-    userId: storedUser.id,
+    id: storedUser.id,
     fullName: storedUser.fullName,
     email: storedUser.email,
     role: storedUser.role,
@@ -463,7 +463,7 @@ export function googleOAuthCallback(req, res) {
   }
 
   const userInfoPayload = {
-    userId: user.id,
+    id: user.id,
     fullName: user.fullName,
     email: user.email,
     role: user.role,

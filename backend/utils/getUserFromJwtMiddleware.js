@@ -27,7 +27,15 @@ const getUserFromJwt = (req, res, next) => {
   }
   req.user = null;
   req.tokenError = tokenError || error;
-  next();
+
+  if (req.user !== null) {
+    next();
+  } else {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: " + req.tokenError,
+    });
+  }
 };
 
 export default getUserFromJwt;
