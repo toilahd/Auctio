@@ -11,7 +11,9 @@ router.use(
     content: swaggerDoc,
     metaData: {
       title: "Auction API Documentation",
-    }
+    },
+    theme: "elysiajs",
+    darkMode: false,
   }),
 );
 

@@ -5,11 +5,14 @@ import { getLogger } from '../config/logger.js';
 const logger = getLogger('UserController');
 
 class UserController {
-  /**
-   * GET /api/users/profile
-   * Get current user profile
-   */
   async getProfile(req, res) {
+    /*
+     * GET /api/users/profile
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Get current user profile'
+     * #swagger.description = 'Get current user profile'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     */
     try {
       const userId = req.user.id;
 
@@ -28,11 +31,15 @@ class UserController {
     }
   }
 
-  /**
-   * PUT /api/users/profile
-   * Update user profile
-   */
   async updateProfile(req, res) {
+    /*
+     * PUT /api/users/profile
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Update user profile'
+     * #swagger.description = 'Update user profile'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['body'] = { in: 'body', description: 'User profile data', required: true, schema: { type: 'object', properties: { email: { type: 'string' }, fullName: { type: 'string' }, address: { type: 'string' }, dateOfBirth: { type: 'string' } } } }
+     */
     try {
       const userId = req.user.id;
       const { email, fullName, address, dateOfBirth } = req.body;
@@ -58,11 +65,15 @@ class UserController {
     }
   }
 
-  /**
-   * POST /api/users/change-password
-   * Change password
-   */
   async changePassword(req, res) {
+    /*
+     * POST /api/users/change-password
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Change password'
+     * #swagger.description = 'Change password'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['body'] = { in: 'body', description: 'Password change data', required: true, schema: { type: 'object', properties: { oldPassword: { type: 'string' }, newPassword: { type: 'string' } }, required: ['oldPassword', 'newPassword'] } }
+     */
     try {
       const userId = req.user.id;
       const { oldPassword, newPassword } = req.body;
@@ -96,11 +107,16 @@ class UserController {
     }
   }
 
-  /**
-   * GET /api/users/ratings
-   * Get user ratings
-   */
   async getRatings(req, res) {
+    /*
+     * GET /api/users/ratings
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Get user ratings'
+     * #swagger.description = 'Get user ratings'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['page'] = { in: 'query', description: 'Page number', type: 'integer', default: 1 }
+     * #swagger.parameters['limit'] = { in: 'query', description: 'Items per page', type: 'integer', default: 20 }
+     */
     try {
       const userId = req.user.id;
       const { page = 1, limit = 20 } = req.query;
@@ -124,11 +140,16 @@ class UserController {
     }
   }
 
-  /**
-   * GET /api/users/bidding-products
-   * Get products user is bidding on
-   */
   async getBiddingProducts(req, res) {
+    /*
+     * GET /api/users/bidding-products
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Get products user is bidding on'
+     * #swagger.description = 'Get products user is bidding on'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['page'] = { in: 'query', description: 'Page number', type: 'integer', default: 1 }
+     * #swagger.parameters['limit'] = { in: 'query', description: 'Items per page', type: 'integer', default: 20 }
+     */
     try {
       const userId = req.user.id;
       const { page = 1, limit = 20 } = req.query;
@@ -152,11 +173,16 @@ class UserController {
     }
   }
 
-  /**
-   * GET /api/users/won-products
-   * Get products user has won
-   */
   async getWonProducts(req, res) {
+    /*
+     * GET /api/users/won-products
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Get products user has won'
+     * #swagger.description = 'Get products user has won'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['page'] = { in: 'query', description: 'Page number', type: 'integer', default: 1 }
+     * #swagger.parameters['limit'] = { in: 'query', description: 'Items per page', type: 'integer', default: 20 }
+     */
     try {
       const userId = req.user.id;
       const { page = 1, limit = 20 } = req.query;
@@ -180,11 +206,15 @@ class UserController {
     }
   }
 
-  /**
-   * POST /api/users/rate-seller
-   * Rate a seller
-   */
   async rateSeller(req, res) {
+    /*
+     * POST /api/users/rate-seller
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Rate a seller'
+     * #swagger.description = 'Rate a seller'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['body'] = { in: 'body', description: 'Rating data', required: true, schema: { type: 'object', properties: { toUserId: { type: 'string' }, type: { type: 'string', enum: ['POSITIVE', 'NEGATIVE'] }, comment: { type: 'string' }, orderId: { type: 'string' } }, required: ['toUserId', 'type'] } }
+     */
     try {
       const fromUserId = req.user.id;
       const { toUserId, type, comment, orderId } = req.body;
@@ -225,11 +255,14 @@ class UserController {
     }
   }
 
-  /**
-   * POST /api/users/request-seller-upgrade
-   * Request upgrade to seller
-   */
   async requestSellerUpgrade(req, res) {
+    /*
+     * POST /api/users/request-seller-upgrade
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Request upgrade to seller'
+     * #swagger.description = 'Request upgrade to seller'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     */
     try {
       const userId = req.user.id;
 

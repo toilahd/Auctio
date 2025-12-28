@@ -5,11 +5,15 @@ import { getLogger } from '../config/logger.js';
 const logger = getLogger('WatchlistController');
 
 class WatchlistController {
-  /**
-   * POST /api/watchlist
-   * Add product to watchlist
-   */
   async addToWatchlist(req, res) {
+    /*
+     * POST /api/watchlist
+     * #swagger.tags = ['Watchlist']
+     * #swagger.summary = 'Add product to watchlist'
+     * #swagger.description = 'Add product to watchlist'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['body'] = { in: 'body', description: 'Product data', required: true, schema: { type: 'object', properties: { productId: { type: 'string' } }, required: ['productId'] } }
+     */
     try {
       const { productId } = req.body;
       const userId = req.user.id;
@@ -37,11 +41,15 @@ class WatchlistController {
     }
   }
 
-  /**
-   * DELETE /api/watchlist/:productId
-   * Remove product from watchlist
-   */
   async removeFromWatchlist(req, res) {
+    /*
+     * DELETE /api/watchlist/:productId
+     * #swagger.tags = ['Watchlist']
+     * #swagger.summary = 'Remove product from watchlist'
+     * #swagger.description = 'Remove product from watchlist'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['productId'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+     */
     try {
       const { productId } = req.params;
       const userId = req.user.id;
@@ -61,11 +69,16 @@ class WatchlistController {
     }
   }
 
-  /**
-   * GET /api/watchlist
-   * Get user's watchlist
-   */
   async getWatchlist(req, res) {
+    /*
+     * GET /api/watchlist
+     * #swagger.tags = ['Watchlist']
+     * #swagger.summary = 'Get user watchlist'
+     * #swagger.description = 'Get user watchlist'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['page'] = { in: 'query', description: 'Page number', type: 'integer', default: 1 }
+     * #swagger.parameters['limit'] = { in: 'query', description: 'Items per page', type: 'integer', default: 20 }
+     */
     try {
       const userId = req.user.id;
       const { page = 1, limit = 20 } = req.query;
@@ -89,11 +102,15 @@ class WatchlistController {
     }
   }
 
-  /**
-   * GET /api/watchlist/check/:productId
-   * Check if product is in watchlist
-   */
   async checkWatchlist(req, res) {
+    /*
+     * GET /api/watchlist/check/:productId
+     * #swagger.tags = ['Watchlist']
+     * #swagger.summary = 'Check if product is in watchlist'
+     * #swagger.description = 'Check if product is in watchlist'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['productId'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+     */
     try {
       const { productId } = req.params;
       const userId = req.user.id;
