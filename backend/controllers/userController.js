@@ -1,8 +1,8 @@
 // controllers/userController.js
-import userService from '../services/userService.js';
-import { getLogger } from '../config/logger.js';
+import userService from "../services/userService.js";
+import { getLogger } from "../config/logger.js";
 
-const logger = getLogger('UserController');
+const logger = getLogger("UserController");
 
 class UserController {
   async getProfile(req, res) {
@@ -20,13 +20,46 @@ class UserController {
 
       return res.status(200).json({
         success: true,
-        data: user
+        data: user,
       });
     } catch (error) {
-      logger.error('Error in getProfile:', error);
+      logger.error("Error in getProfile:", error);
       return res.status(500).json({
         success: false,
-        message: 'Failed to get profile'
+        message: "Failed to get profile",
+      });
+    }
+  }
+
+  async getProfileById(req, res) {
+    /*
+     * GET /api/users/profile/:id
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Get user profile by ID'
+     * #swagger.description = 'Get user profile by ID'
+     * #swagger.parameters['id'] = { in: 'path', description: 'User ID', required: true, type: 'string' }
+     */
+    try {
+      const { id } = req.params;
+
+      const user = await userService.getUserProfile(id);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: user,
+      });
+    } catch (error) {
+      logger.error("Error in getProfileById:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to get user profile",
       });
     }
   }
@@ -48,19 +81,19 @@ class UserController {
         email,
         fullName,
         address,
-        dateOfBirth
+        dateOfBirth,
       });
 
       return res.status(200).json({
         success: true,
         data: user,
-        message: 'Profile updated successfully'
+        message: "Profile updated successfully",
       });
     } catch (error) {
-      logger.error('Error in updateProfile:', error);
+      logger.error("Error in updateProfile:", error);
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to update profile'
+        message: error.message || "Failed to update profile",
       });
     }
   }
@@ -81,14 +114,14 @@ class UserController {
       if (!oldPassword || !newPassword) {
         return res.status(400).json({
           success: false,
-          message: 'Old password and new password are required'
+          message: "Old password and new password are required",
         });
       }
 
       if (newPassword.length < 6) {
         return res.status(400).json({
           success: false,
-          message: 'New password must be at least 6 characters long'
+          message: "New password must be at least 6 characters long",
         });
       }
 
@@ -96,13 +129,13 @@ class UserController {
 
       return res.status(200).json({
         success: true,
-        message: 'Password changed successfully'
+        message: "Password changed successfully",
       });
     } catch (error) {
-      logger.error('Error in changePassword:', error);
+      logger.error("Error in changePassword:", error);
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to change password'
+        message: error.message || "Failed to change password",
       });
     }
   }
@@ -129,13 +162,46 @@ class UserController {
 
       return res.status(200).json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
-      logger.error('Error in getRatings:', error);
+      logger.error("Error in getRatings:", error);
       return res.status(500).json({
         success: false,
-        message: 'Failed to get ratings'
+        message: "Failed to get ratings",
+      });
+    }
+  }
+
+  async getRatingsByUserId(req, res) {
+    /*
+     * GET /api/users/:id/ratings
+     * #swagger.tags = ['Users']
+     * #swagger.summary = 'Get ratings for a specific user'
+     * #swagger.description = 'Get ratings for a specific user by ID'
+     * #swagger.parameters['id'] = { in: 'path', description: 'User ID', type: 'string', required: true }
+     * #swagger.parameters['page'] = { in: 'query', description: 'Page number', type: 'integer', default: 1 }
+     * #swagger.parameters['limit'] = { in: 'query', description: 'Items per page', type: 'integer', default: 20 }
+     */
+    try {
+      const { id } = req.params;
+      const { page = 1, limit = 20 } = req.query;
+
+      const result = await userService.getUserRatings(
+        id,
+        parseInt(page),
+        parseInt(limit)
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      logger.error("Error in getRatingsByUserId:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to get ratings",
       });
     }
   }
@@ -162,13 +228,13 @@ class UserController {
 
       return res.status(200).json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
-      logger.error('Error in getBiddingProducts:', error);
+      logger.error("Error in getBiddingProducts:", error);
       return res.status(500).json({
         success: false,
-        message: 'Failed to get bidding products'
+        message: "Failed to get bidding products",
       });
     }
   }
@@ -195,13 +261,13 @@ class UserController {
 
       return res.status(200).json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
-      logger.error('Error in getWonProducts:', error);
+      logger.error("Error in getWonProducts:", error);
       return res.status(500).json({
         success: false,
-        message: 'Failed to get won products'
+        message: "Failed to get won products",
       });
     }
   }
@@ -222,14 +288,14 @@ class UserController {
       if (!toUserId || !type) {
         return res.status(400).json({
           success: false,
-          message: 'Seller ID and rating type are required'
+          message: "Seller ID and rating type are required",
         });
       }
 
-      if (!['POSITIVE', 'NEGATIVE'].includes(type)) {
+      if (!["POSITIVE", "NEGATIVE"].includes(type)) {
         return res.status(400).json({
           success: false,
-          message: 'Rating type must be POSITIVE or NEGATIVE'
+          message: "Rating type must be POSITIVE or NEGATIVE",
         });
       }
 
@@ -244,13 +310,13 @@ class UserController {
       return res.status(201).json({
         success: true,
         data: rating,
-        message: 'Rating submitted successfully'
+        message: "Rating submitted successfully",
       });
     } catch (error) {
-      logger.error('Error in rateSeller:', error);
+      logger.error("Error in rateSeller:", error);
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to submit rating'
+        message: error.message || "Failed to submit rating",
       });
     }
   }
@@ -271,17 +337,17 @@ class UserController {
       return res.status(200).json({
         success: true,
         data: result,
-        message: 'Seller upgrade request submitted. Admin will review within 7 days.'
+        message:
+          "Seller upgrade request submitted. Admin will review within 7 days.",
       });
     } catch (error) {
-      logger.error('Error in requestSellerUpgrade:', error);
+      logger.error("Error in requestSellerUpgrade:", error);
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to request seller upgrade'
+        message: error.message || "Failed to request seller upgrade",
       });
     }
   }
 }
 
 export default new UserController();
-

@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Hammer, Tag, Calendar } from "lucide-react";
+import { Clock, Hammer, Tag, Calendar, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 interface Product {
   id: string;
@@ -48,6 +50,15 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, onClick }: ProductCardProps) => {
+  const navigate = useNavigate();
+  const [now] = useState(() => Date.now());
+
+  const handleSellerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (product.seller?.id) {
+      navigate(`/profile/${product.seller.id}`);
+    }
+  };
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -66,7 +77,6 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 
   const getTimeRemaining = (endTime: string) => {
     const end = new Date(endTime).getTime();
-    const now = Date.now();
     const diff = end - now;
 
     if (diff <= 0) return "Đã kết thúc";
@@ -167,6 +177,25 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
             <code className="px-2 py-0.5 bg-muted rounded text-muted-foreground font-mono">
               {product.currentWinnerId.substring(0, 8)}...
             </code>
+          </div>
+        )}
+
+        {/* Seller Info */}
+        {product.seller && (
+          <div 
+            className="flex items-center gap-2 p-2 -mx-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+            onClick={handleSellerClick}
+            title="Xem trang người bán"
+          >
+            <div className="w-8 h-8 bg-linear-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center shrink-0">
+              <User className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground">Người bán</p>
+              <p className="text-sm font-medium text-foreground truncate">
+                {product.seller.fullName}
+              </p>
+            </div>
           </div>
         )}
 

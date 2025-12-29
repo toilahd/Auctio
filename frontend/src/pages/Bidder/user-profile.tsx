@@ -85,13 +85,14 @@ export default function UserProfilePage() {
         setIsLoading(true);
         setError(null);
 
-        // Fetch user profile
-        const profileResponse = await fetch(
-          `${BACKEND_URL}/api/users/profile`,
-          {
-            credentials: "include",
-          }
-        );
+        // Fetch user profile - use ID if viewing another user, otherwise get own profile
+        const profileUrl = id 
+          ? `${BACKEND_URL}/api/users/profile/${id}`
+          : `${BACKEND_URL}/api/users/profile`;
+        
+        const profileResponse = await fetch(profileUrl, {
+          credentials: "include",
+        });
 
         if (!profileResponse.ok) {
           throw new Error("Failed to fetch user profile");
@@ -126,14 +127,15 @@ export default function UserProfilePage() {
           });
         }
 
-        // Fetch ratings/reviews
+        // Fetch ratings/reviews - use ID if viewing another user
         setIsLoadingReviews(true);
-        const ratingsResponse = await fetch(
-          `${BACKEND_URL}/api/users/ratings?page=1&limit=20`,
-          {
-            credentials: "include",
-          }
-        );
+        const ratingsUrl = id
+          ? `${BACKEND_URL}/api/users/${id}/ratings?page=1&limit=20`
+          : `${BACKEND_URL}/api/users/ratings?page=1&limit=20`;
+        
+        const ratingsResponse = await fetch(ratingsUrl, {
+          credentials: "include",
+        });
 
         if (ratingsResponse.ok) {
           const ratingsData = await ratingsResponse.json();
@@ -466,12 +468,16 @@ export default function UserProfilePage() {
                 reviews.map((review) => (
                   <Card key={review.id} className="p-6">
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
+                      <div 
+                        className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 -m-2 p-2 rounded-lg transition-colors"
+                        onClick={() => navigate(`/profile/${review.fromUserId}`)}
+                        title="Xem trang người dùng"
+                      >
                         <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                           <User className="w-5 h-5 text-gray-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-gray-900 hover:text-primary transition-colors">
                             {review.fromUser.fullName}
                           </p>
                           <p className="text-xs text-gray-500">
