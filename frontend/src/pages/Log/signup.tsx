@@ -70,7 +70,7 @@ const SignUp = () => {
       navigate("/verify-email");
     } catch (error) {
       console.error("Signup failed:", error);
-      alert("Đăng ký thất bại. Vui lòng thử lại.");
+      // Show error message to user through react hook form
     }
   };
 

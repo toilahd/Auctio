@@ -29,8 +29,7 @@ const ForgotPassword = () => {
 
   const onSubmit: SubmitHandler<any> = async (data) => {
     try {
-      // TODO: Replace with actual API endpoint when backend implements forgot password
-      const response = await fetch(`${BACKEND_URL}/forgot-password`, {
+      const response = await fetch(`${BACKEND_URL}/auth/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -38,14 +37,16 @@ const ForgotPassword = () => {
         body: JSON.stringify({ email: data.email }),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error("Không thể gửi email đặt lại mật khẩu");
+        throw new Error(responseData.message || "Không thể gửi email đặt lại mật khẩu");
       }
 
       setIsSubmitted(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Forgot password failed:", error);
-      alert("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      alert(error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
     }
   };
 

@@ -1,8 +1,10 @@
 import * as z from "zod";
 import { PrismaClient, UserRole } from "@prisma/client";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { createJwt, decodeJwt } from "./../utils/jwtUtil.js";
 import UserModel from "../models/User.js";
+import { sendEmail } from "../config/email.js";
 
 const prisma = new PrismaClient();
 
@@ -365,6 +367,152 @@ export async function signup(req, res) {
     });
 }
 
+export async function createNewOtp(req, res) {
+  /*
+    #swagger.summary = 'Create new OTP for email verification'
+    #swagger.description = 'Generate and send a new OTP code to the user email for verification.'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.responses[200] = {
+      description: 'New OTP sent successfully.',
+      schema: { message: 'New OTP sent successfully' }
+    }
+    #swagger.responses[401] = {
+      description: 'Not authenticated.',
+      schema: { message: 'Not authenticated' }
+    }
+    #swagger.responses[500] = {
+      description: 'Failed to generate or send OTP.',
+      schema: { message: 'Failed to generate or send OTP' }
+    }
+  */
+
+  const user = await UserModel.findById(req.user.id);
+  if (!user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  if (user.isVerified) {
+    return res.json({ message: "Email already verified" });
+  }
+
+  try {
+    const otpToken = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log(`Generated new OTP for ${user.email}: ${otpToken}`);
+    // In production, send this OTP via email/SMS
+    await sendEmail(
+      user.email,
+      "Your New OTP Code",
+      `Your new OTP code is: ${otpToken}`
+    );
+    // Store OTP token in database or cache with expiration
+    await UserModel.update(user.id, { verificationToken: otpToken });
+
+    res.json({ message: "New OTP sent successfully" });
+  } catch (error) {
+    console.log("Failed to generate or send OTP:", error);
+    return res.status(500).json({ message: "Failed to generate or send OTP" });
+  }
+}
+
+export async function verifyEmail(req, res) {
+  /*
+    #swagger.summary = 'Verify user email'
+    #swagger.description = 'Verify the user email using the OTP code sent to their email.'
+    #swagger.parameters['body'] = {
+      in: 'body',
+      description: 'Email verification details',
+      required: true,
+      schema: {
+        otp: '123456'
+      }
+    }
+    #swagger.responses[200] = {
+      description: 'Email verified successfully.',
+      schema: { message: 'Email verified successfully', accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
+    }
+    #swagger.responses[400] = {
+      description: 'Invalid input.',
+      schema: { message: 'Invalid input' }
+    }
+    #swagger.responses[401] = {
+      description: 'Invalid or expired OTP.',
+      schema: { message: 'Invalid or expired OTP' }
+    }
+  */
+
+  // Make validation schema
+  const verifySchema = z.object({
+    otp: z.string().min(6).max(6),
+  });
+
+  // Validate input
+  const parseResult = verifySchema.safeParse(req.body);
+  if (!parseResult.success) {
+    console.log(
+      "Email verification validation error:",
+      parseResult.error.message
+    );
+    return res.status(400).json({
+      message: "Invalid input",
+      errors: JSON.parse(parseResult.error.message),
+    });
+  }
+
+  const { otp } = parseResult.data;
+
+  const user = await UserModel.findById(req.user.id);
+  if (!user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  if (user.isVerified) {
+    return res.json({ message: "Email already verified" });
+  }
+
+  // Check OTP
+  if (user.verificationToken !== otp) {
+    console.log(
+      `Invalid OTP for user ${user.email}: provided ${otp}, expected ${user.verificationToken}`
+    );
+    return res.status(401).json({ message: "Invalid or expired OTP" });
+  }
+
+  // Update user as verified and clear verification token
+  UserModel.update(user.id, { isVerified: true, verificationToken: null });
+
+  console.log(
+    `User email verified successfully: ${user.email}, ID: ${user.id}`
+  );
+
+  const userInfoPayload = {
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    role: user.role,
+    isVerified: user.isVerified,
+  };
+
+  const accessToken = createJwt(userInfoPayload, {
+    expiresIn: ACCESS_TOKEN_AGE,
+  });
+
+  const refreshToken = createJwt(userInfoPayload, {
+    expiresIn: REFRESH_TOKEN_AGE,
+  });
+
+  // Update stored refresh token
+  UserModel.update(user.id, { resetToken: refreshToken });
+
+  res
+    .cookie("access", accessToken, { httpOnly: true })
+    .cookie("refresh", refreshToken, { httpOnly: true })
+    .json({
+      message: "Email verified successfully",
+      accessToken,
+      refreshToken,
+    });
+}
+
 export function logout(req, res) {
   /*
     #swagger.summary = 'User logout'
@@ -507,5 +655,160 @@ export function googleOAuthCallback(req, res) {
         accessToken: accessToken,
         refreshToken: refreshToken,
       });
+  }
+}
+
+export async function forgotPassword(req, res) {
+  /*
+    #swagger.summary = 'Request password reset'
+    #swagger.description = 'Send password reset email with token'
+    #swagger.parameters['body'] = {
+      in: 'body',
+      description: 'User email',
+      required: true,
+      schema: { email: 'user@example.com' }
+    }
+    #swagger.responses[200] = {
+      description: 'Reset email sent successfully'
+    }
+  */
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    // Always return success to prevent email enumeration
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: "If the email exists, a reset link will be sent",
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Save token to database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetToken,
+        resetTokenExpiry,
+      },
+    });
+
+    // Send email with reset link
+    const resetLink = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
+    await sendEmail({
+      to: user.email,
+      subject: "Đặt lại mật khẩu - Auctio",
+      html: `
+        <h2>Yêu cầu đặt lại mật khẩu</h2>
+        <p>Xin chào ${user.fullName},</p>
+        <p>Bạn đã yêu cầu đặt lại mật khẩu. Nhấp vào link bên dưới để đặt lại mật khẩu:</p>
+        <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Đặt lại mật khẩu</a>
+        <p>Link này sẽ hết hạn sau 1 giờ.</p>
+        <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+      `,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "If the email exists, a reset link will be sent",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process password reset request",
+    });
+  }
+}
+
+export async function resetPassword(req, res) {
+  /*
+    #swagger.summary = 'Reset password with token'
+    #swagger.description = 'Reset user password using reset token'
+    #swagger.parameters['body'] = {
+      in: 'body',
+      description: 'Reset token and new password',
+      required: true,
+      schema: {
+        token: 'reset-token-here',
+        password: 'newPassword123'
+      }
+    }
+    #swagger.responses[200] = {
+      description: 'Password reset successfully'
+    }
+  */
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Token and password are required",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
+    // Find user with valid token
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: {
+          gte: new Date(), // Token not expired
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update password and clear reset token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reset password",
+    });
   }
 }
