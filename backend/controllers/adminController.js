@@ -314,3 +314,104 @@ export const deleteUser = async (req, res) => {
     });
   }
 };
+
+
+// ==================== DASHBOARD ====================
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const stats = await adminService.getDashboardStats();
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    logger.error('Get dashboard stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const getUserGrowth = async (req, res) => {
+  try {
+    const { days } = req.query;
+    const data = await adminService.getUserGrowth({
+      days: parseInt(days) || 30
+    });
+
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    logger.error('Get user growth error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const getProductGrowth = async (req, res) => {
+  try {
+    const { days } = req.query;
+    const data = await adminService.getProductGrowth({
+      days: parseInt(days) || 30
+    });
+
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    logger.error('Get product growth error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const getTopSellers = async (req, res) => {
+  try {
+    const { limit } = req.query;
+    const data = await adminService.getTopSellersByRevenue({
+      limit: parseInt(limit) || 10
+    });
+
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    logger.error('Get top sellers error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const getTopProducts = async (req, res) => {
+  try {
+    const { limit, sortBy } = req.query;
+    const data = await adminService.getTopProducts({
+      limit: parseInt(limit) || 10,
+      sortBy: sortBy || 'bids'
+    });
+
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    logger.error('Get top products error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

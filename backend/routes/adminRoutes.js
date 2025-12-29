@@ -31,6 +31,12 @@ router.get('/upgrade-requests', adminController.getUpgradeRequests);
 router.post('/upgrade-requests/:userId/approve', adminController.approveUpgradeRequest);
 router.post('/upgrade-requests/:userId/reject', adminController.rejectUpgradeRequest);
 
+// ==================== DASHBOARD ====================
+router.get('/dashboard/stats', adminController.getDashboardStats);
+router.get('/dashboard/user-growth', adminController.getUserGrowth);
+router.get('/dashboard/product-growth', adminController.getProductGrowth);
+router.get('/dashboard/top-sellers', adminController.getTopSellers);
+router.get('/dashboard/top-products', adminController.getTopProducts);
 
 export default router;
 

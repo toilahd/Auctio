@@ -312,8 +312,153 @@ class AdminService {
     return prisma.user.delete({ where: { id: userId } });
   }
 
+
+  // ==================== DASHBOARD STATISTICS ====================
+
+  async getDashboardStats() {
+    const now = new Date();
+    const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalUsers,
+      totalProducts,
+      totalBids,
+      totalOrders,
+      newUsersLast7Days,
+      newProductsLast7Days,
+      newUpgradeRequestsLast7Days,
+      activeAuctions,
+      endedAuctions,
+      totalRevenue,
+      revenueByMonth
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.product.count(),
+      prisma.bid.count(),
+      prisma.order.count(),
+      prisma.user.count({ where: { createdAt: { gte: last7Days } } }),
+      prisma.product.count({ where: { createdAt: { gte: last7Days } } }),
+      prisma.user.count({
+        where: {
+          upgradeRequested: true,
+          upgradeRequestedAt: { gte: last7Days }
+        }
+      }),
+      prisma.product.count({ where: { status: 'ACTIVE' } }),
+      prisma.product.count({ where: { status: 'ENDED' } }),
+      prisma.order.aggregate({
+        where: { isPaid: true },
+        _sum: { finalPrice: true }
+      }),
+      prisma.$queryRaw`
+        SELECT 
+          DATE_TRUNC('month', "createdAt") as month,
+          COUNT(*) as count,
+          SUM("finalPrice") as revenue
+        FROM "Order"
+        WHERE "isPaid" = true
+          AND "createdAt" >= ${last30Days}
+        GROUP BY DATE_TRUNC('month', "createdAt")
+        ORDER BY month DESC
+      `
+    ]);
+
+    const usersByRole = await prisma.user.groupBy({
+      by: ['role'],
+      _count: true
+    });
+
+    const productsByStatus = await prisma.product.groupBy({
+      by: ['status'],
+      _count: true
+    });
+
+    return {
+      overview: {
+        totalUsers,
+        totalProducts,
+        totalBids,
+        totalOrders,
+        activeAuctions,
+        endedAuctions,
+        totalRevenue: totalRevenue._sum.finalPrice || 0
+      },
+      last7Days: {
+        newUsers: newUsersLast7Days,
+        newProducts: newProductsLast7Days,
+        newUpgradeRequests: newUpgradeRequestsLast7Days
+      },
+      usersByRole,
+      productsByStatus,
+      revenueByMonth
+    };
+  }
+
+  async getUserGrowth({ days = 30 }) {
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    return prisma.$queryRaw`
+      SELECT 
+        DATE("createdAt") as date,
+        COUNT(*) as count,
+        role
+      FROM "User"
+      WHERE "createdAt" >= ${startDate}
+      GROUP BY DATE("createdAt"), role
+      ORDER BY date DESC
+    `;
+  }
+
+  async getProductGrowth({ days = 30 }) {
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    return prisma.$queryRaw`
+      SELECT 
+        DATE("createdAt") as date,
+        COUNT(*) as count,
+        status
+      FROM "Product"
+      WHERE "createdAt" >= ${startDate}
+      GROUP BY DATE("createdAt"), status
+      ORDER BY date DESC
+    `;
+  }
+
+  async getTopSellersByRevenue({ limit = 10 }) {
+    return prisma.$queryRaw`
+      SELECT 
+        u.id,
+        u."fullName",
+        u.email,
+        COUNT(DISTINCT o.id) as "orderCount",
+        SUM(o."finalPrice") as "totalRevenue"
+      FROM "User" u
+      INNER JOIN "Order" o ON u.id = o."sellerId"
+      WHERE o."isPaid" = true
+      GROUP BY u.id, u."fullName", u.email
+      ORDER BY "totalRevenue" DESC
+      LIMIT ${limit}
+    `;
+  }
+
+  async getTopProducts({ limit = 10, sortBy = 'bids' }) {
+    const orderBy = sortBy === 'price'
+        ? { currentPrice: 'desc' }
+        : { bidCount: 'desc' };
+
+    return prisma.product.findMany({
+      take: limit,
+      orderBy,
+      include: {
+        seller: { select: { id: true, fullName: true } },
+        category: true,
+        _count: { select: { bids: true, watchLists: true } }
+      }
+    });
+  }
+
 }
 
 
 export default new AdminService();
-
