@@ -12,6 +12,7 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import watchlistRoutes from "./routes/watchlistRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
@@ -53,6 +54,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
