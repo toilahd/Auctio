@@ -187,3 +187,130 @@ export const removeProduct = async (req, res) => {
     });
   }
 };
+// ==================== USER MANAGEMENT ====================
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const { page, limit, role } = req.query;
+    const result = await adminService.getAllUsers({
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 20,
+      role
+    });
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    logger.error('Get all users error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await adminService.getUserById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    logger.error('Get user error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const getUpgradeRequests = async (req, res) => {
+  try {
+    const { page, limit, status } = req.query;
+    const result = await adminService.getUpgradeRequests({
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 20,
+      status: status || 'PENDING'
+    });
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    logger.error('Get upgrade requests error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const approveUpgradeRequest = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await adminService.approveUpgradeRequest(userId);
+
+    res.json({
+      success: true,
+      data: user,
+      message: 'Upgrade request approved successfully'
+    });
+  } catch (error) {
+    logger.error('Approve upgrade request error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const rejectUpgradeRequest = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+    const user = await adminService.rejectUpgradeRequest(userId, reason);
+
+    res.json({
+      success: true,
+      data: user,
+      message: 'Upgrade request rejected'
+    });
+  } catch (error) {
+    logger.error('Reject upgrade request error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await adminService.deleteUser(id);
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    logger.error('Delete user error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

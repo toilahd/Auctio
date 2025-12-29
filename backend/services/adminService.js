@@ -151,6 +151,166 @@ class AdminService {
       }
     });
   }
+  // ==================== USER MANAGEMENT ====================
+
+  async getAllUsers({ page = 1, limit = 20, role }) {
+    const skip = (page - 1) * limit;
+    const where = role ? { role } : {};
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          role: true,
+          positiveRatings: true,
+          negativeRatings: true,
+          upgradeRequested: true,
+          upgradeRequestedAt: true,
+          upgradeStatus: true,
+          isVerified: true,
+          createdAt: true,
+          _count: {
+            select: {
+              products: true,
+              bids: true,
+              watchList: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.user.count({ where })
+    ]);
+
+    return {
+      users,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async getUserById(id) {
+    return prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        address: true,
+        dateOfBirth: true,
+        role: true,
+        positiveRatings: true,
+        negativeRatings: true,
+        upgradeRequested: true,
+        upgradeRequestedAt: true,
+        upgradeStatus: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            products: true,
+            bids: true,
+            watchList: true,
+            ratingsGiven: true,
+            ratingsReceived: true
+          }
+        }
+      }
+    });
+  }
+
+  async getUpgradeRequests({ page = 1, limit = 20, status = 'PENDING' }) {
+    const skip = (page - 1) * limit;
+    const where = {
+      upgradeRequested: true,
+      upgradeStatus: status
+    };
+
+    const [requests, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          upgradeRequestedAt: true,
+          upgradeStatus: true,
+          positiveRatings: true,
+          negativeRatings: true,
+          createdAt: true,
+          _count: {
+            select: { bids: true }
+          }
+        },
+        orderBy: { upgradeRequestedAt: 'desc' }
+      }),
+      prisma.user.count({ where })
+    ]);
+
+    return {
+      requests,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async approveUpgradeRequest(userId) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
+    if (!user.upgradeRequested) throw new Error('No upgrade request found');
+    if (user.upgradeStatus !== 'PENDING') throw new Error('Request already processed');
+
+    return prisma.user.update({
+      where: { id: userId },
+      data: {
+        role: 'SELLER',
+        upgradeStatus: 'APPROVED'
+      }
+    });
+  }
+
+  async rejectUpgradeRequest(userId, reason) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
+    if (!user.upgradeRequested) throw new Error('No upgrade request found');
+    if (user.upgradeStatus !== 'PENDING') throw new Error('Request already processed');
+
+    return prisma.user.update({
+      where: { id: userId },
+      data: {
+        upgradeStatus: 'REJECTED',
+        upgradeRequested: false
+      }
+    });
+  }
+
+  async deleteUser(userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        _count: {
+          select: { products: true }
+        }
+      }
+    });
+
+    if (!user) throw new Error('User not found');
+    if (user._count.products > 0) {
+      throw new Error('Cannot delete user with active products');
+    }
+
+    return prisma.user.delete({ where: { id: userId } });
+  }
 
 }
 

@@ -21,6 +21,15 @@ router.get('/products', adminController.getAllProducts);
 router.get('/products/:id', adminController.getProductById);
 router.delete('/products/:id', adminController.removeProduct);
 
+// ==================== USER MANAGEMENT ====================
+router.get('/users', adminController.getAllUsers);
+router.get('/users/:id', adminController.getUserById);
+router.delete('/users/:id', adminController.deleteUser);
+
+// Upgrade requests
+router.get('/upgrade-requests', adminController.getUpgradeRequests);
+router.post('/upgrade-requests/:userId/approve', adminController.approveUpgradeRequest);
+router.post('/upgrade-requests/:userId/reject', adminController.rejectUpgradeRequest);
 
 
 export default router;
