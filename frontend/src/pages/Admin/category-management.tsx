@@ -1,9 +1,7 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -21,146 +19,140 @@ import {
   Save,
   X,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 
 interface Category {
   id: string;
   name: string;
-  slug: string;
-  description: string;
   parentId: string | null;
-  productCount: number;
-  isActive: boolean;
-  icon?: string;
+  _count?: { products: number };
+  children?: Category[];
 }
 
 export default function CategoryManagementPage() {
-  const navigate = useNavigate();
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [newCategory, setNewCategory] = useState({
     name: "",
-    slug: "",
-    description: "",
     parentId: "",
-    icon: "",
+  });
+  const [editCategory, setEditCategory] = useState({
+    name: "",
+    parentId: "",
   });
 
-  // Mock categories data
-  // TODO: Replace with API call to fetch categories
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: "1",
-      name: "Điện tử",
-      slug: "electronics",
-      description: "Các sản phẩm điện tử, công nghệ",
-      parentId: null,
-      productCount: 245,
-      isActive: true,
-      icon: "Smartphone",
-    },
-    {
-      id: "1-1",
-      name: "Điện thoại",
-      slug: "phone",
-      description: "Smartphone, điện thoại di động",
-      parentId: "1",
-      productCount: 89,
-      isActive: true,
-    },
-    {
-      id: "1-2",
-      name: "Laptop",
-      slug: "laptop",
-      description: "Máy tính xách tay",
-      parentId: "1",
-      productCount: 67,
-      isActive: true,
-    },
-    {
-      id: "1-3",
-      name: "Tablet",
-      slug: "tablet",
-      description: "Máy tính bảng",
-      parentId: "1",
-      productCount: 34,
-      isActive: true,
-    },
-    {
-      id: "2",
-      name: "Thời trang",
-      slug: "fashion",
-      description: "Quần áo, phụ kiện thời trang",
-      parentId: null,
-      productCount: 156,
-      isActive: true,
-      icon: "Shirt",
-    },
-    {
-      id: "2-1",
-      name: "Đồng hồ",
-      slug: "watches",
-      description: "Đồng hồ đeo tay",
-      parentId: "2",
-      productCount: 45,
-      isActive: true,
-    },
-    {
-      id: "2-2",
-      name: "Túi xách",
-      slug: "bags",
-      description: "Túi xách, balo",
-      parentId: "2",
-      productCount: 38,
-      isActive: true,
-    },
-    {
-      id: "3",
-      name: "Xe cộ",
-      slug: "vehicles",
-      description: "Ô tô, xe máy",
-      parentId: null,
-      productCount: 78,
-      isActive: true,
-      icon: "Car",
-    },
-  ]);
+  const fetchCategories = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`${BACKEND_URL}/api/admin/categories?limit=100`, {
+        credentials: "include",
+      });
 
-  const mainCategories = categories.filter((cat) => !cat.parentId);
-  const getSubcategories = (parentId: string) =>
-    categories.filter((cat) => cat.parentId === parentId);
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        const isJson = contentType?.includes("application/json");
+        if (isJson) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch categories");
+        }
+        throw new Error(`Failed to fetch categories (${response.status})`);
+      }
 
-  const handleCreate = () => {
+      const data = await response.json();
+      if (data.success) {
+        setCategories(data.data.categories || []);
+      }
+    } catch (err) {
+      console.error("Error fetching categories:", err);
+      const errorMessage = err instanceof Error ? err.message : "Không thể tải danh mục";
+      setError(errorMessage + " - Kiểm tra backend server");
+    } finally {
+      setLoading(false);
+    }
+  }, [BACKEND_URL]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const handleCreate = async () => {
     if (!newCategory.name.trim()) {
       alert("Vui lòng nhập tên danh mục");
       return;
     }
 
-    // TODO: Replace with API call to create category
-    const category: Category = {
-      id: Date.now().toString(),
-      name: newCategory.name,
-      slug: newCategory.slug || newCategory.name.toLowerCase().replace(/\s+/g, "-"),
-      description: newCategory.description,
-      parentId: newCategory.parentId || null,
-      productCount: 0,
-      isActive: true,
-      icon: newCategory.icon,
-    };
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/admin/categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: newCategory.name,
+          parentId: newCategory.parentId || null,
+        }),
+      });
 
-    setCategories([...categories, category]);
-    setNewCategory({ name: "", slug: "", description: "", parentId: "", icon: "" });
-    setIsCreating(false);
+      const data = await response.json();
+      if (data.success) {
+        alert("Tạo danh mục thành công!");
+        setNewCategory({ name: "", parentId: "" });
+        setIsCreating(false);
+        fetchCategories();
+      } else {
+        alert(data.message || "Không thể tạo danh mục");
+      }
+    } catch (err) {
+      console.error("Error creating category:", err);
+      alert("Lỗi khi tạo danh mục");
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleUpdate = async (id: string) => {
+    if (!editCategory.name.trim()) {
+      alert("Vui lòng nhập tên danh mục");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/admin/categories/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: editCategory.name,
+          parentId: editCategory.parentId || null,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert("Cập nhật danh mục thành công!");
+        setEditingId(null);
+        setEditCategory({ name: "", parentId: "" });
+        fetchCategories();
+      } else {
+        alert(data.message || "Không thể cập nhật danh mục");
+      }
+    } catch (err) {
+      console.error("Error updating category:", err);
+      alert("Lỗi khi cập nhật danh mục");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
     const category = categories.find((c) => c.id === id);
     if (!category) return;
 
     // Check if category has products
-    if (category.productCount > 0) {
+    if (category._count && category._count.products > 0) {
       alert(
-        `Không thể xóa danh mục "${category.name}" vì còn ${category.productCount} sản phẩm. Vui lòng di chuyển hoặc xóa các sản phẩm trước.`
+        `Không thể xóa danh mục "${category.name}" vì còn ${category._count.products} sản phẩm. Vui lòng di chuyển hoặc xóa các sản phẩm trước.`
       );
       return;
     }
@@ -175,19 +167,40 @@ export default function CategoryManagementPage() {
     }
 
     if (confirm(`Bạn có chắc muốn xóa danh mục "${category.name}"?`)) {
-      // TODO: Replace with API call to delete category
-      setCategories(categories.filter((c) => c.id !== id));
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/admin/categories/${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          alert("Xóa danh mục thành công!");
+          fetchCategories();
+        } else {
+          alert(data.message || "Không thể xóa danh mục");
+        }
+      } catch (err) {
+        console.error("Error deleting category:", err);
+        alert("Lỗi khi xóa danh mục");
+      }
     }
   };
 
-  const handleToggleActive = (id: string) => {
-    // TODO: Replace with API call to toggle category status
-    setCategories(
-      categories.map((c) =>
-        c.id === id ? { ...c, isActive: !c.isActive } : c
-      )
-    );
+  const handleStartEdit = (id: string) => {
+    const category = categories.find((c) => c.id === id);
+    if (category) {
+      setEditingId(id);
+      setEditCategory({
+        name: category.name,
+        parentId: category.parentId || "",
+      });
+    }
   };
+
+  const mainCategories = categories.filter((cat) => !cat.parentId);
+  const getSubcategories = (parentId: string) =>
+    categories.filter((cat) => cat.parentId === parentId);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -210,114 +223,90 @@ export default function CategoryManagementPage() {
           </Button>
         </div>
 
-        {/* Create Category Form */}
-        {isCreating && (
-          <Card className="mb-6 border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FolderPlus className="w-5 h-5" />
-                Tạo danh mục mới
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Tên danh mục <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      value={newCategory.name}
-                      onChange={(e) =>
-                        setNewCategory({ ...newCategory, name: e.target.value })
-                      }
-                      placeholder="VD: Điện tử"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Slug (URL)
-                    </label>
-                    <Input
-                      value={newCategory.slug}
-                      onChange={(e) =>
-                        setNewCategory({ ...newCategory, slug: e.target.value })
-                      }
-                      placeholder="electronics (tự động tạo nếu để trống)"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Danh mục cha (để trống nếu là danh mục chính)
-                  </label>
-                  <Select
-                    value={newCategory.parentId}
-                    onValueChange={(value) =>
-                      setNewCategory({ ...newCategory, parentId: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn danh mục cha" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Không có (Danh mục chính)</SelectItem>
-                      {mainCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Mô tả
-                  </label>
-                  <Textarea
-                    value={newCategory.description}
-                    onChange={(e) =>
-                      setNewCategory({
-                        ...newCategory,
-                        description: e.target.value,
-                      })
-                    }
-                    placeholder="Mô tả về danh mục này..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <Button onClick={handleCreate}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Tạo danh mục
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsCreating(false);
-                      setNewCategory({
-                        name: "",
-                        slug: "",
-                        description: "",
-                        parentId: "",
-                        icon: "",
-                      });
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Hủy
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
+        {/* Loading/Error States */}
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </div>
+        ) : error ? (
+          <Card className="p-6 mb-8 border-red-200 bg-red-50">
+            <p className="text-red-600">{error}</p>
           </Card>
-        )}
+        ) : (
+          <>
+            {/* Create Category Form */}
+            {isCreating && (
+              <Card className="mb-6 border-blue-200 bg-blue-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FolderPlus className="w-5 h-5" />
+                    Tạo danh mục mới
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        Tên danh mục <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        value={newCategory.name}
+                        onChange={(e) =>
+                          setNewCategory({ ...newCategory, name: e.target.value })
+                        }
+                        placeholder="VD: Điện tử"
+                      />
+                    </div>
 
-        {/* Categories List */}
-        <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        Danh mục cha (để trống nếu là danh mục chính)
+                      </label>
+                      <Select
+                        value={newCategory.parentId}
+                        onValueChange={(value) =>
+                          setNewCategory({ ...newCategory, parentId: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn danh mục cha" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">
+                            Không có (Danh mục chính)
+                          </SelectItem>
+                          {mainCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button onClick={handleCreate}>
+                        <Save className="w-4 h-4 mr-2" />
+                        Tạo danh mục
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsCreating(false);
+                          setNewCategory({ name: "", parentId: "" });
+                        }}
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Hủy
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Categories List */}
+            <div className="space-y-6">
           {mainCategories.map((mainCategory) => (
             <Card key={mainCategory.id}>
               <CardHeader className="bg-gray-50">
@@ -325,115 +314,176 @@ export default function CategoryManagementPage() {
                   <div className="flex items-center gap-3">
                     <Folder className="w-5 h-5 text-blue-600" />
                     <div>
-                      <CardTitle>{mainCategory.name}</CardTitle>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {mainCategory.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">
-                      {mainCategory.productCount} sản phẩm
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleToggleActive(mainCategory.id)}
-                    >
-                      {mainCategory.isActive ? "Ẩn" : "Hiện"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingId(mainCategory.id)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDelete(mainCategory.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-
-              {/* Subcategories */}
-              {getSubcategories(mainCategory.id).length > 0 && (
-                <CardContent className="pt-4">
-                  <div className="space-y-2">
-                    {getSubcategories(mainCategory.id).map((subCategory) => (
-                      <div
-                        key={subCategory.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-1 h-8 bg-blue-200 rounded" />
-                          <div>
-                            <h4 className="font-medium text-gray-900">
-                              {subCategory.name}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              {subCategory.description}
-                            </p>
+                      {editingId === mainCategory.id ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editCategory.name}
+                            onChange={(e) =>
+                              setEditCategory({
+                                ...editCategory,
+                                name: e.target.value,
+                              })
+                            }
+                            placeholder="Tên danh mục"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdate(mainCategory.id)}
+                            >
+                              <Save className="w-4 h-4 mr-2" />
+                              Lưu
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingId(null);
+                                setEditCategory({ name: "", parentId: "" });
+                              }}
+                            >
+                              <X className="w-4 h-4 mr-2" />
+                              Hủy
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">
-                            {subCategory.productCount} sản phẩm
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleToggleActive(subCategory.id)}
-                          >
-                            {subCategory.isActive ? "Ẩn" : "Hiện"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setEditingId(subCategory.id)}
+                      ) : (
+                        <CardTitle>{mainCategory.name}</CardTitle>
+                      )}
+                    </div>
+                  </div>
+                  {editingId !== mainCategory.id && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">
+                        {mainCategory._count?.products || 0} sản phẩm
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleStartEdit(mainCategory.id)}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
                             size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(subCategory.id)}
+                            variant="outline"
+                            onClick={() => handleDelete(mainCategory.id)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          ))}
-        </div>
+                      )}
+                    </div>
+                  </CardHeader>
 
-        {/* Info Card */}
-        <Card className="mt-8 border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div className="text-sm text-gray-700">
-                <p className="font-medium mb-2">Lưu ý khi xóa danh mục:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Không thể xóa danh mục đang có sản phẩm</li>
-                  <li>Không thể xóa danh mục cha khi còn danh mục con</li>
-                  <li>Nên ẩn danh mục thay vì xóa để giữ lại dữ liệu lịch sử</li>
-                </ul>
-              </div>
+                  {/* Subcategories */}
+                  {getSubcategories(mainCategory.id).length > 0 && (
+                    <CardContent className="pt-4">
+                      <div className="space-y-2">
+                        {getSubcategories(mainCategory.id).map((subCategory) => (
+                          <div
+                            key={subCategory.id}
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-1 h-8 bg-blue-200 rounded" />
+                              <div>
+                                {editingId === subCategory.id ? (
+                                  <div className="space-y-2">
+                                    <Input
+                                      value={editCategory.name}
+                                      onChange={(e) =>
+                                        setEditCategory({
+                                          ...editCategory,
+                                          name: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Tên danh mục"
+                                      className="w-64"
+                                    />
+                                    <div className="flex gap-2">
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleUpdate(subCategory.id)}
+                                      >
+                                        <Save className="w-4 h-4 mr-2" />
+                                        Lưu
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setEditingId(null);
+                                          setEditCategory({
+                                            name: "",
+                                            parentId: "",
+                                          });
+                                        }}
+                                      >
+                                        <X className="w-4 h-4 mr-2" />
+                                        Hủy
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <h4 className="font-medium text-gray-900">
+                                    {subCategory.name}
+                                  </h4>
+                                )}
+                              </div>
+                            </div>
+                            {editingId !== subCategory.id && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-600">
+                                  {subCategory._count?.products || 0} sản phẩm
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleStartEdit(subCategory.id)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDelete(subCategory.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Info Card */}
+            <Card className="mt-8 border-blue-200 bg-blue-50">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div className="text-sm text-gray-700">
+                    <p className="font-medium mb-2">Lưu ý khi xóa danh mục:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Không thể xóa danh mục đang có sản phẩm</li>
+                      <li>Không thể xóa danh mục cha khi còn danh mục con</li>
+                      <li>Nên ẩn danh mục thay vì xóa để giữ lại dữ liệu lịch sử</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       <Footer />
     </div>
   );
 }
+

@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,38 +22,42 @@ import {
   Clock,
   Shield,
   TrendingUp,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface User {
   id: string;
-  name: string;
   email: string;
-  phone: string;
+  fullName: string;
   role: "BIDDER" | "SELLER" | "ADMIN";
-  status: "active" | "banned" | "pending_verification";
-  joinedAt: string;
-  totalBids: number;
-  wonAuctions: number;
-  soldItems?: number;
-  rating?: {
-    positive: number;
-    negative: number;
+  positiveRatings: number;
+  negativeRatings: number;
+  upgradeRequested: boolean;
+  upgradeRequestedAt: string | null;
+  upgradeStatus: string | null;
+  isVerified: boolean;
+  createdAt: string;
+  _count: {
+    products: number;
+    bids: number;
+    watchList: number;
   };
 }
 
 interface UpgradeRequest {
   id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  businessName: string;
-  businessAddress: string;
-  phoneNumber: string;
-  reason: string;
-  status: "pending" | "approved" | "rejected";
-  submittedAt: string;
-  reviewedAt?: string;
-  reviewNote?: string;
+  email: string;
+  fullName: string;
+  upgradeRequestedAt: string;
+  upgradeStatus: "PENDING" | "APPROVED" | "REJECTED";
+  positiveRatings: number;
+  negativeRatings: number;
+  createdAt: string;
+  _count: {
+    bids: number;
+  };
 }
 
 export default function UserManagementPage() {
@@ -63,134 +66,109 @@ export default function UserManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const [users, setUsers] = useState<User[]>([]);
+  const [upgradeRequests, setUpgradeRequests] = useState<UpgradeRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
 
-  // Calculate dates once at component mount
-  const [userDates] = useState(() => {
-    const now = Date.now();
-    return {
-      u1Joined: new Date(now - 365 * 24 * 60 * 60 * 1000).toISOString(),
-      u2Joined: new Date(now - 180 * 24 * 60 * 60 * 1000).toISOString(),
-      u3Joined: new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString(),
-      u4Joined: new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      u5Joined: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      req1Submit: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      req2Submit: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      req3Submit: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      req3Reviewed: new Date(now - 8 * 24 * 60 * 60 * 1000).toISOString(),
-    };
-  });
+  const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  // Mock users data
-  // TODO: Replace with API call to fetch users
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "user1",
-      name: "Nguyễn Văn A",
-      email: "nguyenvana@example.com",
-      phone: "0912345678",
-      role: "SELLER",
-      status: "active",
-      joinedAt: userDates.u1Joined,
-      totalBids: 156,
-      wonAuctions: 45,
-      soldItems: 38,
-      rating: { positive: 42, negative: 3 },
-    },
-    {
-      id: "user2",
-      name: "Trần Thị B",
-      email: "tranthib@example.com",
-      phone: "0923456789",
-      role: "BIDDER",
-      status: "active",
-      joinedAt: userDates.u2Joined,
-      totalBids: 89,
-      wonAuctions: 23,
-      rating: { positive: 21, negative: 2 },
-    },
-    {
-      id: "user3",
-      name: "Lê Văn C",
-      email: "levanc@example.com",
-      phone: "0934567890",
-      role: "SELLER",
-      status: "active",
-      joinedAt: userDates.u3Joined,
-      totalBids: 67,
-      wonAuctions: 18,
-      soldItems: 52,
-      rating: { positive: 48, negative: 4 },
-    },
-    {
-      id: "user4",
-      name: "Phạm Thị D",
-      email: "phamthid@example.com",
-      phone: "0945678901",
-      role: "BIDDER",
-      status: "pending_verification",
-      joinedAt: userDates.u4Joined,
-      totalBids: 5,
-      wonAuctions: 1,
-      rating: { positive: 1, negative: 0 },
-    },
-    {
-      id: "user5",
-      name: "Hoàng Văn E (Vi phạm)",
-      email: "hoangvane@example.com",
-      phone: "0956789012",
-      role: "BIDDER",
-      status: "banned",
-      joinedAt: userDates.u5Joined,
-      totalBids: 12,
-      wonAuctions: 3,
-      rating: { positive: 1, negative: 5 },
-    },
-  ]);
+  // Fetch users
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "10",
+      });
 
-  // Mock upgrade requests data
-  // TODO: Replace with API call to fetch upgrade requests
-  const [upgradeRequests, setUpgradeRequests] = useState<UpgradeRequest[]>([
-    {
-      id: "req1",
-      userId: "user6",
-      userName: "TechStore VN",
-      userEmail: "techstore@example.com",
-      businessName: "TechStore VN",
-      businessAddress: "123 Đường ABC, Quận 1, TP.HCM",
-      phoneNumber: "0901234567",
-      reason:
-        "Có kinh nghiệm bán đồ công nghệ hơn 5 năm. Muốn mở rộng kinh doanh trên nền tảng đấu giá.",
-      status: "pending",
-      submittedAt: userDates.req1Submit,
-    },
-    {
-      id: "req2",
-      userId: "user7",
-      userName: "Fashion Shop",
-      userEmail: "fashion@example.com",
-      businessName: "Fashion Luxury",
-      businessAddress: "456 Đường XYZ, Quận 3, TP.HCM",
-      phoneNumber: "0912345678",
-      reason: "Chuyên bán đồng hồ và túi xách cao cấp chính hãng.",
-      status: "pending",
-      submittedAt: userDates.req2Submit,
-    },
-    {
-      id: "req3",
-      userId: "user8",
-      userName: "Unknown Seller",
-      userEmail: "unknown@example.com",
-      businessName: "Unknown Shop",
-      businessAddress: "789 Đường DEF, Quận 10, TP.HCM",
-      phoneNumber: "0923456789",
-      reason: "Muốn bán hàng",
-      status: "rejected",
-      submittedAt: userDates.req3Submit,
-      reviewedAt: userDates.req3Reviewed,
-      reviewNote:
-        "Thông tin không đầy đủ và không rõ ràng. Vui lòng cung cấp thêm chi tiết về kinh nghiệm và giấy tờ chứng minh.",
-    },
-  ]);
+      if (roleFilter !== "all") {
+        params.append("role", roleFilter);
+      }
+
+      const response = await fetch(`${BACKEND_URL}/api/admin/users?${params}`, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        const isJson = contentType?.includes("application/json");
+        if (isJson) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch users");
+        }
+        throw new Error(`Failed to fetch users (${response.status})`);
+      }
+      
+      const data = await response.json();
+
+      if (data.success) {
+        setUsers(data.data.users || []);
+        setTotalPages(data.data.totalPages || 1);
+        setTotalUsers(data.data.total || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      alert("Không thể tải danh sách người dùng - Kiểm tra backend server");
+    } finally {
+      setLoading(false);
+    }
+  }, [BACKEND_URL, page, roleFilter]);
+
+  // Fetch upgrade requests
+  const fetchUpgradeRequests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: "1",
+        limit: "50",
+      });
+
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/upgrade-requests?${params}`,
+        {
+          credentials: "include",
+        }
+      );
+      
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        const isJson = contentType?.includes("application/json");
+        if (isJson) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch upgrade requests");
+        }
+        throw new Error(`Failed to fetch upgrade requests (${response.status})`);
+      }
+      
+      const data = await response.json();
+
+      if (data.success) {
+        setUpgradeRequests(data.data.requests || []);
+      }
+    } catch (error) {
+      console.error("Error fetching upgrade requests:", error);
+      alert("Không thể tải danh sách yêu cầu nâng cấp - Kiểm tra backend server");
+    } finally {
+      setLoading(false);
+    }
+  }, [BACKEND_URL]);
+
+  useEffect(() => {
+    if (activeTab === "users") {
+      fetchUsers();
+    } else {
+      fetchUpgradeRequests();
+    }
+  }, [activeTab, fetchUsers, fetchUpgradeRequests]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [roleFilter, searchQuery]);
 
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat("vi-VN", {
@@ -226,33 +204,20 @@ export default function UserManagementPage() {
     );
   };
 
-  const getStatusBadge = (status: User["status"]) => {
-    const statusConfig = {
-      active: {
-        label: "Hoạt động",
-        color: "bg-green-100 text-green-800",
-        icon: CheckCircle,
-      },
-      banned: {
-        label: "Bị khóa",
-        color: "bg-red-100 text-red-800",
-        icon: Ban,
-      },
-      pending_verification: {
-        label: "Chờ xác minh",
-        color: "bg-yellow-100 text-yellow-800",
-        icon: Clock,
-      },
-    };
+  const getStatusBadge = (user: User) => {
+    if (!user.isVerified) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <Clock className="w-3 h-3" />
+          Chờ xác minh
+        </span>
+      );
+    }
 
-    const config = statusConfig[status];
-    const Icon = config.icon;
     return (
-      <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
-      >
-        <Icon className="w-3 h-3" />
-        {config.label}
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        <CheckCircle className="w-3 h-3" />
+        Đã xác minh
       </span>
     );
   };
@@ -261,116 +226,134 @@ export default function UserManagementPage() {
     navigate(`/profile/${userId}`);
   };
 
-  const handleBanUser = (userId: string) => {
+  const handleBanUser = async (userId: string) => {
     const user = users.find((u) => u.id === userId);
     if (!user) return;
 
-    if (confirm(`Bạn có chắc muốn khóa tài khoản "${user.name}"?`)) {
-      // TODO: Replace with API call to ban user
-      setUsers(
-        users.map((u) =>
-          u.id === userId ? { ...u, status: "banned" as const } : u
-        )
-      );
+    if (confirm(`Bạn có chắc muốn khóa tài khoản "${user.fullName}"?`)) {
+      try {
+        const response = await fetch(
+          `${BACKEND_URL}/api/admin/users/${userId}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          fetchUsers();
+        }
+      } catch (error) {
+        console.error("Error banning user:", error);
+        alert("Không thể khóa tài khoản");
+      }
     }
   };
 
-  const handleUnbanUser = (userId: string) => {
-    const user = users.find((u) => u.id === userId);
-    if (!user) return;
-
-    if (confirm(`Bạn có chắc muốn mở khóa tài khoản "${user.name}"?`)) {
-      // TODO: Replace with API call to unban user
-      setUsers(
-        users.map((u) =>
-          u.id === userId ? { ...u, status: "active" as const } : u
-        )
-      );
-    }
-  };
-
-  const handleApproveUpgrade = (requestId: string) => {
-    const request = upgradeRequests.find((r) => r.id === requestId);
+  const handleApproveUpgrade = async (userId: string) => {
+    const request = upgradeRequests.find((r) => r.id === userId);
     if (!request) return;
 
-    const reviewNote = prompt(
-      `Phê duyệt yêu cầu của "${request.userName}".\n\nGhi chú (tùy chọn):`
-    );
-    if (reviewNote === null) return;
-
-    // TODO: Replace with API call to approve upgrade request
-    setUpgradeRequests(
-      upgradeRequests.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              status: "approved" as const,
-              reviewedAt: new Date().toISOString(),
-              reviewNote: reviewNote || "Yêu cầu đã được phê duyệt.",
-            }
-          : r
-      )
-    );
-
-    // Update user role
-    const user = users.find((u) => u.id === request.userId);
-    if (user) {
-      setUsers(
-        users.map((u) =>
-          u.id === request.userId
-            ? { ...u, role: "SELLER" as const, soldItems: 0 }
-            : u
-        )
-      );
-    }
-  };
-
-  const handleRejectUpgrade = (requestId: string) => {
-    const request = upgradeRequests.find((r) => r.id === requestId);
-    if (!request) return;
-
-    const reviewNote = prompt(
-      `Từ chối yêu cầu của "${request.userName}".\n\nLý do từ chối (bắt buộc):`
-    );
-    if (!reviewNote || reviewNote.trim() === "") {
-      alert("Vui lòng nhập lý do từ chối");
+    if (!confirm(`Phê duyệt yêu cầu nâng cấp của "${request.fullName}"?`)) {
       return;
     }
 
-    // TODO: Replace with API call to reject upgrade request
-    setUpgradeRequests(
-      upgradeRequests.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              status: "rejected" as const,
-              reviewedAt: new Date().toISOString(),
-              reviewNote,
-            }
-          : r
-      )
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/upgrade-requests/${userId}/approve`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Đã phê duyệt yêu cầu thành công");
+        fetchUpgradeRequests();
+      } else {
+        alert(data.message || "Không thể phê duyệt yêu cầu");
+      }
+    } catch (error) {
+      console.error("Error approving upgrade:", error);
+      alert("Không thể phê duyệt yêu cầu");
+    }
+  };
+
+  const handleRejectUpgrade = async (userId: string) => {
+    const request = upgradeRequests.find((r) => r.id === userId);
+    if (!request) return;
+
+    const reason = prompt(
+      `Từ chối yêu cầu của "${request.fullName}".\n\nLý do từ chối (bắt buộc):`
     );
+    if (!reason || reason.trim() === "") {
+      if (reason !== null) {
+        alert("Vui lòng nhập lý do từ chối");
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/admin/upgrade-requests/${userId}/reject`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ reason }),
+        }
+      );
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Đã từ chối yêu cầu");
+        fetchUpgradeRequests();
+      } else {
+        alert(data.message || "Không thể từ chối yêu cầu");
+      }
+    } catch (error) {
+      console.error("Error rejecting upgrade:", error);
+      alert("Không thể từ chối yêu cầu");
+    }
   };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       searchQuery === "" ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "verified" && user.isVerified) ||
+      (statusFilter === "unverified" && !user.isVerified);
 
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
-  const pendingUpgrades = upgradeRequests.filter((r) => r.status === "pending");
+  const pendingUpgrades = upgradeRequests.filter(
+    (r) => r.upgradeStatus === "PENDING"
+  );
   const stats = {
-    totalUsers: users.length,
+    totalUsers: totalUsers,
     sellers: users.filter((u) => u.role === "SELLER").length,
     bidders: users.filter((u) => u.role === "BIDDER").length,
     pendingUpgrades: pendingUpgrades.length,
   };
+
+  if (loading && users.length === 0 && upgradeRequests.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -436,7 +419,7 @@ export default function UserManagementPage() {
               <div>
                 <div className="text-sm text-gray-600">Yêu cầu chờ</div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {stats.pendingUpgrades}
+                  {pendingUpgrades.length}
                 </div>
               </div>
             </div>
@@ -514,11 +497,8 @@ export default function UserManagementPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tất cả</SelectItem>
-                      <SelectItem value="active">Hoạt động</SelectItem>
-                      <SelectItem value="banned">Bị khóa</SelectItem>
-                      <SelectItem value="pending_verification">
-                        Chờ xác minh
-                      </SelectItem>
+                      <SelectItem value="verified">Đã xác minh</SelectItem>
+                      <SelectItem value="unverified">Chưa xác minh</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -526,104 +506,147 @@ export default function UserManagementPage() {
             </Card>
 
             {/* Users List */}
-            <div className="space-y-4">
-              {filteredUsers.map((user) => (
-                <Card key={user.id} className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {user.name}
-                        </h3>
-                        {getRoleBadge(user.role)}
-                        {getStatusBadge(user.status)}
-                      </div>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <div>Email: {user.email}</div>
-                        <div>SĐT: {user.phone}</div>
-                        <div>Tham gia: {formatDate(user.joinedAt)}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div>
-                      <div className="text-sm text-gray-600">Lượt đấu giá</div>
-                      <div className="font-semibold text-gray-900">
-                        {user.totalBids}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Đã thắng</div>
-                      <div className="font-semibold text-gray-900">
-                        {user.wonAuctions}
-                      </div>
-                    </div>
-                    {user.soldItems !== undefined && (
-                      <div>
-                        <div className="text-sm text-gray-600">Đã bán</div>
-                        <div className="font-semibold text-gray-900">
-                          {user.soldItems}
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <Card className="p-12">
+                <div className="text-center">
+                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Không tìm thấy người dùng
+                  </h3>
+                  <p className="text-gray-600">
+                    Thử thay đổi bộ lọc hoặc tìm kiếm
+                  </p>
+                </div>
+              </Card>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {filteredUsers.map((user) => (
+                    <Card key={user.id} className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {user.fullName}
+                            </h3>
+                            {getRoleBadge(user.role)}
+                            {getStatusBadge(user)}
+                          </div>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <div>Email: {user.email}</div>
+                            <div>Tham gia: {formatDate(user.createdAt)}</div>
+                          </div>
                         </div>
                       </div>
-                    )}
-                    {user.rating && (
-                      <div>
-                        <div className="text-sm text-gray-600">Đánh giá</div>
-                        <div className="font-semibold text-gray-900">
-                          <span className="text-green-600">
-                            +{user.rating.positive}
-                          </span>
-                          {" / "}
-                          <span className="text-red-600">
-                            -{user.rating.negative}
-                          </span>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                          <div className="text-sm text-gray-600">Sản phẩm</div>
+                          <div className="font-semibold text-gray-900">
+                            {user._count.products}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">
+                            Lượt đấu giá
+                          </div>
+                          <div className="font-semibold text-gray-900">
+                            {user._count.bids}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Theo dõi</div>
+                          <div className="font-semibold text-gray-900">
+                            {user._count.watchList}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Đánh giá</div>
+                          <div className="font-semibold text-gray-900">
+                            <span className="text-green-600">
+                              +{user.positiveRatings}
+                            </span>
+                            {" / "}
+                            <span className="text-red-600">
+                              -{user.negativeRatings}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    )}
-                  </div>
 
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleViewUser(user.id)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Xem hồ sơ
-                    </Button>
-                    {user.status === "active" ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleBanUser(user.id)}
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        <Ban className="w-4 h-4 mr-2" />
-                        Khóa tài khoản
-                      </Button>
-                    ) : user.status === "banned" ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleUnbanUser(user.id)}
-                        className="text-green-600 border-green-200 hover:bg-green-50"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Mở khóa
-                      </Button>
-                    ) : null}
-                  </div>
-                </Card>
-              ))}
-            </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewUser(user.id)}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Xem hồ sơ
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleBanUser(user.id)}
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                        >
+                          <Ban className="w-4 h-4 mr-2" />
+                          Khóa tài khoản
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <Card className="p-4 mt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-600">
+                        Trang {page} / {totalPages} (Tổng {totalUsers} người
+                        dùng)
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          disabled={page === 1}
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          Trước
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setPage((p) => Math.min(totalPages, p + 1))
+                          }
+                          disabled={page === totalPages}
+                        >
+                          Sau
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+              </>
+            )}
           </>
         )}
 
         {/* Upgrade Requests Tab */}
         {activeTab === "upgrades" && (
           <div className="space-y-4">
-            {upgradeRequests.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+              </div>
+            ) : upgradeRequests.length === 0 ? (
               <Card className="p-12">
                 <div className="text-center">
                   <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -642,20 +665,20 @@ export default function UserManagementPage() {
                     <div>
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {request.businessName}
+                          {request.fullName}
                         </h3>
-                        {request.status === "pending" && (
+                        {request.upgradeStatus === "PENDING" && (
                           <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
                             Chờ xét duyệt
                           </span>
                         )}
-                        {request.status === "approved" && (
+                        {request.upgradeStatus === "APPROVED" && (
                           <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full flex items-center gap-1">
                             <CheckCircle className="w-3 h-3" />
                             Đã phê duyệt
                           </span>
                         )}
-                        {request.status === "rejected" && (
+                        {request.upgradeStatus === "REJECTED" && (
                           <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full flex items-center gap-1">
                             <XCircle className="w-3 h-3" />
                             Đã từ chối
@@ -663,65 +686,37 @@ export default function UserManagementPage() {
                         )}
                       </div>
                       <div className="text-sm text-gray-600 space-y-1">
-                        <div>Người gửi: {request.userName}</div>
-                        <div>Email: {request.userEmail}</div>
-                        <div>Ngày gửi: {formatDate(request.submittedAt)}</div>
-                        {request.reviewedAt && (
-                          <div>Ngày xét duyệt: {formatDate(request.reviewedAt)}</div>
-                        )}
+                        <div>Email: {request.email}</div>
+                        <div>
+                          Ngày gửi: {formatDate(request.upgradeRequestedAt)}
+                        </div>
+                        <div>Tham gia: {formatDate(request.createdAt)}</div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3 mb-4">
+                  <div className="grid grid-cols-3 gap-4 mb-4">
                     <div>
-                      <div className="text-sm font-medium text-gray-700">
-                        Địa chỉ kinh doanh:
-                      </div>
-                      <div className="text-sm text-gray-900">
-                        {request.businessAddress}
+                      <div className="text-sm text-gray-600">Lượt đấu giá</div>
+                      <div className="font-semibold text-gray-900">
+                        {request._count.bids}
                       </div>
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-700">
-                        Số điện thoại:
-                      </div>
-                      <div className="text-sm text-gray-900">
-                        {request.phoneNumber}
+                      <div className="text-sm text-gray-600">Đánh giá (+)</div>
+                      <div className="font-semibold text-green-600">
+                        {request.positiveRatings}
                       </div>
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-700">
-                        Lý do:
+                      <div className="text-sm text-gray-600">Đánh giá (-)</div>
+                      <div className="font-semibold text-red-600">
+                        {request.negativeRatings}
                       </div>
-                      <div className="text-sm text-gray-900">{request.reason}</div>
                     </div>
                   </div>
 
-                  {request.reviewNote && (
-                    <div
-                      className={`p-3 rounded-lg mb-4 ${
-                        request.status === "approved"
-                          ? "bg-green-50 border border-green-200"
-                          : "bg-red-50 border border-red-200"
-                      }`}
-                    >
-                      <div className="text-sm font-medium text-gray-900 mb-1">
-                        Ghi chú từ quản trị viên:
-                      </div>
-                      <div
-                        className={`text-sm ${
-                          request.status === "approved"
-                            ? "text-green-800"
-                            : "text-red-800"
-                        }`}
-                      >
-                        {request.reviewNote}
-                      </div>
-                    </div>
-                  )}
-
-                  {request.status === "pending" && (
+                  {request.upgradeStatus === "PENDING" && (
                     <div className="flex gap-2">
                       <Button
                         size="sm"

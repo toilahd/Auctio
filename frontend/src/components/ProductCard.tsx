@@ -55,7 +55,8 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [isTogglingWatchlist, setIsTogglingWatchlist] = useState(false);
 
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   useEffect(() => {
     checkWatchlistStatus();
@@ -63,9 +64,12 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 
   const checkWatchlistStatus = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/watchlist/check/${product.id}`, {
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${BACKEND_URL}/api/watchlist/check/${product.id}`,
+        {
+          credentials: "include",
+        }
+      );
       const data = await response.json();
       if (data.success) {
         setIsInWatchlist(data.data.inWatchlist);
@@ -78,14 +82,17 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
   const handleWatchlistToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsTogglingWatchlist(true);
-    
+
     try {
       if (isInWatchlist) {
         // Remove from watchlist
-        const response = await fetch(`${BACKEND_URL}/api/watchlist/${product.id}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
+        const response = await fetch(
+          `${BACKEND_URL}/api/watchlist/${product.id}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
         const data = await response.json();
         if (data.success) {
           setIsInWatchlist(false);
@@ -169,21 +176,27 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
           alt={product.title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        
+
         {/* Watchlist Button */}
         <button
           onClick={handleWatchlistToggle}
           disabled={isTogglingWatchlist}
           className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-background transition-colors disabled:opacity-50"
-          title={isInWatchlist ? "Xóa khỏi danh sách theo dõi" : "Thêm vào danh sách theo dõi"}
+          title={
+            isInWatchlist
+              ? "Xóa khỏi danh sách theo dõi"
+              : "Thêm vào danh sách theo dõi"
+          }
         >
           <Heart
             className={`w-4 h-4 transition-colors ${
-              isInWatchlist ? "fill-red-500 text-red-500" : "text-muted-foreground"
+              isInWatchlist
+                ? "fill-red-500 text-red-500"
+                : "text-muted-foreground"
             }`}
           />
         </button>
-        
+
         {/* Time Remaining Badge */}
         <div className="absolute top-3 right-3 flex items-center gap-1 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg">
           <Clock className="w-3 h-3" />
@@ -253,7 +266,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 
         {/* Seller Info */}
         {product.seller && (
-          <div 
+          <div
             className="flex items-center gap-2 p-2 -mx-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
             onClick={handleSellerClick}
             title="Xem trang người bán"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Clock,
   Activity,
+  Loader2,
 } from "lucide-react";
 
 interface StatCard {
@@ -22,6 +23,33 @@ interface StatCard {
   change: string;
   trend: "up" | "down" | "neutral";
   icon: typeof Users;
+}
+
+interface DashboardStats {
+  totalUsers: number;
+  totalProducts: number;
+  totalBids: number;
+  totalRevenue: number;
+  activeAuctions: number;
+  pendingUpgrades: number;
+}
+
+interface TopSeller {
+  id: string;
+  fullName: string;
+  email: string;
+  totalRevenue: number;
+  totalSales: number;
+}
+
+interface TopProduct {
+  id: string;
+  title: string;
+  currentPrice: number;
+  totalBids: number;
+  seller: {
+    fullName: string;
+  };
 }
 
 interface RecentActivity {
@@ -35,8 +63,125 @@ interface RecentActivity {
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
+  const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [topSellers, setTopSellers] = useState<TopSeller[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Calculate dates once at component mount
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [statsRes, sellersRes, productsRes] = await Promise.all([
+        fetch(`${BACKEND_URL}/api/admin/dashboard/stats`, {
+          credentials: "include",
+        }),
+        fetch(`${BACKEND_URL}/api/admin/dashboard/top-sellers?limit=5`, {
+          credentials: "include",
+        }),
+        fetch(
+          `${BACKEND_URL}/api/admin/dashboard/top-products?limit=5&sortBy=bids`,
+          {
+            credentials: "include",
+          }
+        ),
+      ]);
+
+      // Check responses and provide specific error messages
+      if (!statsRes.ok) {
+        const contentType = statsRes.headers.get("content-type");
+        const isJson = contentType?.includes("application/json");
+        const errorMsg = isJson
+          ? await statsRes.json().then((data) => data.message)
+          : `API stats endpoint failed (${statsRes.status})`;
+        throw new Error(errorMsg || "Failed to fetch stats");
+      }
+
+      if (!sellersRes.ok) {
+        throw new Error(`Failed to fetch top sellers (${sellersRes.status})`);
+      }
+
+      if (!productsRes.ok) {
+        throw new Error(`Failed to fetch top products (${productsRes.status})`);
+      }
+
+      const [statsData, sellersData, productsData] = await Promise.all([
+        statsRes.json(),
+        sellersRes.json(),
+        productsRes.json(),
+      ]);
+
+      if (statsData.success) {
+        setStats(statsData.data);
+      }
+      if (sellersData.success) {
+        setTopSellers(sellersData.data);
+      }
+      if (productsData.success) {
+        setTopProducts(productsData.data);
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Không thể tải dữ liệu dashboard";
+      setError(
+        errorMessage + " - Vui lòng kiểm tra backend server có đang chạy không"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [BACKEND_URL]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
+  const statCards: StatCard[] = stats && stats.totalUsers !== undefined
+    ? [
+        {
+          title: "Tổng người dùng",
+          value: stats.totalUsers.toLocaleString(),
+          change: `${stats.totalUsers} tài khoản`,
+          trend: "neutral" as const,
+          icon: Users,
+        },
+        {
+          title: "Đấu giá hoạt động",
+          value: stats.activeAuctions ?? 0,
+          change: `${stats.totalProducts ?? 0} tổng sản phẩm`,
+          trend: "neutral" as const,
+          icon: Package,
+        },
+        {
+          title: "Tổng lượt đấu giá",
+          value: (stats.totalBids ?? 0).toLocaleString(),
+          change: `Trên toàn hệ thống`,
+          trend: "neutral" as const,
+          icon: DollarSign,
+        },
+        {
+          title: "Yêu cầu nâng cấp",
+          value: stats.pendingUpgrades ?? 0,
+          change: "Đang chờ xét duyệt",
+          trend: "neutral" as const,
+          icon: TrendingUp,
+        },
+      ]
+    : [];
+
+  // Generate mock recent activity for now
+  // TODO: Add API endpoint for recent activity/audit logs
   const [activityDates] = useState(() => {
     const now = Date.now();
     return {
@@ -48,41 +193,8 @@ export default function AdminDashboardPage() {
     };
   });
 
-  // Mock statistics data
-  // TODO: Replace with API call to fetch admin dashboard stats
-  const stats: StatCard[] = [
-    {
-      title: "Tổng người dùng",
-      value: "12,450",
-      change: "+12% so với tháng trước",
-      trend: "up",
-      icon: Users,
-    },
-    {
-      title: "Đấu giá hoạt động",
-      value: 342,
-      change: "+8% so với tuần trước",
-      trend: "up",
-      icon: Package,
-    },
-    {
-      title: "Doanh thu tháng này",
-      value: "₫1.2 tỷ",
-      change: "+15% so với tháng trước",
-      trend: "up",
-      icon: DollarSign,
-    },
-    {
-      title: "Yêu cầu nâng cấp",
-      value: 28,
-      change: "Đang chờ xét duyệt",
-      trend: "neutral",
-      icon: TrendingUp,
-    },
-  ];
-
   // Mock recent activity data
-  // TODO: Replace with API call to fetch recent admin activity
+  // TODO: Add API endpoint for recent activity/audit logs
   const recentActivity: RecentActivity[] = [
     {
       id: "1",
@@ -123,10 +235,6 @@ export default function AdminDashboardPage() {
       status: "approved",
     },
   ];
-
-  const formatPrice = (price: string) => {
-    return price;
-  };
 
   const getTimeAgo = (dateString: string) => {
     const now = Date.now();
@@ -202,53 +310,156 @@ export default function AdminDashboardPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Quản trị hệ thống
           </h1>
-          <p className="text-gray-600">
-            Tổng quan và quản lý hệ thống đấu giá
-          </p>
+          <p className="text-gray-600">Tổng quan và quản lý hệ thống đấu giá</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    {stat.title}
-                  </CardTitle>
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Icon className="w-5 h-5 text-blue-600" />
-                  </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </div>
+        ) : error ? (
+          <Card className="p-6 mb-8 border-red-200 bg-red-50">
+            <p className="text-red-600">{error}</p>
+          </Card>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {statCards.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <Card key={index} className="pt-6">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-600">
+                        {stat.title}
+                      </CardTitle>
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Icon className="w-5 h-5 text-blue-600" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                        {stat.value}
+                      </div>
+                      <p
+                        className={`text-sm ${
+                          stat.trend === "up"
+                            ? "text-green-600"
+                            : stat.trend === "down"
+                            ? "text-red-600"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {stat.change}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Top Sellers and Top Products */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Top Sellers */}
+              <Card className="pt-6">
+                <CardHeader>
+                  <CardTitle>Người bán hàng đầu</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
-                    {stat.value}
-                  </div>
-                  <p
-                    className={`text-sm ${
-                      stat.trend === "up"
-                        ? "text-green-600"
-                        : stat.trend === "down"
-                        ? "text-red-600"
-                        : "text-gray-600"
-                    }`}
-                  >
-                    {stat.change}
-                  </p>
+                  {topSellers.length === 0 ? (
+                    <p className="text-center text-gray-500 py-4">
+                      Chưa có dữ liệu
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {topSellers.map((seller, index) => (
+                        <div
+                          key={seller.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {seller.fullName}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {seller.totalSales} sản phẩm
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold text-gray-900">
+                              {formatPrice(seller.totalRevenue)}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              Doanh thu
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            );
-          })}
-        </div>
+
+              {/* Top Products */}
+              <Card className="pt-6">
+                <CardHeader>
+                  <CardTitle>Sản phẩm hot nhất</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {topProducts.length === 0 ? (
+                    <p className="text-center text-gray-500 py-4">
+                      Chưa có dữ liệu
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {topProducts.map((product, index) => (
+                        <div
+                          key={product.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900 line-clamp-1">
+                                {product.title}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {product.seller.fullName}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold text-gray-900">
+                              {product.totalBids} lượt
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {formatPrice(product.currentPrice)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
 
         {/* Quick Actions */}
-        <Card className="mb-8">
+        <Card className="mb-8 pt-6">
           <CardHeader>
             <CardTitle>Thao tác nhanh</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Button
                 variant="outline"
                 className="w-full justify-start"
@@ -273,20 +484,12 @@ export default function AdminDashboardPage() {
                 <FileText className="w-4 h-4 mr-2" />
                 Quản lý danh mục
               </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => navigate("/admin/users")}
-              >
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Yêu cầu nâng cấp ({stats[3].value})
-              </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Recent Activity */}
-        <Card>
+        <Card className="pt-6">
           <CardHeader>
             <CardTitle>Hoạt động gần đây</CardTitle>
           </CardHeader>
@@ -322,7 +525,10 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="mt-6 text-center">
-              <Button variant="outline" onClick={() => navigate("/admin/activity")}>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/admin/activity")}
+              >
                 Xem tất cả hoạt động
               </Button>
             </div>

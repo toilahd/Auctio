@@ -8,7 +8,7 @@ import { sendEmail } from "../config/email.js";
 
 const prisma = new PrismaClient();
 
-const ACCESS_TOKEN_AGE = "5min";
+const ACCESS_TOKEN_AGE = "10min";
 const REFRESH_TOKEN_AGE = "30d";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
