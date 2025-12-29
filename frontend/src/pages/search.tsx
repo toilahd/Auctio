@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,265 +12,229 @@ import {
 } from "@/components/ui/select";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ProductCard from "@/components/ProductCard";
 import {
   Search as SearchIcon,
   Filter,
   X,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 
 interface Product {
   id: string;
   title: string;
-  currentPrice: number;
-  image: string;
-  endTime: string;
-  totalBids: number;
-  category: string;
-  subcategory: string;
+  titleNoAccent: string;
   description: string;
+  startPrice: string;
+  currentPrice: string;
+  stepPrice: string;
+  buyNowPrice: string | null;
+  endTime: string;
+  images: string[];
+  categoryId: string;
+  sellerId: string;
+  status: string;
+  bidCount: number;
+  viewCount: number;
+  autoExtend: boolean;
+  currentWinnerId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  isNew?: boolean;
+  category?: {
+    id: string;
+    name: string;
+  };
+  seller?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  _count?: {
+    bids: number;
+  };
+  timeLeft?: {
+    hours: number;
+    minutes: number;
+    total: number;
+  };
 }
 
 export default function SearchPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  const initialCategory = searchParams.get("categoryId") || "all";
+  const initialSortBy = searchParams.get("sortBy") || "endTime";
+  const initialOrder = searchParams.get("order") || "asc";
+  const initialPage = parseInt(searchParams.get("page") || "1");
 
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [priceRange, setPriceRange] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("relevance");
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>(initialCategory);
+  const [sortBy, setSortBy] = useState<string>(initialSortBy);
+  const [order, setOrder] = useState<string>(initialOrder);
+  const [page, setPage] = useState(initialPage);
+  const [limit] = useState(12);
+  const [highlightMinutes, setHighlightMinutes] = useState(30);
 
-  // Calculate end times once at component mount
-  const [productEndTimes] = useState(() => {
-    const now = Date.now();
-    return {
-      product1: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
-      product2: new Date(now + 4 * 60 * 60 * 1000).toISOString(),
-      product3: new Date(now + 6 * 60 * 60 * 1000).toISOString(),
-      product4: new Date(now + 1 * 60 * 60 * 1000).toISOString(),
-      product5: new Date(now + 8 * 60 * 60 * 1000).toISOString(),
-      product6: new Date(now + 12 * 60 * 60 * 1000).toISOString(),
-      product7: new Date(now + 3 * 60 * 60 * 1000).toISOString(),
-      product8: new Date(now + 5 * 60 * 60 * 1000).toISOString(),
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [categories, setCategories] = useState<
+    { value: string; label: string }[]
+  >([{ value: "all", label: "Tất cả danh mục" }]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Sync search query with URL params when they change
+  useEffect(() => {
+    const queryParam = searchParams.get("q");
+    if (queryParam !== null) {
+      setSearchQuery(decodeURIComponent(queryParam));
+    } else {
+      setSearchQuery("");
+    }
+  }, [searchParams]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/categories");
+        const data = await response.json();
+        if (data.success) {
+          const categoryOptions = [
+            { value: "all", label: "Tất cả danh mục" },
+            ...data.data.map((cat: any) => ({
+              value: cat.id.toString(),
+              label: cat.name,
+            })),
+          ];
+          setCategories(categoryOptions);
+        }
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
     };
-  });
+    fetchCategories();
+  }, []);
 
-  // Mock product data
-  // TODO: Replace with API call to search products
-  const allProducts: Product[] = useMemo(() => [
-    {
-      id: "1",
-      title: "iPhone 15 Pro Max 256GB Titan Tự Nhiên",
-      currentPrice: 25000000,
-      image: "https://via.placeholder.com/400x300",
-      endTime: productEndTimes.product1,
-      totalBids: 45,
-      category: "electronics",
-      subcategory: "phone",
-      description: "iPhone mới nguyên seal chưa kích hoạt bảo hành 12 tháng",
-    },
-    {
-      id: "2",
-      title: "MacBook Pro 14 inch M3 Pro 18GB 512GB",
-      currentPrice: 45000000,
-      image: "https://via.placeholder.com/400x300",
-      endTime: productEndTimes.product2,
-      totalBids: 32,
-      category: "electronics",
-      subcategory: "laptop",
-      description: "MacBook Pro mới 100% chính hãng Apple Việt Nam",
-    },
-    {
-      id: "3",
-      title: "Đồng hồ Rolex Submariner Date Automatic",
-      currentPrice: 180000000,
-      image: "https://via.placeholder.com/400x300",
-      endTime: productEndTimes.product3,
-      totalBids: 28,
-      category: "fashion",
-      subcategory: "watches",
-      description: "Đồng hồ Rolex chính hãng kèm hộp và giấy tờ đầy đủ",
-    },
-    {
-      id: "4",
-      title: "iPad Pro 12.9 inch M2 256GB WiFi",
-      currentPrice: 18000000,
-      image: "https://via.placeholder.com/400x300",
-      endTime: productEndTimes.product4,
-      totalBids: 18,
-      category: "electronics",
-      subcategory: "tablet",
-      description: "iPad Pro M2 mới nguyên seal",
-    },
-    {
-      id: "5",
-      title: "Mercedes-Benz C200 2020 màu đen",
-      currentPrice: 950000000,
-      image: "https://via.placeholder.com/400x300",
-      endTime: productEndTimes.product5,
-      totalBids: 12,
-      category: "vehicles",
-      subcategory: "car",
-      description: "Mercedes C200 đời 2020 chính chủ biển Hà Nội",
-    },
-    {
-      id: "6",
-      title: "Tranh sơn dầu phong cảnh Hạ Long 120x80cm",
-      currentPrice: 15000000,
-      image: "https://via.placeholder.com/400x300",
-      endTime: productEndTimes.product6,
-      totalBids: 8,
-      category: "art",
-      subcategory: "painting",
-      description: "Tranh sơn dầu vẽ tay phong cảnh Vịnh Hạ Long",
-    },
-    {
-      id: "7",
-      title: "Tai nghe AirPods Pro 2 USB-C",
-      currentPrice: 4500000,
-      image: "https://via.placeholder.com/400x300",
-      endTime: productEndTimes.product7,
-      totalBids: 23,
-      category: "electronics",
-      subcategory: "headphone",
-      description: "AirPods Pro 2 chính hãng Apple VN",
-    },
-    {
-      id: "8",
-      title: "Túi xách Louis Vuitton Neverfull MM",
-      currentPrice: 28000000,
-      image: "https://via.placeholder.com/400x300",
-      endTime: productEndTimes.product8,
-      totalBids: 15,
-      category: "fashion",
-      subcategory: "bags",
-      description: "Túi Louis Vuitton authentic kèm hóa đơn và hộp",
-    },
-  ], [productEndTimes]);
+  // Fetch products when filters change
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
 
-  // Vietnamese text normalization for search
-  // TODO: Implement proper Vietnamese diacritics removal
-  const normalizeVietnamese = (text: string): string => {
-    // Simple stub - in real implementation, would remove Vietnamese diacritics
-    // For now, just lowercase
-    return text.toLowerCase().trim();
-  };
+      try {
+        const params = new URLSearchParams();
+        if (searchQuery) params.append("q", searchQuery);
+        if (selectedCategory && selectedCategory !== "all")
+          params.append("categoryId", selectedCategory);
+        params.append("page", page.toString());
+        params.append("limit", limit.toString());
+        params.append("sortBy", sortBy);
+        params.append("order", order);
+        params.append("highlightMinutes", highlightMinutes.toString());
 
-  // Filter and search products
-  const filteredProducts = useMemo(() => {
-    let results = [...allProducts];
-
-    // Search by query
-    if (searchQuery.trim()) {
-      const normalizedQuery = normalizeVietnamese(searchQuery);
-      results = results.filter((product) => {
-        const normalizedTitle = normalizeVietnamese(product.title);
-        const normalizedDesc = normalizeVietnamese(product.description);
-        return (
-          normalizedTitle.includes(normalizedQuery) ||
-          normalizedDesc.includes(normalizedQuery)
+        const response = await fetch(
+          `http://localhost:3000/api/products/search?${params.toString()}`
         );
-      });
-    }
+        const data = await response.json();
 
-    // Filter by category
-    if (selectedCategory !== "all") {
-      results = results.filter((p) => p.category === selectedCategory);
-    }
+        if (data.success) {
+          setProducts(data.data.products || []);
+          setTotalProducts(data.data.pagination?.total || 0);
+        } else {
+          setError("Không thể tải danh sách sản phẩm");
+        }
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError("Đã xảy ra lỗi khi tải sản phẩm");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Filter by price range
-    if (priceRange !== "all") {
-      results = results.filter((p) => {
-        if (priceRange === "under10m") return p.currentPrice < 10000000;
-        if (priceRange === "10m-50m")
-          return p.currentPrice >= 10000000 && p.currentPrice < 50000000;
-        if (priceRange === "50m-100m")
-          return p.currentPrice >= 50000000 && p.currentPrice < 100000000;
-        if (priceRange === "over100m") return p.currentPrice >= 100000000;
-        return true;
-      });
-    }
-
-    // Sort results
-    if (sortBy === "price-asc") {
-      results.sort((a, b) => a.currentPrice - b.currentPrice);
-    } else if (sortBy === "price-desc") {
-      results.sort((a, b) => b.currentPrice - a.currentPrice);
-    } else if (sortBy === "ending-soon") {
-      results.sort(
-        (a, b) =>
-          new Date(a.endTime).getTime() - new Date(b.endTime).getTime()
-      );
-    } else if (sortBy === "most-bids") {
-      results.sort((a, b) => b.totalBids - a.totalBids);
-    }
-
-    return results;
-  }, [allProducts, searchQuery, selectedCategory, priceRange, sortBy]);
+    fetchProducts();
+  }, [searchQuery, selectedCategory, page, limit, sortBy, order, highlightMinutes]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search is already reactive via useMemo
+    setPage(1);
+    // Update URL params
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("q", searchQuery);
+    if (selectedCategory && selectedCategory !== "all")
+      params.set("categoryId", selectedCategory);
+    params.set("sortBy", sortBy);
+    params.set("order", order);
+    params.set("page", "1");
+    setSearchParams(params);
   };
 
   const handleClearFilters = () => {
+    setSearchQuery("");
     setSelectedCategory("all");
-    setPriceRange("all");
-    setSortBy("relevance");
+    setSortBy("endTime");
+    setOrder("asc");
+    setPage(1);
+    setSearchParams({});
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    setPage(1);
+    // Update URL params
+    const params = new URLSearchParams(searchParams);
+    if (value !== "all") {
+      params.set("categoryId", value);
+    } else {
+      params.delete("categoryId");
+    }
+    params.set("page", "1");
+    setSearchParams(params);
+  };
+
+  const handleSortChange = (value: string) => {
+    // Parse sort value like "endTime-asc" or "price-desc"
+    const [sortField, sortOrder] = value.split("-");
+    setSortBy(sortField);
+    setOrder(sortOrder || "asc");
+    setPage(1);
+    // Update URL params
+    const params = new URLSearchParams(searchParams);
+    params.set("sortBy", sortField);
+    params.set("order", sortOrder || "asc");
+    params.set("page", "1");
+    setSearchParams(params);
   };
 
   const handleProductClick = (productId: string) => {
     navigate(`/product/${productId}`);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    const params = new URLSearchParams(searchParams);
+    params.set("page", newPage.toString());
+    setSearchParams(params);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const getTimeRemaining = (endTime: string) => {
-    const end = new Date(endTime).getTime();
-    const now = Date.now();
-    const diff = end - now;
-
-    if (diff <= 0) return "Đã kết thúc";
-
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      return `${days} ngày`;
-    }
-    if (hours > 0) {
-      return `${hours} giờ ${minutes} phút`;
-    }
-    return `${minutes} phút`;
-  };
-
-  const categories = [
-    { value: "all", label: "Tất cả danh mục" },
-    { value: "electronics", label: "Điện tử" },
-    { value: "fashion", label: "Thời trang" },
-    { value: "home", label: "Nhà cửa" },
-    { value: "vehicles", label: "Xe cộ" },
-    { value: "art", label: "Nghệ thuật" },
-  ];
+  const totalPages = Math.ceil(totalProducts / limit);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <div className="container mx-auto px-4 py-8">
         {/* Search Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground mb-3">
             Tìm kiếm sản phẩm
           </h1>
-          <p className="text-gray-600">
+          <p className="text-lg text-muted-foreground">
             {searchQuery
               ? `Kết quả tìm kiếm cho "${searchQuery}"`
               : "Nhập từ khóa để tìm kiếm sản phẩm"}
@@ -278,10 +242,10 @@ export default function SearchPage() {
         </div>
 
         {/* Search Bar */}
-        <Card className="p-6 mb-6">
+        {/* <Card className="p-6 mb-8 shadow-sm">
           <form onSubmit={handleSearch} className="flex gap-4">
             <div className="flex-1 relative">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
               <Input
                 type="text"
                 placeholder="Tìm kiếm sản phẩm đấu giá..."
@@ -290,24 +254,33 @@ export default function SearchPage() {
                 className="pl-10"
               />
             </div>
-            <Button type="submit">Tìm kiếm</Button>
+            <Button type="submit" size="lg">
+              Tìm kiếm
+            </Button>
           </form>
-        </Card>
+        </Card> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Card className="p-6 sticky top-4 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Filter className="w-5 h-5" />
                   Bộ lọc
+                  {(selectedCategory !== "all" || sortBy !== "endTime" || order !== "asc") && (
+                    <span className="ml-2 px-2 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                      {[selectedCategory !== "all", sortBy !== "endTime" || order !== "asc"]
+                        .filter(Boolean).length}
+                    </span>
+                  )}
                 </h2>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleClearFilters}
                   className="text-sm"
+                  disabled={selectedCategory === "all" && sortBy === "endTime" && order === "asc" && !searchQuery}
                 >
                   <X className="w-4 h-4 mr-1" />
                   Xóa
@@ -315,12 +288,54 @@ export default function SearchPage() {
               </div>
 
               <div className="space-y-6">
+                {/* Active Filters Summary */}
+                {(selectedCategory !== "all" || searchQuery) && (
+                  <div className="pb-4 border-b border-border">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      Bộ lọc đang áp dụng:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {searchQuery && (
+                        <div className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded">
+                          <SearchIcon className="w-3 h-3" />
+                          "{searchQuery}"
+                          <button
+                            onClick={() => {
+                              setSearchQuery("");
+                              const params = new URLSearchParams(searchParams);
+                              params.delete("q");
+                              setSearchParams(params);
+                            }}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                      {selectedCategory !== "all" && (
+                        <div className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded">
+                          {categories.find(c => c.value === selectedCategory)?.label}
+                          <button
+                            onClick={() => handleCategoryChange("all")}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Category Filter */}
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label className="text-sm font-medium text-foreground mb-2 block">
                     Danh mục
                   </label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={handleCategoryChange}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -334,40 +349,30 @@ export default function SearchPage() {
                   </Select>
                 </div>
 
-                {/* Price Range Filter */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Khoảng giá
-                  </label>
-                  <Select value={priceRange} onValueChange={setPriceRange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tất cả</SelectItem>
-                      <SelectItem value="under10m">Dưới 10 triệu</SelectItem>
-                      <SelectItem value="10m-50m">10 - 50 triệu</SelectItem>
-                      <SelectItem value="50m-100m">50 - 100 triệu</SelectItem>
-                      <SelectItem value="over100m">Trên 100 triệu</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Sort By */}
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label className="text-sm font-medium text-foreground mb-2 block">
                     Sắp xếp
                   </label>
-                  <Select value={sortBy} onValueChange={setSortBy}>
+                  <Select
+                    value={`${sortBy}-${order}`}
+                    onValueChange={handleSortChange}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="relevance">Liên quan nhất</SelectItem>
-                      <SelectItem value="ending-soon">Sắp kết thúc</SelectItem>
-                      <SelectItem value="most-bids">Nhiều lượt đấu giá</SelectItem>
-                      <SelectItem value="price-asc">Giá thấp đến cao</SelectItem>
-                      <SelectItem value="price-desc">Giá cao đến thấp</SelectItem>
+                      <SelectItem value="endTime-asc">Sắp kết thúc</SelectItem>
+                      <SelectItem value="newest-desc">Mới nhất</SelectItem>
+                      <SelectItem value="price-asc">
+                        Giá thấp đến cao
+                      </SelectItem>
+                      <SelectItem value="price-desc">
+                        Giá cao đến thấp
+                      </SelectItem>
+                      <SelectItem value="bidCount-desc">
+                        Nhiều lượt đấu giá
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -378,58 +383,109 @@ export default function SearchPage() {
           {/* Results */}
           <div className="lg:col-span-3">
             {/* Results Count */}
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-gray-600">
-                Tìm thấy <strong>{filteredProducts.length}</strong> sản phẩm
+            <div className="mb-6 flex items-center justify-between">
+              <p className="text-base text-muted-foreground">
+                Tìm thấy{" "}
+                <span className="font-semibold text-foreground">
+                  {totalProducts}
+                </span>{" "}
+                sản phẩm
               </p>
             </div>
 
-            {/* Products Grid */}
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <Card
-                    key={product.id}
-                    className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => handleProductClick(product.id)}
-                  >
-                    <div className="relative">
-                      <img
-                        src={product.image}
-                        alt={product.title}
-                        className="w-full h-48 object-cover"
-                      />
-                      <div className="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded text-sm font-medium">
-                        {getTimeRemaining(product.endTime)}
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                        {product.title}
-                      </h3>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Giá hiện tại</span>
-                          <span className="text-lg font-bold text-primary">
-                            {formatPrice(product.currentPrice)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm text-gray-600">
-                          <span>{product.totalBids} lượt đấu giá</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+            {/* Loading State */}
+            {loading && (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
               </div>
-            ) : (
-              <Card className="p-12">
+            )}
+
+            {/* Error State */}
+            {error && (
+              <Card className="p-12 shadow-sm">
                 <div className="text-center">
-                  <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <AlertCircle className="w-16 h-16 text-destructive mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    Đã xảy ra lỗi
+                  </h3>
+                  <p className="text-muted-foreground mb-6">{error}</p>
+                  <Button onClick={() => window.location.reload()}>
+                    Thử lại
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Products Grid */}
+            {!loading && !error && products.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onClick={handleProductClick}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-8 flex justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => handlePageChange(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                    >
+                      Trước
+                    </Button>
+                    <div className="flex items-center gap-2">
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (page <= 3) {
+                            pageNum = i + 1;
+                          } else if (page >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = page - 2 + i;
+                          }
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={page === pageNum ? "default" : "outline"}
+                              onClick={() => handlePageChange(pageNum)}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        }
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                      disabled={page === totalPages}
+                    >
+                      Sau
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && products.length === 0 && (
+              <Card className="p-12 shadow-sm">
+                <div className="text-center">
+                  <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     Không tìm thấy sản phẩm
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-muted-foreground mb-6">
                     Không có sản phẩm nào phù hợp với từ khóa tìm kiếm của bạn.
                     <br />
                     Vui lòng thử lại với từ khóa khác hoặc điều chỉnh bộ lọc.

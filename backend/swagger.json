@@ -93,6 +93,9 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         },
         "security": [
@@ -453,19 +456,56 @@
     },
     "/api/bids/": {
       "post": {
-        "description": "",
+        "tags": [
+          "Bidding"
+        ],
+        "summary": "Place a bid on a product",
+        "description": "Place a bid on a product",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "description": "Bid data",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
-                "productId": {
-                  "example": "any"
+                "type": {
+                  "type": "string",
+                  "example": "object"
                 },
-                "maxAmount": {
-                  "example": "any"
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "productId": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    },
+                    "maxAmount": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "number"
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": {
+                  "type": "array",
+                  "example": [
+                    "productId",
+                    "maxAmount"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -484,28 +524,42 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/bids/product/{productId}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Bidding"
+        ],
+        "summary": "Get bid history for a product",
+        "description": "Get bid history for a product",
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           },
           {
             "name": "limit",
             "in": "query",
-            "type": "string"
+            "description": "Number of records",
+            "type": "integer",
+            "default": 20
           },
           {
             "name": "offset",
             "in": "query",
-            "type": "string"
+            "description": "Offset for pagination",
+            "type": "integer",
+            "default": 0
           }
         ],
         "responses": {
@@ -523,13 +577,18 @@
     },
     "/api/bids/product/{productId}/winner": {
       "get": {
-        "description": "",
+        "tags": [
+          "Bidding"
+        ],
+        "summary": "Get current winning bid for a product",
+        "description": "Get current winning bid for a product",
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
@@ -547,13 +606,18 @@
     },
     "/api/bids/product/{productId}/can-bid": {
       "get": {
-        "description": "",
+        "tags": [
+          "Bidding"
+        ],
+        "summary": "Check if user can bid on product",
+        "description": "Check if user can bid on product",
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
@@ -566,47 +630,78 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/products/search": {
       "get": {
-        "description": "",
+        "tags": [
+          "Products"
+        ],
+        "summary": "Search products with filters",
+        "description": "Search products with filters (Vietnamese no-accent supported)",
         "parameters": [
           {
             "name": "q",
             "in": "query",
+            "description": "Search query",
             "type": "string"
           },
           {
             "name": "categoryId",
             "in": "query",
-            "type": "string"
+            "description": "Filter by category ID",
+            "type": "integer"
           },
           {
             "name": "page",
             "in": "query",
-            "type": "string"
+            "description": "Page number",
+            "type": "integer",
+            "default": 1
           },
           {
             "name": "limit",
             "in": "query",
-            "type": "string"
+            "description": "Items per page",
+            "type": "integer",
+            "default": 20
           },
           {
             "name": "sortBy",
             "in": "query",
-            "type": "string"
+            "description": "Sort by field",
+            "type": "string",
+            "enum": [
+              "endTime",
+              "price",
+              "newest",
+              "bidCount"
+            ],
+            "default": "endTime"
           },
           {
             "name": "order",
             "in": "query",
-            "type": "string"
+            "description": "Sort order",
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
           },
           {
             "name": "highlightMinutes",
             "in": "query",
-            "type": "string"
+            "description": "Minutes to highlight new products",
+            "type": "integer",
+            "default": 30
           }
         ],
         "responses": {
@@ -621,13 +716,23 @@
     },
     "/api/products/top/{criteria}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get top 5 products for homepage",
+        "description": "Get top 5 products for homepage",
         "parameters": [
           {
             "name": "criteria",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Criteria for top products",
+            "enum": [
+              "ending_soon",
+              "most_bids",
+              "highest_price"
+            ]
           }
         ],
         "responses": {
@@ -642,23 +747,32 @@
     },
     "/api/products/category/{categoryId}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get products by category with pagination",
+        "description": "Get products by category with pagination",
         "parameters": [
           {
             "name": "categoryId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "integer",
+            "description": "Category ID"
           },
           {
             "name": "page",
             "in": "query",
-            "type": "string"
+            "description": "Page number",
+            "type": "integer",
+            "default": 1
           },
           {
             "name": "limit",
             "in": "query",
-            "type": "string"
+            "description": "Items per page",
+            "type": "integer",
+            "default": 20
           }
         ],
         "responses": {
@@ -673,13 +787,18 @@
     },
     "/api/products/{id}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get product details by ID",
+        "description": "Get product details by ID",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "integer",
+            "description": "Product ID"
           }
         ],
         "responses": {
@@ -697,7 +816,11 @@
     },
     "/api/categories/menu": {
       "get": {
-        "description": "",
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Get category menu hierarchy",
+        "description": "Get all root categories with their children and product counts",
         "responses": {
           "200": {
             "description": "OK"
@@ -710,16 +833,46 @@
     },
     "/api/watchlist/": {
       "post": {
-        "description": "",
+        "tags": [
+          "Watchlist"
+        ],
+        "summary": "Add product to watchlist",
+        "description": "Add product to watchlist",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "description": "Product data",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
-                "productId": {
-                  "example": "any"
+                "type": {
+                  "type": "string",
+                  "example": "object"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "productId": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": {
+                  "type": "array",
+                  "example": [
+                    "productId"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -732,20 +885,33 @@
           "400": {
             "description": "Bad Request"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "get": {
-        "description": "",
+        "tags": [
+          "Watchlist"
+        ],
+        "summary": "Get user watchlist",
+        "description": "Get user watchlist",
         "parameters": [
           {
             "name": "page",
             "in": "query",
-            "type": "string"
+            "description": "Page number",
+            "type": "integer",
+            "default": 1
           },
           {
             "name": "limit",
             "in": "query",
-            "type": "string"
+            "description": "Items per page",
+            "type": "integer",
+            "default": 20
           }
         ],
         "responses": {
@@ -755,18 +921,28 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/watchlist/{productId}": {
       "delete": {
-        "description": "",
+        "tags": [
+          "Watchlist"
+        ],
+        "summary": "Remove product from watchlist",
+        "description": "Remove product from watchlist",
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
@@ -776,18 +952,28 @@
           "400": {
             "description": "Bad Request"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/watchlist/check/{productId}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Watchlist"
+        ],
+        "summary": "Check if product is in watchlist",
+        "description": "Check if product is in watchlist",
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
@@ -797,7 +983,12 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/questions/product/{productId}": {
@@ -886,7 +1077,11 @@
     },
     "/api/users/profile": {
       "get": {
-        "description": "",
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get current user profile",
+        "description": "Get current user profile",
         "responses": {
           "200": {
             "description": "OK"
@@ -894,28 +1089,72 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "put": {
-        "description": "",
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user profile",
+        "description": "Update user profile",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "description": "User profile data",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
-                "email": {
-                  "example": "any"
+                "type": {
+                  "type": "string",
+                  "example": "object"
                 },
-                "fullName": {
-                  "example": "any"
-                },
-                "address": {
-                  "example": "any"
-                },
-                "dateOfBirth": {
-                  "example": "any"
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    },
+                    "fullName": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    },
+                    "address": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    },
+                    "dateOfBirth": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -927,25 +1166,96 @@
           },
           "400": {
             "description": "Bad Request"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/users/profile/{id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user profile by ID",
+        "description": "Get user profile by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
     },
     "/api/users/change-password": {
       "post": {
-        "description": "",
+        "tags": [
+          "Users"
+        ],
+        "summary": "Change password",
+        "description": "Change password",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "description": "Password change data",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
-                "oldPassword": {
-                  "example": "any"
+                "type": {
+                  "type": "string",
+                  "example": "object"
                 },
-                "newPassword": {
-                  "example": "any"
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "oldPassword": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    },
+                    "newPassword": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": {
+                  "type": "array",
+                  "example": [
+                    "oldPassword",
+                    "newPassword"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -958,22 +1268,80 @@
           "400": {
             "description": "Bad Request"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/users/ratings": {
       "get": {
-        "description": "",
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user ratings",
+        "description": "Get user ratings",
         "parameters": [
           {
             "name": "page",
             "in": "query",
-            "type": "string"
+            "description": "Page number",
+            "type": "integer",
+            "default": 1
           },
           {
             "name": "limit",
             "in": "query",
-            "type": "string"
+            "description": "Items per page",
+            "type": "integer",
+            "default": 20
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/ratings": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get ratings for a specific user",
+        "description": "Get ratings for a specific user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "User ID"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "type": "integer",
+            "default": 20
           }
         ],
         "responses": {
@@ -988,17 +1356,25 @@
     },
     "/api/users/bidding-products": {
       "get": {
-        "description": "",
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get products user is bidding on",
+        "description": "Get products user is bidding on",
         "parameters": [
           {
             "name": "page",
             "in": "query",
-            "type": "string"
+            "description": "Page number",
+            "type": "integer",
+            "default": 1
           },
           {
             "name": "limit",
             "in": "query",
-            "type": "string"
+            "description": "Items per page",
+            "type": "integer",
+            "default": 20
           }
         ],
         "responses": {
@@ -1008,10 +1384,175 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/users/won-products": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get products user has won",
+        "description": "Get products user has won",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "type": "integer",
+            "default": 20
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/users/rate-seller": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Rate a seller",
+        "description": "Rate a seller",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Rating data",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "object"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "toUserId": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    },
+                    "type": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        },
+                        "enum": {
+                          "type": "array",
+                          "example": [
+                            "POSITIVE",
+                            "NEGATIVE"
+                          ],
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "comment": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    },
+                    "orderId": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": {
+                  "type": "array",
+                  "example": [
+                    "toUserId",
+                    "type"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/users/request-seller-upgrade": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Request upgrade to seller",
+        "description": "Request upgrade to seller",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/admin/categories": {
       "get": {
         "description": "",
         "parameters": [
@@ -1030,13 +1571,17 @@
           "200": {
             "description": "OK"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
           "500": {
             "description": "Internal Server Error"
           }
         }
-      }
-    },
-    "/api/users/rate-seller": {
+      },
       "post": {
         "description": "",
         "parameters": [
@@ -1046,16 +1591,10 @@
             "schema": {
               "type": "object",
               "properties": {
-                "toUserId": {
+                "name": {
                   "example": "any"
                 },
-                "type": {
-                  "example": "any"
-                },
-                "comment": {
-                  "example": "any"
-                },
-                "orderId": {
+                "parentId": {
                   "example": "any"
                 }
               }
@@ -1068,19 +1607,536 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
         }
       }
     },
-    "/api/users/request-seller-upgrade": {
-      "post": {
+    "/api/admin/categories/{id}": {
+      "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "example": "any"
+                },
+                "parentId": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
           },
           "400": {
             "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/admin/products": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "sellerId",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/products/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/admin/upgrade-requests": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/upgrade-requests/{userId}/approve": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/admin/upgrade-requests/{userId}/reject": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/admin/dashboard/stats": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/dashboard/user-growth": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/dashboard/product-growth": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/dashboard/top-sellers": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/admin/dashboard/top-products": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }

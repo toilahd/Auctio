@@ -1,165 +1,113 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import AuctionCard from "@/components/AuctionCard";
+import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ChevronRight,
+  Clock,
+  Flame,
+  Gem,
+  Search,
+  Sparkles,
+} from "lucide-react";
 
-// Mock data for featured auctions
-const mockAuctions = {
-  endingSoon: [
-    {
-      id: "1",
-      title: "iPhone 15 Pro Max 256GB - Nguyên seal, chưa kích hoạt",
-      currentPrice: 25000000,
-      buyNowPrice: 30000000,
-      imageUrl: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500",
-      endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-      totalBids: 45,
-      seller: "TechStore VN",
-      isEnding: true,
-    },
-    {
-      id: "2",
-      title: "MacBook Pro M3 14 inch 2024 - Like new 99%",
-      currentPrice: 35000000,
-      imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500",
-      endTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-      totalBids: 32,
-      seller: "Apple Store HN",
-      isEnding: true,
-    },
-    {
-      id: "3",
-      title: "Sony WH-1000XM5 - Tai nghe chống ồn cao cấp",
-      currentPrice: 6500000,
-      buyNowPrice: 8000000,
-      imageUrl: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=500",
-      endTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-      totalBids: 18,
-      seller: "AudioPro",
-      isEnding: true,
-    },
-    {
-      id: "4",
-      title: "iPad Air M2 2024 - WiFi 128GB Starlight",
-      currentPrice: 12000000,
-      imageUrl: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500",
-      endTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-      totalBids: 28,
-      seller: "iZone HCM",
-      isEnding: true,
-    },
-    {
-      id: "5",
-      title: "Samsung Galaxy Watch 6 Classic 47mm",
-      currentPrice: 7200000,
-      buyNowPrice: 9000000,
-      imageUrl: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=500",
-      endTime: new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString(),
-      totalBids: 21,
-      seller: "SmartWatch VN",
-      isEnding: true,
-    },
-  ],
-  mostBid: [
-    {
-      id: "6",
-      title: "Nike Air Jordan 1 Retro High OG - Size 42",
-      currentPrice: 8500000,
-      imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500",
-      endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 127,
-      seller: "Sneaker Heaven",
-    },
-    {
-      id: "7",
-      title: "Rolex Submariner Date 126610LN - Fullbox 2023",
-      currentPrice: 250000000,
-      imageUrl: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=500",
-      endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 98,
-      seller: "Luxury Watches",
-    },
-    {
-      id: "8",
-      title: "PlayStation 5 Slim + 2 tay cầm + 5 game AAA",
-      currentPrice: 15000000,
-      buyNowPrice: 18000000,
-      imageUrl: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=500",
-      endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 86,
-      seller: "GameHub",
-    },
-    {
-      id: "9",
-      title: "Canon EOS R6 Mark II Body - Chính hãng LBM",
-      currentPrice: 52000000,
-      imageUrl: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=500",
-      endTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 74,
-      seller: "Camera World",
-    },
-    {
-      id: "10",
-      title: "Herman Miller Aeron Chair Size B - Like New",
-      currentPrice: 18000000,
-      buyNowPrice: 22000000,
-      imageUrl: "https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=500",
-      endTime: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 67,
-      seller: "Office Furniture Pro",
-    },
-  ],
-  highestPrice: [
-    {
-      id: "11",
-      title: "Mercedes-Benz S-Class S500 2023 - Màu đen, đi 5000km",
-      currentPrice: 4500000000,
-      imageUrl: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=500",
-      endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 15,
-      seller: "Luxury Auto",
-    },
-    {
-      id: "12",
-      title: "Căn hộ Vinhomes Central Park 3PN - View sông",
-      currentPrice: 8500000000,
-      imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=500",
-      endTime: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 8,
-      seller: "VinGroup",
-    },
-    {
-      id: "13",
-      title: "Tranh sơn dầu Nguyễn Gia Trí - Chính chủ",
-      currentPrice: 350000000,
-      imageUrl: "https://images.unsplash.com/photo-1579541814924-49fef17c5be5?w=500",
-      endTime: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 12,
-      seller: "Fine Arts Gallery",
-    },
-    {
-      id: "14",
-      title: "Patek Philippe Nautilus 5711/1A - Full set 2022",
-      currentPrice: 1200000000,
-      imageUrl: "https://images.unsplash.com/photo-1587836374184-4172d2e6d18d?w=500",
-      endTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 22,
-      seller: "Swiss Time",
-    },
-    {
-      id: "15",
-      title: "Harley-Davidson Street Glide Special 2024",
-      currentPrice: 950000000,
-      buyNowPrice: 1200000000,
-      imageUrl: "https://images.unsplash.com/photo-1558981359-219d6364c9c8?w=500",
-      endTime: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 18,
-      seller: "Harley VN",
-    },
-  ],
-};
+interface Product {
+  id: string;
+  title: string;
+  titleNoAccent: string;
+  description: string;
+  startPrice: string;
+  currentPrice: string;
+  stepPrice: string;
+  buyNowPrice: string | null;
+  endTime: string;
+  images: string[];
+  categoryId: string;
+  sellerId: string;
+  status: string;
+  bidCount: number;
+  viewCount: number;
+  autoExtend: boolean;
+  currentWinnerId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  isNew?: boolean;
+  category?: {
+    id: string;
+    name: string;
+  };
+  seller?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  _count?: {
+    bids: number;
+  };
+  timeLeft?: {
+    hours: number;
+    minutes: number;
+    total: number;
+  };
+}
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  const [endingSoon, setEndingSoon] = useState<Product[]>([]);
+  const [mostBid, setMostBid] = useState<Product[]>([]);
+  const [highestPrice, setHighestPrice] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const [endingSoonRes, mostBidRes, highestPriceRes] = await Promise.all([
+          fetch("http://localhost:3000/api/products/top/ending_soon"),
+          fetch("http://localhost:3000/api/products/top/most_bids"),
+          fetch("http://localhost:3000/api/products/top/highest_price"),
+        ]);
+
+        const [endingSoonData, mostBidData, highestPriceData] =
+          await Promise.all([
+            endingSoonRes.json(),
+            mostBidRes.json(),
+            highestPriceRes.json(),
+          ]);
+
+        if (endingSoonData.success) setEndingSoon(endingSoonData.data);
+        if (mostBidData.success) setMostBid(mostBidData.data);
+        if (highestPriceData.success) setHighestPrice(highestPriceData.data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Đang tải...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950">
       <Header />
@@ -177,10 +125,20 @@ const HomePage = () => {
                 hữu những sản phẩm chất lượng với giá tốt nhất.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="text-lg px-8">
+                <Button
+                  size="lg"
+                  className="text-lg px-8"
+                  onClick={() => navigate("/search")}
+                >
+                  <Search className="w-5 h-5 mr-2" />
                   Khám phá ngay
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-lg px-8"
+                  onClick={() => navigate("/about")}
+                >
                   Tìm hiểu thêm
                 </Button>
               </div>
@@ -193,21 +151,35 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                  ⏰ Sắp kết thúc
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Clock className="w-7 h-7 text-destructive" />
+                  Sắp kết thúc
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Nhanh tay đấu giá trước khi quá muộn
                 </p>
               </div>
-              <Button variant="outline" onClick={() => window.location.href = "/products?sort=ending"}>
-                Xem tất cả →
+              <Button
+                variant="outline"
+                onClick={() => navigate("/search?sortBy=endTime&order=asc")}
+              >
+                Xem tất cả <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-              {mockAuctions.endingSoon.map((auction) => (
-                <AuctionCard key={auction.id} {...auction} />
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {endingSoon.length > 0 ? (
+                endingSoon.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onClick={handleProductClick}
+                  />
+                ))
+              ) : (
+                <p className="col-span-full text-center text-gray-500 dark:text-gray-400">
+                  Không có sản phẩm nào
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -217,21 +189,35 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                  🔥 Đấu giá nhiều nhất
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Flame className="w-7 h-7 text-orange-500" />
+                  Đấu giá nhiều nhất
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Sản phẩm được quan tâm nhất
                 </p>
               </div>
-              <Button variant="outline" onClick={() => window.location.href = "/products?sort=bids"}>
-                Xem tất cả →
+              <Button
+                variant="outline"
+                onClick={() => navigate("/search?sortBy=bidCount&order=desc")}
+              >
+                Xem tất cả <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-              {mockAuctions.mostBid.map((auction) => (
-                <AuctionCard key={auction.id} {...auction} />
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {mostBid.length > 0 ? (
+                mostBid.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onClick={handleProductClick}
+                  />
+                ))
+              ) : (
+                <p className="col-span-full text-center text-gray-500 dark:text-gray-400">
+                  Không có sản phẩm nào
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -241,21 +227,35 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                  💎 Giá trị cao nhất
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Gem className="w-7 h-7 text-blue-500" />
+                  Giá trị cao nhất
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Những sản phẩm cao cấp, giá trị lớn
                 </p>
               </div>
-              <Button variant="outline" onClick={() => window.location.href = "/products?sort=price"}>
-                Xem tất cả →
+              <Button
+                variant="outline"
+                onClick={() => navigate("/search?sortBy=price&order=desc")}
+              >
+                Xem tất cả <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-              {mockAuctions.highestPrice.map((auction) => (
-                <AuctionCard key={auction.id} {...auction} />
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {highestPrice.length > 0 ? (
+                highestPrice.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onClick={handleProductClick}
+                  />
+                ))
+              ) : (
+                <p className="col-span-full text-center text-gray-500 dark:text-gray-400">
+                  Không có sản phẩm nào
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -267,9 +267,15 @@ const HomePage = () => {
               Bạn muốn bán sản phẩm?
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
-              Đăng ký trở thành người bán và tiếp cận hàng ngàn khách hàng tiềm năng
+              Đăng ký trở thành người bán và tiếp cận hàng ngàn khách hàng tiềm
+              năng
             </p>
-            <Button size="lg" className="text-lg px-8" onClick={() => window.location.href = "/seller/create-product"}>
+            <Button
+              size="lg"
+              className="text-lg px-8"
+              onClick={() => navigate("/seller/create-product")}
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
               Đăng sản phẩm ngay
             </Button>
           </div>

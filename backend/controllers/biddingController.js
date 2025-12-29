@@ -8,13 +8,15 @@ import prisma from '../config/prisma.js';
 const logger = getLogger('BiddingController');
 
 class BiddingController {
-  /**
-   * Place a bid on a product
-   * POST /api/bids
-   */
-  // controllers/biddingController.js
-
   async placeBid(req, res) {
+    /*
+     * POST /api/bids
+     * #swagger.tags = ['Bidding']
+     * #swagger.summary = 'Place a bid on a product'
+     * #swagger.description = 'Place a bid on a product'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['body'] = { in: 'body', description: 'Bid data', required: true, schema: { type: 'object', properties: { productId: { type: 'string' }, maxAmount: { type: 'number' } }, required: ['productId', 'maxAmount'] } }
+     */
     try {
       const { productId, maxAmount } = req.body;
       const bidderId = req.user.id;
@@ -82,11 +84,16 @@ class BiddingController {
     }
   }
 
-  /**
-   * Get bid history for a product
-   * GET /api/bids/product/:productId
-   */
   async getBidHistory(req, res) {
+    /*
+     * GET /api/bids/product/:productId
+     * #swagger.tags = ['Bidding']
+     * #swagger.summary = 'Get bid history for a product'
+     * #swagger.description = 'Get bid history for a product'
+     * #swagger.parameters['productId'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+     * #swagger.parameters['limit'] = { in: 'query', description: 'Number of records', type: 'integer', default: 20 }
+     * #swagger.parameters['offset'] = { in: 'query', description: 'Offset for pagination', type: 'integer', default: 0 }
+     */
     try {
       const { productId } = req.params;
       const limit = parseInt(req.query.limit) || 20;
@@ -108,11 +115,14 @@ class BiddingController {
     }
   }
 
-  /**
-   * Get current winning bid for a product
-   * GET /api/bids/product/:productId/winner
-   */
   async getCurrentWinner(req, res) {
+    /*
+     * GET /api/bids/product/:productId/winner
+     * #swagger.tags = ['Bidding']
+     * #swagger.summary = 'Get current winning bid for a product'
+     * #swagger.description = 'Get current winning bid for a product'
+     * #swagger.parameters['productId'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+     */
     try {
       const { productId } = req.params;
 
@@ -132,11 +142,15 @@ class BiddingController {
     }
   }
 
-  /**
-   * Check if user can bid on product
-   * GET /api/bids/product/:productId/can-bid
-   */
   async canUserBid(req, res) {
+    /*
+     * GET /api/bids/product/:productId/can-bid
+     * #swagger.tags = ['Bidding']
+     * #swagger.summary = 'Check if user can bid on product'
+     * #swagger.description = 'Check if user can bid on product'
+     * #swagger.security = [{ "bearerAuth": [] }]
+     * #swagger.parameters['productId'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+     */
     try {
       const { productId } = req.params;
       const userId = req.user.id;

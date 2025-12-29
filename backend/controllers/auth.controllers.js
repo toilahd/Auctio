@@ -6,7 +6,7 @@ import UserModel from "../models/User.js";
 
 const prisma = new PrismaClient();
 
-const ACCESS_TOKEN_AGE = "2min";
+const ACCESS_TOKEN_AGE = "5min";
 const REFRESH_TOKEN_AGE = "30d";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -63,7 +63,22 @@ export function whoAmI(req, res) {
       }
     }
   */
-  return res.json({ user: req.user, error: req.tokenError });
+  if (req.user) {
+    return res.json({
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        fullName: req.user.fullName,
+        role: req.user.role,
+      },
+      error: null,
+    });
+  } else {
+    return res.status(401).json({
+      user: null,
+      error: "No valid authentication token provided",
+    });
+  }
 }
 
 export async function login(req, res) {
@@ -167,7 +182,7 @@ export async function login(req, res) {
 
   // All good, create tokens
   const userInfoPayload = {
-    userId: foundUser.id,
+    id: foundUser.id,
     fullName: foundUser.fullName,
     email: foundUser.email,
     role: foundUser.role,
@@ -309,8 +324,19 @@ export async function signup(req, res) {
   // JWT will always has isVerified as false on signup
   // If there is a OTP screen, update the JWT with correct isVerified
   // TODO: OTP logic
+  const otpToken = Math.floor(100000 + Math.random() * 900000).toString();
+  console.log(`Generated OTP for ${newUser.email}: ${otpToken}`);
+  // In production, send this OTP via email/SMS
+  await sendEmail(
+    newUser.email,
+    "Your OTP Code",
+    `Your OTP code is: ${otpToken}`
+  );
+  // Store OTP token in database or cache with expiration
+  await UserModel.update(newUser.id, { verificationToken: otpToken });
+
   const userInfoPayload = {
-    userId: newUser.id,
+    id: newUser.id,
     fullName: newUser.fullName,
     email: newUser.email,
     role: newUser.role,
@@ -354,11 +380,13 @@ export function logout(req, res) {
   */
   const user = req.user || null;
   if (user === null) {
+    console.log("Logout attempt without authentication");
     return res.status(401).json({ message: "Not authenticated" });
   }
 
-  UserModel.update(user.userId, { resetToken: null });
+  UserModel.update(user.id, { resetToken: null });
 
+  console.log(`User logged out: ${user.email}, ID: ${user.id}`);
   res.clearCookie("access");
   res.clearCookie("refresh");
   res.json({ message: "Logged out successfully" });
@@ -406,14 +434,14 @@ export async function refreshToken(req, res) {
     return res.status(401).json({ message: "Invalid refresh token" });
   }
 
-  const storedUser = await UserModel.findById(user.userId);
+  const storedUser = await UserModel.findById(user.id);
 
   if (!storedUser || storedUser.resetToken !== refreshToken) {
     return res.status(401).json({ message: "Invalid refresh token" });
   }
 
   const userInfoPayload = {
-    userId: storedUser.id,
+    id: storedUser.id,
     fullName: storedUser.fullName,
     email: storedUser.email,
     role: storedUser.role,
@@ -448,7 +476,7 @@ export function googleOAuthCallback(req, res) {
   }
 
   const userInfoPayload = {
-    userId: user.id,
+    id: user.id,
     fullName: user.fullName,
     email: user.email,
     role: user.role,
