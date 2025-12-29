@@ -6,7 +6,7 @@ import UserModel from "../models/User.js";
 
 const prisma = new PrismaClient();
 
-const ACCESS_TOKEN_AGE = "30s";
+const ACCESS_TOKEN_AGE = "5min";
 const REFRESH_TOKEN_AGE = "30d";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -369,11 +369,13 @@ export function logout(req, res) {
   */
   const user = req.user || null;
   if (user === null) {
+    console.log("Logout attempt without authentication");
     return res.status(401).json({ message: "Not authenticated" });
   }
 
   UserModel.update(user.id, { resetToken: null });
 
+  console.log(`User logged out: ${user.email}, ID: ${user.id}`);
   res.clearCookie("access");
   res.clearCookie("refresh");
   res.json({ message: "Logged out successfully" });

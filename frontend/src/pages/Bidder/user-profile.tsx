@@ -7,7 +7,6 @@ import Footer from "@/components/layout/Footer";
 import {
   User,
   Mail,
-  Phone,
   MapPin,
   Calendar,
   Star,
@@ -54,13 +53,17 @@ interface UserProfile {
 
 interface Review {
   id: string;
-  fromUserId: string;
-  fromUserName: string;
-  type: "positive" | "negative";
+  type: "POSITIVE" | "NEGATIVE";
   comment: string;
+  fromUserId: string;
+  toUserId: string;
+  orderId: string | null;
   createdAt: string;
-  orderId: string;
-  productTitle: string;
+  updatedAt: string;
+  fromUser: {
+    id: string;
+    fullName: string;
+  };
 }
 
 export default function UserProfilePage() {
@@ -70,9 +73,10 @@ export default function UserProfilePage() {
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [reviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
 
   // Fetch user profile data
   useEffect(() => {
@@ -106,7 +110,7 @@ export default function UserProfilePage() {
             dateOfBirth: data.dateOfBirth,
             joinedAt: data.createdAt,
             role: data.role,
-            isVerified: undefined, // Not provided by API - will show warning
+            isVerified: data.isVerified, // Not provided by API - will show warning
             avatar: undefined, // Not provided by API
             bio: undefined, // Not provided by API - will show warning
             stats: undefined, // Not provided by API - will show warning
@@ -122,9 +126,22 @@ export default function UserProfilePage() {
           });
         }
 
-        // TODO: Fetch reviews from separate endpoint
-        // const reviewsResponse = await fetch(`${BACKEND_URL}/api/users/${id}/reviews`);
-        // setReviews(reviewsData);
+        // Fetch ratings/reviews
+        setIsLoadingReviews(true);
+        const ratingsResponse = await fetch(
+          `${BACKEND_URL}/api/users/ratings?page=1&limit=20`,
+          {
+            credentials: "include",
+          }
+        );
+
+        if (ratingsResponse.ok) {
+          const ratingsData = await ratingsResponse.json();
+          if (ratingsData.success && ratingsData.data) {
+            setReviews(ratingsData.data.ratings || []);
+          }
+        }
+        setIsLoadingReviews(false);
       } catch (err: any) {
         console.error("Error fetching profile:", err);
         setError(err.message || "Failed to load user profile");
@@ -248,7 +265,7 @@ export default function UserProfilePage() {
               </div>
 
               {/* Bio */}
-              {userProfile.bio ? (
+              {/* {userProfile.bio ? (
                 <div className="mb-6 pb-6 border-b">
                   <p className="text-sm text-gray-600 text-center">
                     {userProfile.bio}
@@ -261,7 +278,7 @@ export default function UserProfilePage() {
                     <span>Bio chưa có trong API</span>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Contact Info */}
               <div className="space-y-3 mb-6">
@@ -272,7 +289,7 @@ export default function UserProfilePage() {
                   </span>
                 </div>
 
-                {userProfile.phone ? (
+                {/* {userProfile.phone ? (
                   <div className="flex items-center gap-3 text-sm">
                     <Phone className="w-5 h-5 text-gray-400" />
                     <span className="text-gray-600">{userProfile.phone}</span>
@@ -284,12 +301,21 @@ export default function UserProfilePage() {
                       Số điện thoại chưa có trong API
                     </span>
                   </div>
-                )}
+                )} */}
 
                 {userProfile.address && (
                   <div className="flex items-center gap-3 text-sm">
                     <MapPin className="w-5 h-5 text-gray-400" />
                     <span className="text-gray-600">{userProfile.address}</span>
+                  </div>
+                )}
+
+                {userProfile.dateOfBirth && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <User className="w-5 h-5 text-gray-400" />
+                    <span className="text-gray-600">
+                      Sinh nhật: {formatDate(userProfile.dateOfBirth)}
+                    </span>
                   </div>
                 )}
 
@@ -430,7 +456,13 @@ export default function UserProfilePage() {
                 Đánh giá gần đây ({reviews.length})
               </h3>
 
-              {reviews.length > 0 ? (
+              {isLoadingReviews ? (
+                <Card className="p-8">
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                  </div>
+                </Card>
+              ) : reviews.length > 0 ? (
                 reviews.map((review) => (
                   <Card key={review.id} className="p-6">
                     <div className="flex items-start justify-between mb-3">
@@ -440,7 +472,7 @@ export default function UserProfilePage() {
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {review.fromUserName}
+                            {review.fromUser.fullName}
                           </p>
                           <p className="text-xs text-gray-500">
                             {getTimeAgo(review.createdAt)}
@@ -448,7 +480,7 @@ export default function UserProfilePage() {
                         </div>
                       </div>
 
-                      {review.type === "positive" ? (
+                      {review.type === "POSITIVE" ? (
                         <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                           <ThumbsUp className="w-4 h-4" />
                           Tích cực
@@ -463,32 +495,23 @@ export default function UserProfilePage() {
 
                     <p className="text-gray-700 mb-3">{review.comment}</p>
 
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Package className="w-4 h-4" />
-                      <span>Đơn hàng: {review.productTitle}</span>
-                    </div>
+                    {review.orderId && (
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Package className="w-4 h-4" />
+                        <span>Đơn hàng: {review.orderId}</span>
+                      </div>
+                    )}
                   </Card>
                 ))
               ) : (
                 <Card className="p-8">
-                  <div className="flex items-start gap-3 text-amber-600 bg-amber-50 p-4 rounded-lg mb-4">
-                    <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Đánh giá chưa có trong API</p>
-                      <p className="text-sm mt-1">
-                        Cần endpoint: GET /api/users/:id/reviews hoặc
-                        /api/users/profile/reviews
-                      </p>
-                    </div>
-                  </div>
                   <div className="text-center">
                     <Star className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       Chưa có đánh giá
                     </h3>
                     <p className="text-gray-600">
-                      Người dùng này chưa nhận được đánh giá nào hoặc endpoint
-                      chưa có.
+                      Người dùng này chưa nhận được đánh giá nào.
                     </p>
                   </div>
                 </Card>

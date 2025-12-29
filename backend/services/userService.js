@@ -25,7 +25,8 @@ class UserService {
           upgradeRequested: true,
           upgradeRequestedAt: true,
           upgradeStatus: true,
-          createdAt: true
+          createdAt: true,
+          isVerified: true
         }
       });
 

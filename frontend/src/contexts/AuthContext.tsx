@@ -10,6 +10,7 @@ export interface User {
     positive: number;
     negative: number;
   };
+//   isVerified?: boolean;
 }
 
 interface AuthContextType {
