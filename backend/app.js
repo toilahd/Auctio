@@ -17,6 +17,11 @@ import sellerRoutes from "./routes/sellerRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 dotenv.config();
 
+BigInt.prototype.toJSON = function () {
+  const int = Number.parseInt(this.toString());
+  return int ?? this.toString();
+};
+
 const PORT = process.env.PORT || 3000;
 
 // Routes

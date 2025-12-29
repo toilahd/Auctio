@@ -2,11 +2,13 @@ import express from 'express';
 import * as adminController from '../controllers/adminController.js';
 import { authenticateToken } from '../middlewares/authMiddleware.js';
 import { requireAdmin } from '../middlewares/adminMiddleware.js';
+import getUserFromJwt from '../utils/getUserFromJwtMiddleware.js';
 
 const router = express.Router();
 
 // All admin routes require authentication and admin role
-router.use(authenticateToken);
+// router.use(authenticateToken);
+router.use(getUserFromJwt);
 router.use(requireAdmin);
 
 // ==================== CATEGORY MANAGEMENT ====================
