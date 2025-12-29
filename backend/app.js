@@ -14,6 +14,7 @@ import questionRoutes from "./routes/questionRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import sellerRoutes from "./routes/sellerRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
@@ -57,6 +58,7 @@ app.use("/api/questions", questionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/seller", sellerRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

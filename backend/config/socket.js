@@ -49,6 +49,40 @@ export const initializeSocket = (httpServer) => {
       logger.info(`Client ${socket.id} joined user room: ${userId}`);
     });
 
+    // Join order chat room (for seller-winner communication)
+    socket.on('join:chat', (orderId) => {
+      socket.join(`chat:${orderId}`);
+      logger.info(`Client ${socket.id} joined chat room: ${orderId}`);
+
+      socket.emit('chat:joined', {
+        orderId,
+        message: 'Successfully joined chat room'
+      });
+    });
+
+    // Leave chat room
+    socket.on('leave:chat', (orderId) => {
+      socket.leave(`chat:${orderId}`);
+      logger.info(`Client ${socket.id} left chat room: ${orderId}`);
+    });
+
+    // Handle typing indicator
+    socket.on('chat:typing', ({ orderId, userId, userName }) => {
+      socket.to(`chat:${orderId}`).emit('chat:typing', {
+        userId,
+        userName,
+        orderId
+      });
+    });
+
+    // Handle stop typing
+    socket.on('chat:stop-typing', ({ orderId, userId }) => {
+      socket.to(`chat:${orderId}`).emit('chat:stop-typing', {
+        userId,
+        orderId
+      });
+    });
+
     // Handle disconnection
     socket.on('disconnect', () => {
       logger.info(`Client disconnected: ${socket.id}`);
@@ -154,12 +188,52 @@ export const emitPriceUpdate = (productId, data) => {
   logger.info(`Emitted price update for product ${productId}`);
 };
 
+/**
+ * Emit new chat message to order chat room
+ * @param {string} orderId - Order ID
+ * @param {Object} message - Chat message data
+ */
+export const emitChatMessage = (orderId, message) => {
+  if (!io) {
+    logger.warn('Socket.IO not initialized, skipping chat message emit');
+    return;
+  }
+
+  io.to(`chat:${orderId}`).emit('chat:message', {
+    ...message,
+    timestamp: new Date()
+  });
+
+  logger.info(`Emitted chat message for order ${orderId}`);
+};
+
+/**
+ * Emit message read notification
+ * @param {string} orderId - Order ID
+ * @param {Object} data - Read notification data
+ */
+export const emitMessageRead = (orderId, data) => {
+  if (!io) {
+    logger.warn('Socket.IO not initialized, skipping message read emit');
+    return;
+  }
+
+  io.to(`chat:${orderId}`).emit('chat:message-read', {
+    ...data,
+    timestamp: new Date()
+  });
+
+  logger.info(`Emitted message read for order ${orderId}`);
+};
+
 export default {
   initializeSocket,
   getIO,
   emitBidUpdate,
   emitUserNotification,
   emitAuctionEnd,
-  emitPriceUpdate
+  emitPriceUpdate,
+  emitChatMessage,
+  emitMessageRead
 };
 
