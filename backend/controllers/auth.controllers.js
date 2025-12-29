@@ -324,6 +324,17 @@ export async function signup(req, res) {
   // JWT will always has isVerified as false on signup
   // If there is a OTP screen, update the JWT with correct isVerified
   // TODO: OTP logic
+  const otpToken = Math.floor(100000 + Math.random() * 900000).toString();
+  console.log(`Generated OTP for ${newUser.email}: ${otpToken}`);
+  // In production, send this OTP via email/SMS
+  await sendEmail(
+    newUser.email,
+    "Your OTP Code",
+    `Your OTP code is: ${otpToken}`
+  );
+  // Store OTP token in database or cache with expiration
+  await UserModel.update(newUser.id, { verificationToken: otpToken });
+
   const userInfoPayload = {
     id: newUser.id,
     fullName: newUser.fullName,
