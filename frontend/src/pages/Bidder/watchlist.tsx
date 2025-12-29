@@ -1,68 +1,78 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import AuctionCard from "@/components/AuctionCard";
+import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const WatchlistPage = () => {
-  // Mock watchlist data - TODO: Fetch from backend
-  const [watchlist, setWatchlist] = useState([
-    {
-      id: "1",
-      title: "iPhone 15 Pro Max 256GB - Nguyên seal, chưa kích hoạt",
-      currentPrice: 25000000,
-      buyNowPrice: 30000000,
-      imageUrl: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500",
-      endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-      totalBids: 45,
-      seller: "TechStore VN",
-      isEnding: true,
-    },
-    {
-      id: "3",
-      title: "Sony WH-1000XM5 - Tai nghe chống ồn cao cấp",
-      currentPrice: 6500000,
-      buyNowPrice: 8000000,
-      imageUrl: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=500",
-      endTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-      totalBids: 18,
-      seller: "AudioPro",
-    },
-    {
-      id: "7",
-      title: "Rolex Submariner Date 126610LN - Fullbox 2023",
-      currentPrice: 250000000,
-      imageUrl: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=500",
-      endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 98,
-      seller: "Luxury Watches",
-    },
-    {
-      id: "8",
-      title: "PlayStation 5 Slim + 2 tay cầm + 5 game AAA",
-      currentPrice: 15000000,
-      buyNowPrice: 18000000,
-      imageUrl: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=500",
-      endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 86,
-      seller: "GameHub",
-    },
-    {
-      id: "11",
-      title: "Mercedes-Benz S-Class S500 2023 - Màu đen, đi 5000km",
-      currentPrice: 4500000000,
-      imageUrl: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=500",
-      endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      totalBids: 15,
-      seller: "Luxury Auto",
-    },
-  ]);
+  const navigate = useNavigate();
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleRemoveFromWatchlist = (id: string) => {
+  const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+  const fetchWatchlist = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/watchlist/?page=1&limit=20`,
+        {
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setWatchlist(data.data.products || []);
+      } else {
+        setError("Không thể tải danh sách theo dõi");
+      }
+    } catch (err) {
+      setError("Đã xảy ra lỗi khi tải dữ liệu");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [BACKEND_URL]);
+
+  useEffect(() => {
+    fetchWatchlist();
+  }, [fetchWatchlist]);
+
+  const handleRemoveFromWatchlist = async (productId: string) => {
     if (confirm("Bạn có chắc muốn xóa sản phẩm này khỏi danh sách theo dõi?")) {
-      setWatchlist((prev) => prev.filter((item) => item.id !== id));
+      try {
+        const response = await fetch(
+          `${BACKEND_URL}/api/watchlist/${productId}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+        const data = await response.json();
+        if (data.success) {
+          setWatchlist((prev) => prev.filter((item) => item.id !== productId));
+        }
+      } catch (err) {
+        console.error("Error removing from watchlist:", err);
+      }
     }
   };
+
+  if (loading && watchlist.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950">
@@ -79,6 +89,12 @@ const WatchlistPage = () => {
               {watchlist.length} sản phẩm đang theo dõi
             </p>
           </div>
+
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+              <p className="text-red-800 dark:text-red-200">{error}</p>
+            </div>
+          )}
 
           {watchlist.length > 0 ? (
             <>
@@ -102,7 +118,11 @@ const WatchlistPage = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (confirm("Bạn có chắc muốn xóa tất cả sản phẩm khỏi danh sách theo dõi?")) {
+                    if (
+                      confirm(
+                        "Bạn có chắc muốn xóa tất cả sản phẩm khỏi danh sách theo dõi?"
+                      )
+                    ) {
                       setWatchlist([]);
                     }
                   }}
@@ -114,12 +134,17 @@ const WatchlistPage = () => {
 
               {/* Products Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {watchlist.map((product) => (
-                  <div key={product.id} className="relative group">
-                    <AuctionCard {...product} isEnding={product.isEnding} />
+                {watchlist.map((item) => (
+                  <div key={item.id} className="relative group">
+                    <ProductCard
+                      product={item}
+                      onClick={(productId) =>
+                        navigate(`/products/${productId}`)
+                      }
+                    />
                     <button
-                      onClick={() => handleRemoveFromWatchlist(product.id)}
-                      className="absolute top-2 right-2 bg-white dark:bg-slate-800 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 dark:hover:bg-red-950/20"
+                      onClick={() => handleRemoveFromWatchlist(item.id)}
+                      className="absolute top-2 right-2 bg-white dark:bg-slate-800 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 dark:hover:bg-red-950/20 z-10"
                       title="Xóa khỏi danh sách theo dõi"
                     >
                       <svg
@@ -161,9 +186,9 @@ const WatchlistPage = () => {
                       Thông báo về sản phẩm theo dõi
                     </h3>
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                      Bạn sẽ nhận được thông báo khi sản phẩm sắp kết thúc (còn 1 giờ) hoặc khi
-                      có người đấu giá vượt qua bạn. Bật thông báo trong phần cài đặt để không
-                      bỏ lỡ.
+                      Bạn sẽ nhận được thông báo khi sản phẩm sắp kết thúc (còn
+                      1 giờ) hoặc khi có người đấu giá vượt qua bạn. Bật thông
+                      báo trong phần cài đặt để không bỏ lỡ.
                     </p>
                   </div>
                 </div>
@@ -191,10 +216,10 @@ const WatchlistPage = () => {
                 Danh sách theo dõi trống
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Bạn chưa theo dõi sản phẩm nào. Nhấn vào biểu tượng trái tim trên sản phẩm để
-                thêm vào danh sách theo dõi.
+                Bạn chưa theo dõi sản phẩm nào. Nhấn vào biểu tượng trái tim
+                trên sản phẩm để thêm vào danh sách theo dõi.
               </p>
-              <Button onClick={() => (window.location.href = "/products")} size="lg">
+              <Button onClick={() => navigate("/search")} size="lg">
                 Khám phá sản phẩm
               </Button>
             </div>

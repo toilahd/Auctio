@@ -1,8 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Hammer, Tag, Calendar, User } from "lucide-react";
+import { Clock, Hammer, Tag, Calendar, User, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Product {
   id: string;
@@ -52,6 +52,63 @@ interface ProductCardProps {
 const ProductCard = ({ product, onClick }: ProductCardProps) => {
   const navigate = useNavigate();
   const [now] = useState(() => Date.now());
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [isTogglingWatchlist, setIsTogglingWatchlist] = useState(false);
+
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+  useEffect(() => {
+    checkWatchlistStatus();
+  }, [product.id]);
+
+  const checkWatchlistStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/watchlist/check/${product.id}`, {
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setIsInWatchlist(data.data.inWatchlist);
+      }
+    } catch (error) {
+      console.error("Error checking watchlist status:", error);
+    }
+  };
+
+  const handleWatchlistToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsTogglingWatchlist(true);
+    
+    try {
+      if (isInWatchlist) {
+        // Remove from watchlist
+        const response = await fetch(`${BACKEND_URL}/api/watchlist/${product.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.success) {
+          setIsInWatchlist(false);
+        }
+      } else {
+        // Add to watchlist
+        const response = await fetch(`${BACKEND_URL}/api/watchlist/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ productId: product.id }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          setIsInWatchlist(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling watchlist:", error);
+    } finally {
+      setIsTogglingWatchlist(false);
+    }
+  };
 
   const handleSellerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -112,6 +169,20 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
           alt={product.title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
+        
+        {/* Watchlist Button */}
+        <button
+          onClick={handleWatchlistToggle}
+          disabled={isTogglingWatchlist}
+          className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-background transition-colors disabled:opacity-50"
+          title={isInWatchlist ? "Xóa khỏi danh sách theo dõi" : "Thêm vào danh sách theo dõi"}
+        >
+          <Heart
+            className={`w-4 h-4 transition-colors ${
+              isInWatchlist ? "fill-red-500 text-red-500" : "text-muted-foreground"
+            }`}
+          />
+        </button>
         
         {/* Time Remaining Badge */}
         <div className="absolute top-3 right-3 flex items-center gap-1 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg">
