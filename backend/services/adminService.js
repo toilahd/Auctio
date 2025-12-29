@@ -89,6 +89,71 @@ class AdminService {
 
     return prisma.category.delete({ where: { id } });
   }
+  // ==================== PRODUCT MANAGEMENT ====================
+
+  async getAllProducts({ page = 1, limit = 20, status, sellerId }) {
+    const skip = (page - 1) * limit;
+    const where = {};
+
+    if (status) where.status = status;
+    if (sellerId) where.sellerId = sellerId;
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          seller: { select: { id: true, fullName: true, email: true } },
+          category: true,
+          currentWinner: { select: { id: true, fullName: true, email: true } },
+          _count: { select: { bids: true, watchLists: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.product.count({ where })
+    ]);
+
+    return {
+      products,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async getProductById(id) {
+    return prisma.product.findUnique({
+      where: { id },
+      include: {
+        seller: true,
+        category: true,
+        currentWinner: true,
+        bids: {
+          include: { bidder: true },
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        },
+        _count: { select: { bids: true, watchLists: true, questions: true } }
+      }
+    });
+  }
+
+  async removeProduct(id, reason) {
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) throw new Error('Product not found');
+
+    return prisma.product.update({
+      where: { id },
+      data: {
+        status: 'CANCELLED',
+        updatedAt: new Date()
+      }
+    });
+  }
+
 }
+
+
 export default new AdminService();
 
