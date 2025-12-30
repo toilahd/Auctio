@@ -2,9 +2,11 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { AlertCircle, Clock, Loader2 } from "lucide-react";
+import Quill from "quill";
+import QuillEditor from "@/components/QuillEditor";
 
 interface DescriptionHistory {
   id: string;
@@ -23,6 +25,7 @@ const EditProductPage = () => {
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const quillRef = useRef<Quill | null>(null);
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -67,12 +70,13 @@ const EditProductPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newDescription.trim()) {
+    const textContent = quillRef.current?.getText().trim() || "";
+    if (!textContent) {
       setErrors({ description: "Vui lòng nhập nội dung bổ sung" });
       return;
     }
 
-    if (newDescription.length < 20) {
+    if (textContent.length < 20) {
       setErrors({ description: "Nội dung bổ sung phải có ít nhất 20 ký tự" });
       return;
     }
@@ -227,13 +231,14 @@ const EditProductPage = () => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Nội dung bổ sung <span className="text-red-500">*</span>
                       </label>
-                      <textarea
-                        value={newDescription}
-                        onChange={(e) => setNewDescription(e.target.value)}
-                        rows={6}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-slate-800 dark:text-white resize-none"
-                        placeholder="VD: Cập nhật: Sản phẩm đã được kiểm tra kỹ càng, đảm bảo 100% chính hãng..."
-                      />
+                      <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-gray-700 min-h-[200px] [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-gray-300 [&_.ql-toolbar]:dark:border-gray-700 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-base [&_.ql-editor.ql-blank::before]:text-gray-400 [&_.ql-editor.ql-blank::before]:dark:text-gray-500 [&_.ql-stroke]:stroke-gray-700 [&_.ql-stroke]:dark:stroke-gray-300 [&_.ql-fill]:fill-gray-700 [&_.ql-fill]:dark:fill-gray-300 [&_.ql-picker-label]:text-gray-700 [&_.ql-picker-label]:dark:text-gray-300 [&_.ql-editor]:text-gray-900 [&_.ql-editor]:dark:text-gray-100">
+                        <QuillEditor
+                          ref={quillRef}
+                          defaultValue={newDescription}
+                          onTextChange={(html) => setNewDescription(html)}
+                          placeholder="VD: Cập nhật: Sản phẩm đã được kiểm tra kỹ càng, đảm bảo 100% chính hãng..."
+                        />
+                      </div>
                       {errors.description && (
                         <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                           <AlertCircle className="w-4 h-4" />
@@ -241,7 +246,8 @@ const EditProductPage = () => {
                         </p>
                       )}
                       <p className="text-gray-500 text-sm mt-1">
-                        {newDescription.length} ký tự (tối thiểu 20 ký tự)
+                        {quillRef.current?.getText().trim().length || 0} ký tự
+                        (tối thiểu 20 ký tự)
                       </p>
                     </div>
 
