@@ -34,6 +34,10 @@ interface Product {
     fullName: string;
     email: string;
   };
+  currentWinner?: {
+    id: string;
+    fullName: string;
+  };
   _count?: {
     bids: number;
   };
@@ -51,12 +55,21 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onClick }: ProductCardProps) => {
   const navigate = useNavigate();
-  const [now] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [isTogglingWatchlist, setIsTogglingWatchlist] = useState(false);
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+  // Update countdown every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     checkWatchlistStatus();
@@ -123,6 +136,14 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
       navigate(`/profile/${product.seller.id}`);
     }
   };
+
+  const handleCategoryClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (product.category?.id) {
+      navigate(`/search?categoryId=${product.category.id}`);
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -156,6 +177,26 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
       return `${hours}h ${minutes}m`;
     }
     return `${minutes} phút`;
+  };
+
+  const getTimeRemainingColor = (endTime: string) => {
+    const end = new Date(endTime).getTime();
+    const diff = end - now;
+
+    if (diff <= 0) {
+      // Ended - gray
+      return "bg-gray-500 text-white";
+    }
+
+    const minutesRemaining = Math.floor(diff / (1000 * 60));
+
+    if (minutesRemaining < 30) {
+      // Less than 30 minutes - red
+      return "bg-destructive text-destructive-foreground";
+    }
+
+    // More than 30 minutes - blue
+    return "bg-blue-500 text-white";
   };
 
   return (
@@ -198,7 +239,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
         </button>
 
         {/* Time Remaining Badge */}
-        <div className="absolute top-3 right-3 flex items-center gap-1 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg">
+        <div className={`absolute top-3 right-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg ${getTimeRemainingColor(product.endTime)}`}>
           <Clock className="w-3 h-3" />
           {getTimeRemaining(product.endTime)}
         </div>
@@ -214,7 +255,9 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
         {product.category && (
           <Badge
             variant="secondary"
-            className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm"
+            className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm cursor-pointer hover:bg-background/90 transition-colors"
+            onClick={handleCategoryClick}
+            title={`Xem tất cả sản phẩm trong danh mục ${product.category.name}`}
           >
             {product.category.name}
           </Badge>
@@ -233,7 +276,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
           <span className="text-sm font-medium text-muted-foreground">
             Giá hiện tại
           </span>
-          <span className="text-xl font-bold text-primary">
+          <span className="font-bold text-primary">
             {formatPrice(parseFloat(product.currentPrice))}
           </span>
         </div>
@@ -255,12 +298,18 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
         <div className="border-t border-border" />
 
         {/* Current Winner */}
-        {product.currentWinnerId && (
+        {(product.currentWinner || product.currentWinnerId) && (
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Đấu giá cao nhất</span>
-            <code className="px-2 py-0.5 bg-muted rounded text-muted-foreground font-mono">
-              {product.currentWinnerId.substring(0, 8)}...
-            </code>
+            {product.currentWinner ? (
+              <span className="font-medium text-foreground">
+                {product.currentWinner.fullName}
+              </span>
+            ) : (
+              <code className="px-2 py-0.5 bg-muted rounded text-muted-foreground font-mono">
+                {product.currentWinnerId!.substring(0, 8)}...
+              </code>
+            )}
           </div>
         )}
 

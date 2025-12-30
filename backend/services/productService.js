@@ -77,6 +77,12 @@ class ProductService {
                 email: true
               }
             },
+            currentWinner: {
+              select: {
+                id: true,
+                fullName: true
+              }
+            },
             _count: {
               select: {
                 bids: true

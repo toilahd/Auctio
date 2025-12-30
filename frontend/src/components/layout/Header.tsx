@@ -220,7 +220,7 @@ const Header = () => {
             Danh mục
           </button>
           <button
-            onClick={() => navigate("/products")}
+            onClick={() => navigate("/search")}
             className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
           >
             Đấu giá
