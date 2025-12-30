@@ -35,6 +35,7 @@ import ResetPassword from "./pages/Log/reset-password";
 import AccountPage from "./pages/Account/account";
 import EditProfile from "./pages/Account/edit-profile";
 import ChangePassword from "./pages/Account/change-password";
+import SellerUpgradePaymentPage from "./pages/Payment/seller-upgrade-payment";
 
 const router = createBrowserRouter([
   {
@@ -92,6 +93,14 @@ const router = createBrowserRouter([
   {
     path: "/change-password",
     element: <ChangePassword />,
+  },
+  {
+    path: "/seller-upgrade-payment",
+    element: (
+      <ProtectedRoute allowedRoles={["BIDDER"]}>
+        <SellerUpgradePaymentPage />
+      </ProtectedRoute>
+    ),
   },
   // Bidder routes (protected)
   {

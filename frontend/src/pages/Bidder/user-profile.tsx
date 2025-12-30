@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -23,6 +23,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Send,
+  Crown,
 } from "lucide-react";
 
 interface UserProfile {
@@ -72,6 +73,7 @@ interface Review {
 export default function UserProfilePage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser, resendOTP } = useAuth();
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -82,7 +84,12 @@ export default function UserProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [isSendingOTP, setIsSendingOTP] = useState(false);
-  const [otpMessage, setOtpMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [otpMessage, setOtpMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [upgradeSuccess, setUpgradeSuccess] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   // Fetch user profile data
   useEffect(() => {
@@ -92,10 +99,10 @@ export default function UserProfilePage() {
         setError(null);
 
         // Fetch user profile - use ID if viewing another user, otherwise get own profile
-        const profileUrl = id 
+        const profileUrl = id
           ? `${BACKEND_URL}/api/users/profile/${id}`
           : `${BACKEND_URL}/api/users/profile`;
-        
+
         const profileResponse = await fetch(profileUrl, {
           credentials: "include",
         });
@@ -138,7 +145,7 @@ export default function UserProfilePage() {
         const ratingsUrl = id
           ? `${BACKEND_URL}/api/users/${id}/ratings?page=1&limit=20`
           : `${BACKEND_URL}/api/users/ratings?page=1&limit=20`;
-        
+
         const ratingsResponse = await fetch(ratingsUrl, {
           credentials: "include",
         });
@@ -161,8 +168,31 @@ export default function UserProfilePage() {
     fetchUserProfile();
   }, [id, BACKEND_URL]);
 
+  // Check for upgrade success parameter
+  useEffect(() => {
+    const upgradeSuccessParam = searchParams.get("upgradeSuccess");
+    if (upgradeSuccessParam === "true") {
+      setUpgradeSuccess(true);
+      // Clear the parameter from URL
+      setSearchParams({});
+
+      // Refresh profile to get updated role
+      window.location.reload();
+    }
+  }, [searchParams, setSearchParams]);
+
+  // Update countdown every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Check if viewing own profile
-  const isOwnProfile = !id || (currentUser && userProfile && currentUser.id === userProfile.id);
+  const isOwnProfile =
+    !id || (currentUser && userProfile && currentUser.id === userProfile.id);
 
   const handleSendOTP = async () => {
     setIsSendingOTP(true);
@@ -220,6 +250,23 @@ export default function UserProfilePage() {
     return userProfile.rating.percentage;
   };
 
+  const getSellerTimeRemaining = () => {
+    if (!userProfile?.upgradeRequestedAt) return null;
+
+    const now = Date.now();
+    const upgradeTime = new Date(userProfile.upgradeRequestedAt).getTime();
+    const expiresAt = upgradeTime + 7 * 24 * 60 * 60 * 1000; // 7 days from upgrade
+    const diff = expiresAt - now;
+
+    if (diff <= 0) return { expired: true, days: 0, hours: 0, minutes: 0 };
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    return { expired: false, days, hours, minutes };
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -263,6 +310,16 @@ export default function UserProfilePage() {
       <Header />
 
       <div className="container mx-auto px-4 py-8">
+        {/* Success Message */}
+        {upgradeSuccess && (
+          <Alert className="mb-6 bg-green-50 border-green-200">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              Nâng cấp tài khoản thành công! Bạn đã trở thành Seller.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Sidebar - User Info */}
           <div className="lg:col-span-1">
@@ -283,7 +340,9 @@ export default function UserProfilePage() {
                       userProfile.isVerified ? (
                         <div className="flex items-center gap-1 text-green-600">
                           <CheckCircle className="w-4 h-4" />
-                          <span className="text-sm font-medium">Đã xác thực</span>
+                          <span className="text-sm font-medium">
+                            Đã xác thực
+                          </span>
                         </div>
                       ) : (
                         isOwnProfile && (
@@ -306,41 +365,92 @@ export default function UserProfilePage() {
                       </div>
                     )}
                   </div>
-                  
-                  {/* Verification Button - Only show for own profile if not verified */}
-                  {isOwnProfile && userProfile.isVerified !== undefined && !userProfile.isVerified && (
-                    <div className="w-full mt-2">
-                      <Button
-                        onClick={handleSendOTP}
-                        disabled={isSendingOTP}
-                        size="sm"
-                        className="w-full"
-                        variant="outline"
-                      >
-                        {isSendingOTP ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Đang gửi...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4 mr-2" />
-                            Gửi mã xác thực
-                          </>
-                        )}
-                      </Button>
-                      {otpMessage && (
+
+                  {/* Seller Countdown */}
+                  {userProfile.role === "SELLER" &&
+                    userProfile.upgradeRequestedAt &&
+                    (() => {
+                      const timeRemaining = getSellerTimeRemaining();
+                      if (!timeRemaining) return null;
+
+                      if (timeRemaining.expired) {
+                        return (
+                          <Alert className="mt-2 border-red-200 bg-red-50 flex items-center">
+                            <AlertCircle className="h-4 w-4 text-red-600" />
+                            <AlertDescription className="text-red-800 text-xs">
+                              Tài khoản Seller đã hết hạn
+                            </AlertDescription>
+                          </Alert>
+                        );
+                      }
+
+                      const isUrgent =
+                        timeRemaining.days === 0 && timeRemaining.hours < 24;
+                      return (
                         <Alert
-                          variant={otpMessage.type === "error" ? "destructive" : "default"}
-                          className="mt-2"
+                          className={` flex items-center ${
+                            isUrgent
+                              ? "border-amber-200 bg-amber-50"
+                              : "border-blue-200 bg-blue-50"
+                          }`}
                         >
-                          <AlertDescription className="text-xs">
-                            {otpMessage.text}
+                          <Calendar
+                            className={`h-4 w-4 ${
+                              isUrgent ? "text-amber-600" : "text-blue-600"
+                            }`}
+                          />
+                          <AlertDescription
+                            className={`${
+                              isUrgent ? "text-amber-800" : "text-blue-800"
+                            }`}
+                          >
+                              <strong>Seller còn:</strong> {timeRemaining.days}d{" "}
+                              {timeRemaining.hours}h {timeRemaining.minutes}m
                           </AlertDescription>
                         </Alert>
-                      )}
-                    </div>
-                  )}
+                      );
+                    })()}
+
+                  {/* Verification Button - Only show for own profile if not verified */}
+                  {isOwnProfile &&
+                    userProfile.isVerified !== undefined &&
+                    !userProfile.isVerified && (
+                      <div className="w-full mt-2">
+                        <Button
+                          onClick={handleSendOTP}
+                          disabled={isSendingOTP}
+                          size="sm"
+                          className="w-full"
+                          variant="outline"
+                        >
+                          {isSendingOTP ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Đang gửi...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              Gửi mã xác thực
+                            </>
+                          )}
+                        </Button>
+                        {otpMessage && (
+                          <Alert
+                            variant={
+                              otpMessage.type === "error"
+                                ? "destructive"
+                                : "default"
+                            }
+                            className="mt-2"
+                          >
+                            <AlertDescription className="text-xs">
+                              {otpMessage.text}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </div>
+                    )}
                 </div>
               </div>
 
@@ -409,14 +519,44 @@ export default function UserProfilePage() {
 
               {/* Edit Profile Button (self view only) */}
               {isOwnProfile && (
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => navigate("/edit-profile")}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Chỉnh sửa hồ sơ
-                </Button>
+                <>
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => navigate("/edit-profile")}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Chỉnh sửa hồ sơ
+                  </Button>
+
+                  {/* Seller Upgrade Button */}
+                  {userProfile.role !== "SELLER" &&
+                    userProfile.role !== "ADMIN" && (
+                      <div className="mt-4">
+                        {userProfile.upgradeStatus === "PENDING" ? (
+                          <Alert>
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>
+                              Yêu cầu nâng cấp đang chờ xét duyệt
+                            </AlertDescription>
+                          </Alert>
+                        ) : (
+                          <Button
+                            onClick={() =>
+                              navigate(
+                                `/seller-upgrade-payment?userId=${userProfile.id}`
+                              )
+                            }
+                            variant="default"
+                            className="w-full bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                          >
+                            <Crown className="w-4 h-4 mr-2" />
+                            Nâng cấp tài khoản Seller
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                </>
               )}
             </Card>
 
@@ -546,9 +686,11 @@ export default function UserProfilePage() {
                 reviews.map((review) => (
                   <Card key={review.id} className="p-6">
                     <div className="flex items-start justify-between mb-3">
-                      <div 
+                      <div
                         className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 -m-2 p-2 rounded-lg transition-colors"
-                        onClick={() => navigate(`/profile/${review.fromUserId}`)}
+                        onClick={() =>
+                          navigate(`/profile/${review.fromUserId}`)
+                        }
                         title="Xem trang người dùng"
                       >
                         <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
