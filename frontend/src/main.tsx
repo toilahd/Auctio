@@ -36,6 +36,7 @@ import AccountPage from "./pages/Account/account";
 import EditProfile from "./pages/Account/edit-profile";
 import ChangePassword from "./pages/Account/change-password";
 import SellerUpgradePaymentPage from "./pages/Payment/seller-upgrade-payment";
+import PaymentResultPage from "./pages/Payment/payment-result";
 
 const router = createBrowserRouter([
   {
@@ -101,6 +102,10 @@ const router = createBrowserRouter([
         <SellerUpgradePaymentPage />
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/payment-result",
+    element: <PaymentResultPage />,
   },
   // Bidder routes (protected)
   {

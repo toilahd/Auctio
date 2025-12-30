@@ -17,36 +17,25 @@ const SellerUpgradePaymentPage = () => {
 
   const handlePayment = async () => {
     setIsProcessing(true);
-    
-    // Simulate payment processing delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Mock payment data
-    const paymentData = {
-      userId,
-      amount: PAYMENT_AMOUNT,
-      transactionId: `MOCK_${Date.now()}`,
-      paymentMethod: "ZaloPay",
-      status: "SUCCESS",
-    };
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/payment/seller-upgrade-callback`, {
+      // Create ZaloPay payment order
+      const response = await fetch(`${BACKEND_URL}/api/payment/seller-upgrade/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(paymentData),
+        body: JSON.stringify({ userId }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Redirect back to profile with success parameter
-        navigate("/profile?upgradeSuccess=true");
+        // Redirect to ZaloPay payment gateway
+        window.location.href = data.data.order_url;
       } else {
-        alert(data.message || "Payment failed");
+        alert(data.message || "Không thể tạo đơn thanh toán");
         setIsProcessing(false);
       }
     } catch (error) {
