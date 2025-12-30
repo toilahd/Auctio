@@ -10,6 +10,33 @@ class QuestionController {
    * Ask a question about a product
    */
   async askQuestion(req, res) {
+    /*
+      #swagger.summary = 'Ask product question'
+      #swagger.description = 'Ask a question about a specific product'
+      #swagger.security = [{ "bearerAuth": [] }, { "cookieAuth": [] }]
+      #swagger.tags = ['Questions']
+      #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Question details',
+        required: true,
+        schema: {
+          productId: 'product-uuid',
+          content: 'What is the condition of this item?'
+        }
+      }
+      #swagger.responses[201] = {
+        description: 'Question submitted successfully',
+        schema: {
+          success: true,
+          data: { $ref: '#/definitions/Question' },
+          message: 'Question submitted. Seller will be notified via email.'
+        }
+      }
+      #swagger.responses[400] = {
+        description: 'Invalid input',
+        schema: { success: false, message: 'Product ID and question content are required' }
+      }
+    */
     try {
       const { productId, content } = req.body;
       const askerId = req.user.id;
@@ -49,6 +76,38 @@ class QuestionController {
    * Answer a question (seller only)
    */
   async answerQuestion(req, res) {
+    /*
+      #swagger.summary = 'Answer product question'
+      #swagger.description = 'Answer a question about your product (seller only)'
+      #swagger.security = [{ "bearerAuth": [] }, { "cookieAuth": [] }]
+      #swagger.tags = ['Questions']
+      #swagger.parameters['questionId'] = {
+        in: 'path',
+        description: 'Question ID',
+        required: true,
+        type: 'string'
+      }
+      #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Answer content',
+        required: true,
+        schema: {
+          content: 'The item is in excellent condition, barely used.'
+        }
+      }
+      #swagger.responses[201] = {
+        description: 'Answer posted successfully',
+        schema: {
+          success: true,
+          data: { $ref: '#/definitions/Answer' },
+          message: 'Answer posted. Asker will be notified via email.'
+        }
+      }
+      #swagger.responses[400] = {
+        description: 'Invalid input',
+        schema: { success: false, message: 'Answer content is required' }
+      }
+    */
     try {
       const { questionId } = req.params;
       const { content } = req.body;
@@ -89,6 +148,28 @@ class QuestionController {
    * Get all questions for a product
    */
   async getProductQuestions(req, res) {
+    /*
+      #swagger.summary = 'Get product questions'
+      #swagger.description = 'Get all questions and answers for a specific product'
+      #swagger.tags = ['Questions']
+      #swagger.parameters['productId'] = {
+        in: 'path',
+        description: 'Product ID',
+        required: true,
+        type: 'string'
+      }
+      #swagger.responses[200] = {
+        description: 'Questions retrieved successfully',
+        schema: {
+          success: true,
+          data: [{ $ref: '#/definitions/Question' }]
+        }
+      }
+      #swagger.responses[500] = {
+        description: 'Failed to get questions',
+        schema: { success: false, message: 'Failed to get questions' }
+      }
+    */
     try {
       const { productId } = req.params;
 

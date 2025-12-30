@@ -1201,40 +1201,87 @@
     },
     "/api/questions/product/{productId}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Questions"
+        ],
+        "summary": "Get product questions",
+        "description": "Get all questions and answers for a specific product",
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Questions retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Question"
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "Failed to get questions",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Failed to get questions"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           }
         }
       }
     },
     "/api/questions/": {
       "post": {
-        "description": "",
+        "tags": [
+          "Questions"
+        ],
+        "summary": "Ask product question",
+        "description": "Ask a question about a specific product",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "description": "Question details",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "productId": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "product-uuid"
                 },
                 "content": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "What is the condition of this item?"
                 }
               }
             }
@@ -1242,32 +1289,83 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Question submitted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/definitions/Question"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Question submitted. Seller will be notified via email."
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Invalid input",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Product ID and question content are required"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/questions/{questionId}/answer": {
       "post": {
-        "description": "",
+        "tags": [
+          "Questions"
+        ],
+        "summary": "Answer product question",
+        "description": "Answer a question about your product (seller only)",
         "parameters": [
           {
             "name": "questionId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Question ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Answer content",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "content": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "The item is in excellent condition, barely used."
                 }
               }
             }
@@ -1275,12 +1373,55 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Answer posted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/definitions/Answer"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Answer posted. Asker will be notified via email."
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Invalid input",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Answer content is required"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/users/profile": {
@@ -2580,40 +2721,61 @@
     },
     "/api/seller/products": {
       "post": {
-        "description": "",
+        "tags": [
+          "Seller"
+        ],
+        "summary": "Create new auction product",
+        "description": "Create a new auction product listing (seller only)",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "description": "Product details",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "title": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Product Title"
                 },
                 "description": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Product description"
                 },
                 "images": {
-                  "example": "any"
+                  "type": "array",
+                  "example": [
+                    "image1.jpg",
+                    "image2.jpg"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 "startPrice": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 100
                 },
                 "stepPrice": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 10
                 },
                 "buyNowPrice": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 500
                 },
                 "categoryId": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "category-uuid"
                 },
                 "autoExtend": {
-                  "example": "any"
+                  "type": "boolean",
+                  "example": true
                 },
                 "endTime": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "2025-12-31T23:59:59Z"
                 }
               }
             }
@@ -2621,94 +2783,335 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Product created successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/definitions/Product"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Missing required fields",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Missing required fields"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/seller/products/active": {
       "get": {
-        "description": "",
+        "tags": [
+          "Seller"
+        ],
+        "summary": "Get seller active products",
+        "description": "Get list of seller\\'s currently active auction products",
         "parameters": [
           {
             "name": "page",
             "in": "query",
-            "type": "string"
+            "description": "Page number",
+            "required": false,
+            "type": "integer",
+            "default": 1
           },
           {
             "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "type": "integer",
+            "default": 20
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "schema",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "total",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "totalPages",
             "in": "query",
             "type": "string"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Active products retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "products": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/Product"
+                      }
+                    },
+                    "total": {
+                      "type": "number",
+                      "example": 100
+                    },
+                    "page": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "totalPages": {
+                      "type": "number",
+                      "example": 5
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/seller/products/completed": {
       "get": {
-        "description": "",
+        "tags": [
+          "Seller"
+        ],
+        "summary": "Get seller completed products",
+        "description": "Get list of seller\\'s completed auction products with winner information",
         "parameters": [
           {
             "name": "page",
             "in": "query",
-            "type": "string"
+            "description": "Page number",
+            "required": false,
+            "type": "integer",
+            "default": 1
           },
           {
             "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "type": "integer",
+            "default": 20
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "schema",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "total",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "totalPages",
             "in": "query",
             "type": "string"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Completed products retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "products": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/Product"
+                      }
+                    },
+                    "total": {
+                      "type": "number",
+                      "example": 50
+                    },
+                    "page": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "totalPages": {
+                      "type": "number",
+                      "example": 3
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/seller/products/{id}/description": {
       "patch": {
-        "description": "",
+        "tags": [
+          "Seller"
+        ],
+        "summary": "Append product description",
+        "description": "Add additional text to existing product description (seller only)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Description to append",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "description": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Additional product information..."
                 }
               }
             }
@@ -2716,41 +3119,105 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Description updated successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/definitions/Product"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Description is required",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Description is required"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/seller/products/{id}/deny-bidder": {
       "post": {
-        "description": "",
+        "tags": [
+          "Seller"
+        ],
+        "summary": "Deny bidder from product",
+        "description": "Block a specific bidder from placing bids on a product (seller only)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Bidder to deny",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "bidderId": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "bidder-user-id"
                 },
                 "reason": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Reason for denying (optional)"
                 }
               }
             }
@@ -2758,41 +3225,106 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Bidder denied successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bidder denied successfully"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Bidder ID is required",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bidder ID is required"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/seller/products/{id}/rate-winner": {
       "post": {
-        "description": "",
+        "tags": [
+          "Seller"
+        ],
+        "summary": "Rate auction winner",
+        "description": "Rate the winner of a completed auction (+1 or -1) (seller only)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Rating details",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "rating": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 1
                 },
                 "comment": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Great buyer, quick payment"
                 }
               }
             }
@@ -2800,62 +3332,187 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Winner rated successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Winner rated successfully"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Rating is required",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Rating is required (+1 or -1)"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/seller/products/{id}/cancel-transaction": {
       "post": {
-        "description": "",
+        "tags": [
+          "Seller"
+        ],
+        "summary": "Cancel transaction",
+        "description": "Cancel transaction with auction winner and automatically give negative rating (seller only)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Transaction cancelled successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Transaction cancelled and winner rated negatively"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "Failed to cancel transaction",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Failed to cancel transaction"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/seller/questions/{id}/answer": {
       "post": {
-        "description": "",
+        "tags": [
+          "Seller"
+        ],
+        "summary": "Answer product question",
+        "description": "Answer a question asked by a bidder about a product (seller only)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Question ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Answer content",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "content": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "This is the answer to your question..."
                 }
               }
             }
@@ -2863,114 +3520,405 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Answer created successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/definitions/Answer"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Answer content is required",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Answer content is required"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/chat/": {
       "get": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Get user chats",
+        "description": "Get all chat conversations for current user with pagination",
         "parameters": [
           {
             "name": "page",
             "in": "query",
-            "type": "string"
+            "description": "Page number",
+            "required": false,
+            "type": "integer",
+            "default": 1
           },
           {
             "name": "limit",
+            "in": "query",
+            "description": "Chats per page",
+            "required": false,
+            "type": "integer",
+            "default": 20
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "schema",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "total",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "totalPages",
             "in": "query",
             "type": "string"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Chats retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "chats": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/Chat"
+                      }
+                    },
+                    "total": {
+                      "type": "number",
+                      "example": 30
+                    },
+                    "page": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "totalPages": {
+                      "type": "number",
+                      "example": 2
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/chat/unread": {
       "get": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Get unread message count",
+        "description": "Get total count of unread messages for current user",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Unread count retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number",
+                      "example": 12
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/chat/{orderId}/messages": {
       "get": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Get chat messages",
+        "description": "Get all messages for an order chat conversation",
         "parameters": [
           {
             "name": "orderId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Order ID"
           },
           {
             "name": "page",
             "in": "query",
-            "type": "string"
+            "description": "Page number",
+            "required": false,
+            "type": "integer",
+            "default": 1
           },
           {
             "name": "limit",
+            "in": "query",
+            "description": "Messages per page",
+            "required": false,
+            "type": "integer",
+            "default": 50
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "schema",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "total",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "totalPages",
             "in": "query",
             "type": "string"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Messages retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/ChatMessage"
+                      }
+                    },
+                    "total": {
+                      "type": "number",
+                      "example": 150
+                    },
+                    "page": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "totalPages": {
+                      "type": "number",
+                      "example": 3
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       },
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Send chat message",
+        "description": "Send a message in order chat between buyer and seller",
         "parameters": [
           {
             "name": "orderId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Order ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Message content",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "content": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Hello, when can we arrange pickup?"
                 }
               }
             }
@@ -2978,42 +3926,147 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Message sent successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/definitions/ChatMessage"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Message content is required",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Message content is required"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/chat/{orderId}/read": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Mark messages as read",
+        "description": "Mark all messages in an order chat as read",
         "parameters": [
           {
             "name": "orderId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Order ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Messages marked as read",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number",
+                      "example": 5
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     }
   },
