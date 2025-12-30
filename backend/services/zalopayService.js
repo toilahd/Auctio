@@ -1,19 +1,19 @@
 // services/zalopayService.js
-import crypto from 'crypto';
-import axios from 'axios';
-import { getLogger } from '../config/logger.js';
+import crypto from "crypto";
+import { getLogger } from "../config/logger.js";
 
-const logger = getLogger('ZaloPayService');
+const logger = getLogger("ZaloPayService");
 
 class ZaloPayService {
   constructor() {
-    this.endpoint = process.env.ZALOPAY_ENDPOINT || 'https://sb-openapi.zalopay.vn/v2/create';
+    this.endpoint =
+      process.env.ZALOPAY_ENDPOINT || "https://sb-openapi.zalopay.vn/v2/create";
     this.appId = process.env.ZALOPAY_APPID;
     this.key1 = process.env.ZALOPAY_KEY1;
     this.key2 = process.env.ZALOPAY_KEY2;
-    
+
     if (!this.appId || !this.key1) {
-      logger.warn('ZaloPay credentials not configured. Payment will fail.');
+      logger.warn("ZaloPay credentials not configured. Payment will fail.");
     }
   }
 
@@ -26,20 +26,22 @@ class ZaloPayService {
   async createSellerUpgradeOrder(userId, amount = 500000) {
     try {
       const appTime = Date.now();
-      const appTransId = this.generateTransactionId('SELLER');
-      
+      const appTransId = this.generateTransactionId("SELLER");
+
       const embedData = {
-        redirecturl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-result?type=seller`,
+        redirecturl: `${
+          process.env.FRONTEND_URL || "http://localhost:5173"
+        }/payment-result?type=seller`,
         merchantinfo: JSON.stringify({
-          type: 'SELLER_UPGRADE',
+          type: "SELLER_UPGRADE",
           userId: userId,
         }),
       };
 
       const items = [
         {
-          itemid: 'seller_upgrade',
-          itemname: 'Nâng cấp tài khoản Seller - 7 ngày',
+          itemid: "seller_upgrade",
+          itemname: "Nâng cấp tài khoản Seller - 7 ngày",
           itemprice: amount,
           itemquantity: 1,
         },
@@ -53,12 +55,12 @@ class ZaloPayService {
         amount: amount,
         embed_data: JSON.stringify(embedData),
         item: JSON.stringify(items),
-        bank_code: '',
+        bank_code: "",
         description: `Nâng cấp Seller cho user ${userId}`,
       };
 
       // Generate MAC
-      const data = [
+      const macData = [
         order.app_id,
         order.app_trans_id,
         order.app_user,
@@ -66,35 +68,39 @@ class ZaloPayService {
         order.app_time,
         order.embed_data,
         order.item,
-      ].join('|');
+      ].join("|");
 
       order.mac = crypto
-        .createHmac('sha256', this.key1)
-        .update(data)
-        .digest('hex');
+        .createHmac("sha256", this.key1)
+        .update(macData)
+        .digest("hex");
 
-      logger.info('Creating ZaloPay order:', { appTransId });
+      logger.info("Creating ZaloPay order:", { appTransId });
 
-      const response = await axios.post(this.endpoint, order, {
+      const formBody = new URLSearchParams(order).toString();
+      const response = await fetch(this.endpoint, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          "Content-Type": "application/x-www-form-urlencoded",
         },
+        body: formBody,
       });
 
-      logger.info('ZaloPay response:', response.data);
+      const data = await response.json();
+      logger.info("ZaloPay response:", data);
 
-      if (response.data.return_code === 1) {
+      if (data.return_code === 1) {
         return {
           success: true,
-          order_url: response.data.order_url,
+          order_url: data.order_url,
           app_trans_id: appTransId,
-          zp_trans_token: response.data.zp_trans_token,
+          zp_trans_token: data.zp_trans_token,
         };
       } else {
-        throw new Error(response.data.return_message || 'Failed to create payment');
+        throw new Error(data.return_message || "Failed to create payment");
       }
     } catch (error) {
-      logger.error('Error creating ZaloPay order:', error);
+      logger.error("Error creating ZaloPay order:", error);
       throw error;
     }
   }
@@ -110,12 +116,14 @@ class ZaloPayService {
   async createAuctionPaymentOrder(orderId, buyerId, amount, productTitle) {
     try {
       const appTime = Date.now();
-      const appTransId = this.generateTransactionId('AUCTION');
-      
+      const appTransId = this.generateTransactionId("AUCTION");
+
       const embedData = {
-        redirecturl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-result?type=auction`,
+        redirecturl: `${
+          process.env.FRONTEND_URL || "http://localhost:5173"
+        }/payment-result?type=auction`,
         merchantinfo: JSON.stringify({
-          type: 'AUCTION_PAYMENT',
+          type: "AUCTION_PAYMENT",
           orderId: orderId,
           buyerId: buyerId,
         }),
@@ -138,12 +146,12 @@ class ZaloPayService {
         amount: amount,
         embed_data: JSON.stringify(embedData),
         item: JSON.stringify(items),
-        bank_code: '',
+        bank_code: "",
         description: `Thanh toán đấu giá: ${productTitle.substring(0, 50)}`,
       };
 
       // Generate MAC
-      const data = [
+      const macData = [
         order.app_id,
         order.app_trans_id,
         order.app_user,
@@ -151,35 +159,42 @@ class ZaloPayService {
         order.app_time,
         order.embed_data,
         order.item,
-      ].join('|');
+      ].join("|");
 
       order.mac = crypto
-        .createHmac('sha256', this.key1)
-        .update(data)
-        .digest('hex');
+        .createHmac("sha256", this.key1)
+        .update(macData)
+        .digest("hex");
 
-      logger.info('Creating ZaloPay order for auction:', { appTransId, orderId });
-
-      const response = await axios.post(this.endpoint, order, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+      logger.info("Creating ZaloPay order for auction:", {
+        appTransId,
+        orderId,
       });
 
-      logger.info('ZaloPay response:', response.data);
+      const formBody = new URLSearchParams(order).toString();
+      const response = await fetch(this.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formBody,
+      });
 
-      if (response.data.return_code === 1) {
+      const data = await response.json();
+      logger.info("ZaloPay response:", data);
+
+      if (data.return_code === 1) {
         return {
           success: true,
-          order_url: response.data.order_url,
+          order_url: data.order_url,
           app_trans_id: appTransId,
-          zp_trans_token: response.data.zp_trans_token,
+          zp_trans_token: data.zp_trans_token,
         };
       } else {
-        throw new Error(response.data.return_message || 'Failed to create payment');
+        throw new Error(data.return_message || "Failed to create payment");
       }
     } catch (error) {
-      logger.error('Error creating ZaloPay order:', error);
+      logger.error("Error creating ZaloPay order:", error);
       throw error;
     }
   }
@@ -192,15 +207,15 @@ class ZaloPayService {
   verifyCallback(callbackData) {
     try {
       const { data, mac } = callbackData;
-      
+
       const computedMac = crypto
-        .createHmac('sha256', this.key2)
+        .createHmac("sha256", this.key2)
         .update(data)
-        .digest('hex');
+        .digest("hex");
 
       return mac === computedMac;
     } catch (error) {
-      logger.error('Error verifying callback:', error);
+      logger.error("Error verifying callback:", error);
       return false;
     }
   }
@@ -212,7 +227,7 @@ class ZaloPayService {
    */
   generateTransactionId(type) {
     const date = new Date();
-    const yymmdd = date.toISOString().slice(2, 10).replace(/-/g, '');
+    const yymmdd = date.toISOString().slice(2, 10).replace(/-/g, "");
     const timestamp = Date.now().toString().slice(-6);
     return `${yymmdd}_${type}_${timestamp}`;
   }
