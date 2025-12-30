@@ -10,8 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, ImagePlus, AlertCircle, Loader2 } from "lucide-react";
+import Quill from "quill";
+import "quill/dist/quill.snow.css";
 
 interface Category {
   id: string;
@@ -59,6 +61,8 @@ const CreateProductPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const quillRef = useRef<HTMLDivElement>(null);
+  const quillInstanceRef = useRef<Quill | null>(null);
 
   // Fetch categories from backend
   useEffect(() => {
@@ -85,6 +89,44 @@ const CreateProductPage = () => {
     };
 
     fetchCategories();
+  }, []);
+
+  // Initialize Quill editor
+  useEffect(() => {
+    if (!quillRef.current || quillInstanceRef.current) return;
+
+    const quill = new Quill(quillRef.current, {
+      theme: "snow",
+      modules: {
+        toolbar: [
+          ["bold", "italic", "underline", "strike"],
+          [{ list: "ordered" }, { list: "bullet" }],
+          [{ align: [] }],
+          ["link"],
+          [{ color: [] }],
+          ["clean"],
+        ],
+      },
+      placeholder:
+        "Mô tả chi tiết về sản phẩm: tình trạng, nguồn gốc, phụ kiện kèm theo, lý do bán...",
+    });
+
+    // Set initial content if exists
+    if (formData.description) {
+      quill.root.innerHTML = formData.description;
+    }
+
+    // Listen for text changes
+    quill.on("text-change", () => {
+      const html = quill.root.innerHTML;
+      setFormData((prev) => ({ ...prev, description: html }));
+    });
+
+    quillInstanceRef.current = quill;
+
+    return () => {
+      quillInstanceRef.current = null;
+    };
   }, []);
 
   const selectedCategory = categories.find(
@@ -131,7 +173,8 @@ const CreateProductPage = () => {
       parseFloat(formData.buyNowPrice) <= parseFloat(formData.startingPrice)
     )
       newErrors.buyNowPrice = "Giá mua ngay phải lớn hơn giá khởi điểm";
-    if (!formData.description.trim() || formData.description.length < 50)
+    const textContent = quillInstanceRef.current?.getText().trim() || "";
+    if (!textContent || textContent.length < 50)
       newErrors.description = "Mô tả phải có ít nhất 50 ký tự";
 
     setErrors(newErrors);
@@ -587,14 +630,9 @@ const CreateProductPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    rows={10}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-slate-800 dark:text-white resize-none"
-                    placeholder="Mô tả chi tiết về sản phẩm: tình trạng, nguồn gốc, phụ kiện kèm theo, lý do bán..."
+                  <div
+                    ref={quillRef}
+                    className="bg-white dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-gray-700 min-h-[300px] [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-gray-300 [&_.ql-toolbar]:dark:border-gray-700 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[250px] [&_.ql-editor]:text-base [&_.ql-editor.ql-blank::before]:text-gray-400 [&_.ql-editor.ql-blank::before]:dark:text-gray-500 [&_.ql-stroke]:stroke-gray-700 [&_.ql-stroke]:dark:stroke-gray-300 [&_.ql-fill]:fill-gray-700 [&_.ql-fill]:dark:fill-gray-300 [&_.ql-picker-label]:text-gray-700 [&_.ql-picker-label]:dark:text-gray-300 [&_.ql-editor]:text-gray-900 [&_.ql-editor]:dark:text-gray-100"
                   />
                   {errors.description && (
                     <p className="text-red-500 text-sm flex items-center gap-1">
@@ -603,7 +641,8 @@ const CreateProductPage = () => {
                     </p>
                   )}
                   <p className="text-gray-500 text-sm">
-                    {formData.description.length} ký tự (tối thiểu 50 ký tự)
+                    {quillInstanceRef.current?.getText().trim().length || 0} ký
+                    tự (tối thiểu 50 ký tự)
                   </p>
                 </div>
               </CardContent>
