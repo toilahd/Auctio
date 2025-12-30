@@ -628,6 +628,78 @@ class SellerController {
       });
     }
   }
+
+  /**
+   * Get seller configuration data
+   * GET /api/seller/config
+   */
+  async getSellerConfig(req, res) {
+    /*
+      #swagger.summary = 'Get seller configuration'
+      #swagger.description = 'Get configuration data for seller including categories and subcategories for product form'
+      #swagger.security = [{ "bearerAuth": [] }, { "cookieAuth": [] }]
+      #swagger.tags = ['Seller']
+      #swagger.responses[200] = {
+        description: 'Configuration retrieved successfully',
+        schema: {
+          success: true,
+          data: {
+            categories: [{
+              id: 'category-uuid',
+              name: 'Electronics',
+              children: [{
+                id: 'subcategory-uuid',
+                name: 'Laptops'
+              }]
+            }]
+          }
+        }
+      }
+      #swagger.responses[401] = {
+        description: 'Unauthorized',
+        schema: { success: false, message: 'Unauthorized' }
+      }
+    */
+    try {
+      const sellerId = req.user?.id;
+
+      if (!sellerId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      // Import CategoryModel dynamically to avoid circular dependency
+      const { default: CategoryModel } = await import("../models/Category.js");
+
+      // Get all root categories with their children
+      const categories = await CategoryModel.getRootCategories();
+
+      // Format data for frontend dropdown
+      const formattedCategories = categories.map((parent) => ({
+        id: parent.id,
+        name: parent.name,
+        children: (parent.children || []).map((child) => ({
+          id: child.id,
+          name: child.name,
+        })),
+      }));
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          categories: formattedCategories,
+        },
+      });
+    } catch (error) {
+      logger.error("Error in getSellerConfig:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to get seller configuration",
+      });
+    }
+  }
 }
 
 export default new SellerController();

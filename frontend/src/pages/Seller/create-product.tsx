@@ -10,8 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
-import { X, ImagePlus, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, ImagePlus, AlertCircle, Loader2 } from "lucide-react";
+
+interface Category {
+  id: string;
+  name: string;
+  children: Array<{
+    id: string;
+    name: string;
+  }>;
+}
 
 interface FormData {
   title: string;
@@ -28,6 +37,9 @@ interface FormData {
 }
 
 const CreateProductPage = () => {
+  const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
   const [formData, setFormData] = useState<FormData>({
     title: "",
     category: "",
@@ -44,37 +56,40 @@ const CreateProductPage = () => {
 
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Mock categories - TODO: Fetch from backend
-  const categories = [
-    {
-      id: "electronics",
-      name: "Điện tử",
-      subCategories: ["Điện thoại", "Laptop", "Máy tính bảng", "Tai nghe", "Phụ kiện"],
-    },
-    {
-      id: "fashion",
-      name: "Thời trang",
-      subCategories: ["Giày dép", "Quần áo", "Túi xách", "Đồng hồ", "Trang sức"],
-    },
-    {
-      id: "home",
-      name: "Nhà cửa & Đời sống",
-      subCategories: ["Nội thất", "Trang trí", "Đồ gia dụng", "Nhà bếp"],
-    },
-    {
-      id: "vehicles",
-      name: "Xe cộ",
-      subCategories: ["Ô tô", "Xe máy", "Xe đạp", "Phụ kiện xe"],
-    },
-    {
-      id: "art",
-      name: "Nghệ thuật & Sưu tầm",
-      subCategories: ["Tranh", "Điêu khắc", "Tem", "Tiền xu", "Đồ cổ"],
-    },
-  ];
+  // Fetch categories from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/seller/config`, {
+          credentials: "include",
+        });
 
-  const selectedCategory = categories.find((cat) => cat.id === formData.category);
+        if (!response.ok) {
+          throw new Error("Failed to fetch categories");
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          setCategories(data.data.categories);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setErrors({ ...errors, categories: "Không thể tải danh mục" });
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const selectedCategory = categories.find(
+    (cat) => cat.id === formData.category
+  );
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -105,7 +120,8 @@ const CreateProductPage = () => {
 
     if (!formData.title.trim()) newErrors.title = "Vui lòng nhập tên sản phẩm";
     if (!formData.category) newErrors.category = "Vui lòng chọn danh mục";
-    if (formData.images.length < 3) newErrors.images = "Vui lòng tải lên ít nhất 3 ảnh";
+    if (formData.images.length < 3)
+      newErrors.images = "Vui lòng tải lên ít nhất 3 ảnh";
     if (!formData.startingPrice || parseFloat(formData.startingPrice) <= 0)
       newErrors.startingPrice = "Giá khởi điểm phải lớn hơn 0";
     if (!formData.bidIncrement || parseFloat(formData.bidIncrement) <= 0)
@@ -122,18 +138,78 @@ const CreateProductPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
-      alert("Vui lòng kiểm tra và điền đầy đủ thông tin");
       return;
     }
 
-    // TODO: Call API to create product
-    console.log("Form data:", formData);
-    alert("Sản phẩm đã được tạo thành công!");
-    window.location.href = "/seller";
+    setIsSubmitting(true);
+
+    try {
+      // Upload images first
+      const imageFormData = new FormData();
+      formData.images.forEach((file) => {
+        imageFormData.append("images", file);
+      });
+
+      const uploadResponse = await fetch(`${BACKEND_URL}/api/upload/images`, {
+        method: "POST",
+        credentials: "include",
+        body: imageFormData,
+      });
+
+      const uploadData = await uploadResponse.json();
+
+      if (!uploadResponse.ok) {
+        throw new Error(uploadData.message || "Không thể tải ảnh lên");
+      }
+
+      const imageUrls = uploadData.data.urls;
+
+      // Calculate end time based on duration
+      const endTime = new Date();
+      endTime.setDate(endTime.getDate() + parseInt(formData.duration));
+
+      // Prepare data for backend
+      const productData = {
+        title: formData.title,
+        description: formData.description,
+        images: imageUrls,
+        startPrice: parseFloat(formData.startingPrice),
+        stepPrice: parseFloat(formData.bidIncrement),
+        buyNowPrice: formData.buyNowPrice
+          ? parseFloat(formData.buyNowPrice)
+          : null,
+        categoryId: formData.subCategory || formData.category, // Use subcategory if selected, otherwise category
+        autoExtend: formData.autoExtend,
+        endTime: endTime.toISOString(),
+      };
+
+      const response = await fetch(`${BACKEND_URL}/api/seller/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(productData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể tạo sản phẩm");
+      }
+
+      alert("Sản phẩm đã được tạo thành công!");
+      window.location.href = "/seller";
+    } catch (error: any) {
+      console.error("Error creating product:", error);
+      alert(error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formatPrice = (value: string) => {
@@ -171,7 +247,9 @@ const CreateProductPage = () => {
                   </label>
                   <Input
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
                     placeholder="VD: iPhone 15 Pro Max 256GB - Nguyên seal"
                     maxLength={200}
                   />
@@ -194,11 +272,22 @@ const CreateProductPage = () => {
                     <Select
                       value={formData.category}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, category: value, subCategory: "" })
+                        setFormData({
+                          ...formData,
+                          category: value,
+                          subCategory: "",
+                        })
                       }
+                      disabled={isLoadingCategories}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Chọn danh mục" />
+                        <SelectValue
+                          placeholder={
+                            isLoadingCategories
+                              ? "Đang tải..."
+                              : "Chọn danh mục"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
@@ -225,15 +314,17 @@ const CreateProductPage = () => {
                       onValueChange={(value) =>
                         setFormData({ ...formData, subCategory: value })
                       }
-                      disabled={!formData.category}
+                      disabled={
+                        !formData.category || !selectedCategory?.children.length
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Chọn danh mục con" />
                       </SelectTrigger>
                       <SelectContent>
-                        {selectedCategory?.subCategories.map((subCat) => (
-                          <SelectItem key={subCat} value={subCat}>
-                            {subCat}
+                        {selectedCategory?.children.map((subCat) => (
+                          <SelectItem key={subCat.id} value={subCat.id}>
+                            {subCat.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -247,7 +338,9 @@ const CreateProductPage = () => {
                   </label>
                   <Select
                     value={formData.condition}
-                    onValueChange={(value) => setFormData({ ...formData, condition: value })}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, condition: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn tình trạng" />
@@ -255,8 +348,12 @@ const CreateProductPage = () => {
                     <SelectContent>
                       <SelectItem value="new">Mới 100%</SelectItem>
                       <SelectItem value="like-new">Như mới</SelectItem>
-                      <SelectItem value="used-good">Đã qua sử dụng - Tốt</SelectItem>
-                      <SelectItem value="used-fair">Đã qua sử dụng - Khá</SelectItem>
+                      <SelectItem value="used-good">
+                        Đã qua sử dụng - Tốt
+                      </SelectItem>
+                      <SelectItem value="used-fair">
+                        Đã qua sử dụng - Khá
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -422,7 +519,8 @@ const CreateProductPage = () => {
                     </p>
                   )}
                   <p className="text-gray-500 text-sm mt-1">
-                    Người mua có thể mua ngay sản phẩm với giá này mà không cần đấu giá
+                    Người mua có thể mua ngay sản phẩm với giá này mà không cần
+                    đấu giá
                   </p>
                 </div>
               </CardContent>
@@ -440,7 +538,9 @@ const CreateProductPage = () => {
                   </label>
                   <Select
                     value={formData.duration}
-                    onValueChange={(value) => setFormData({ ...formData, duration: value })}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, duration: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -470,7 +570,7 @@ const CreateProductPage = () => {
                       Tự động gia hạn
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      Nếu có đấu giá trong 5 phút cuối, tự động gia hạn thêm 5 phút để
+                      Nếu có đấu giá trong 5 phút cuối, tự động gia hạn thêm để
                       đảm bảo công bằng
                     </div>
                   </label>
@@ -481,7 +581,9 @@ const CreateProductPage = () => {
             {/* Description */}
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>Mô tả sản phẩm</CardTitle>
+                <CardTitle>
+                  Mô tả sản phẩm <span className="text-red-500">*</span>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -509,14 +611,27 @@ const CreateProductPage = () => {
 
             {/* Submit Buttons */}
             <div className="flex items-center gap-4">
-              <Button type="submit" size="lg" className="flex-1">
-                Đăng sản phẩm
+              <Button
+                type="submit"
+                size="lg"
+                className="flex-1"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Đang đăng...
+                  </>
+                ) : (
+                  "Đăng sản phẩm"
+                )}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="lg"
                 onClick={() => (window.location.href = "/seller")}
+                disabled={isSubmitting}
               >
                 Hủy
               </Button>
