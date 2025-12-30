@@ -160,7 +160,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 
   return (
     <Card
-      className={`group overflow-hidden cursor-pointer gap-1 pb-1 transition-all duration-300 hover:shadow-xl ${
+      className={`group overflow-hidden cursor-pointer gap-1 pt-0 pb-1 transition-all duration-300 hover:shadow-xl ${
         product.isNew ? "ring-2 ring-primary/50" : ""
       }`}
       onClick={() => onClick(product.id)}

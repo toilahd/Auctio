@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import {
@@ -20,6 +22,7 @@ import {
   Loader2,
   AlertCircle,
   AlertTriangle,
+  Send,
 } from "lucide-react";
 
 interface UserProfile {
@@ -69,6 +72,7 @@ interface Review {
 export default function UserProfilePage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user: currentUser, resendOTP } = useAuth();
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -77,6 +81,8 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [otpMessage, setOtpMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Fetch user profile data
   useEffect(() => {
@@ -155,7 +161,35 @@ export default function UserProfilePage() {
     fetchUserProfile();
   }, [id, BACKEND_URL]);
 
-  const isSelfView = !id; // If no ID in URL, it's viewing own profile
+  // Check if viewing own profile
+  const isOwnProfile = !id || (currentUser && userProfile && currentUser.id === userProfile.id);
+
+  const handleSendOTP = async () => {
+    setIsSendingOTP(true);
+    setOtpMessage(null);
+
+    try {
+      const result = await resendOTP();
+      setOtpMessage({
+        type: result.success ? "success" : "error",
+        text: result.message,
+      });
+
+      if (result.success) {
+        // Navigate to verify email page after 2 seconds
+        setTimeout(() => {
+          navigate("/verify-email");
+        }, 2000);
+      }
+    } catch {
+      setOtpMessage({
+        type: "error",
+        text: "Không thể gửi mã OTP. Vui lòng thử lại sau.",
+      });
+    } finally {
+      setIsSendingOTP(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -243,24 +277,68 @@ export default function UserProfilePage() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-1">
                   {userProfile.fullName}
                 </h2>
-                <div className="flex items-center gap-2 mb-2">
-                  {userProfile.isVerified !== undefined ? (
-                    userProfile.isVerified && (
-                      <div className="flex items-center gap-1 text-green-600">
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="text-sm font-medium">Đã xác thực</span>
+                <div className="flex flex-col items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    {userProfile.isVerified !== undefined ? (
+                      userProfile.isVerified ? (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="text-sm font-medium">Đã xác thực</span>
+                        </div>
+                      ) : (
+                        isOwnProfile && (
+                          <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span className="text-xs">Chưa xác thực email</span>
+                          </div>
+                        )
+                      )
+                    ) : (
+                      <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                        <AlertTriangle className="w-3 h-3" />
+                        <span className="text-xs">isVerified chưa có</span>
                       </div>
-                    )
-                  ) : (
-                    <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded">
-                      <AlertTriangle className="w-3 h-3" />
-                      <span className="text-xs">isVerified chưa có</span>
-                    </div>
-                  )}
-                  {userProfile.role === "SELLER" && (
-                    <div className="flex items-center gap-1 text-blue-600">
-                      <Shield className="w-4 h-4" />
-                      <span className="text-sm font-medium">Người bán</span>
+                    )}
+                    {userProfile.role === "SELLER" && (
+                      <div className="flex items-center gap-1 text-blue-600">
+                        <Shield className="w-4 h-4" />
+                        <span className="text-sm font-medium">Người bán</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Verification Button - Only show for own profile if not verified */}
+                  {isOwnProfile && userProfile.isVerified !== undefined && !userProfile.isVerified && (
+                    <div className="w-full mt-2">
+                      <Button
+                        onClick={handleSendOTP}
+                        disabled={isSendingOTP}
+                        size="sm"
+                        className="w-full"
+                        variant="outline"
+                      >
+                        {isSendingOTP ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Đang gửi...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Gửi mã xác thực
+                          </>
+                        )}
+                      </Button>
+                      {otpMessage && (
+                        <Alert
+                          variant={otpMessage.type === "error" ? "destructive" : "default"}
+                          className="mt-2"
+                        >
+                          <AlertDescription className="text-xs">
+                            {otpMessage.text}
+                          </AlertDescription>
+                        </Alert>
+                      )}
                     </div>
                   )}
                 </div>
@@ -287,7 +365,7 @@ export default function UserProfilePage() {
                 <div className="flex items-center gap-3 text-sm">
                   <Mail className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-600">
-                    {isSelfView ? userProfile.email : "Email ẩn"}
+                    {isOwnProfile ? userProfile.email : "Email ẩn"}
                   </span>
                 </div>
 
@@ -330,7 +408,7 @@ export default function UserProfilePage() {
               </div>
 
               {/* Edit Profile Button (self view only) */}
-              {isSelfView && (
+              {isOwnProfile && (
                 <Button
                   className="w-full"
                   variant="outline"

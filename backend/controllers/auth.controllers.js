@@ -331,8 +331,16 @@ export async function signup(req, res) {
   // In production, send this OTP via email/SMS
   await sendEmail(
     newUser.email,
-    "Your OTP Code",
-    `Your OTP code is: ${otpToken}`
+    "Mã xác thực email - Auctio",
+    `Mã OTP của bạn là: ${otpToken}`,
+    `
+      <h2>Xác thực email</h2>
+      <p>Xin chào ${newUser.fullName},</p>
+      <p>Cảm ơn bạn đã đăng ký tài khoản tại Auctio. Mã OTP xác thực email của bạn là:</p>
+      <div style="background-color: #f3f4f6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">${otpToken}</div>
+      <p>Mã này sẽ hết hạn sau 24 giờ.</p>
+      <p>Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.</p>
+    `
   );
   // Store OTP token in database or cache with expiration
   await UserModel.update(newUser.id, { verificationToken: otpToken });
@@ -401,8 +409,16 @@ export async function createNewOtp(req, res) {
     // In production, send this OTP via email/SMS
     await sendEmail(
       user.email,
-      "Your New OTP Code",
-      `Your new OTP code is: ${otpToken}`
+      "Mã xác thực email mới - Auctio",
+      `Mã OTP mới của bạn là: ${otpToken}`,
+      `
+        <h2>Mã xác thực mới</h2>
+        <p>Xin chào ${user.fullName},</p>
+        <p>Bạn đã yêu cầu gửi lại mã xác thực email. Mã OTP mới của bạn là:</p>
+        <div style="background-color: #f3f4f6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">${otpToken}</div>
+        <p>Mã này sẽ hết hạn sau 24 giờ.</p>
+        <p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.</p>
+      `
     );
     // Store OTP token in database or cache with expiration
     await UserModel.update(user.id, { verificationToken: otpToken });
@@ -710,18 +726,24 @@ export async function forgotPassword(req, res) {
 
     // Send email with reset link
     const resetLink = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
-    await sendEmail({
-      to: user.email,
-      subject: "Đặt lại mật khẩu - Auctio",
-      html: `
+    console.log(`Password reset link for ${user.email}: ${resetLink}`); // For testing purposes
+    await sendEmail(
+      user.email,
+      "Đặt lại mật khẩu - Auctio",
+      `Nhấp vào link sau để đặt lại mật khẩu: ${resetLink}`,
+      `
         <h2>Yêu cầu đặt lại mật khẩu</h2>
         <p>Xin chào ${user.fullName},</p>
-        <p>Bạn đã yêu cầu đặt lại mật khẩu. Nhấp vào link bên dưới để đặt lại mật khẩu:</p>
-        <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Đặt lại mật khẩu</a>
+        <p>Bạn đã yêu cầu đặt lại mật khẩu. Nhấp vào nút bên dưới để đặt lại mật khẩu:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">Đặt lại mật khẩu</a>
+        </div>
+        <p>Hoặc copy link sau vào trình duyệt:</p>
+        <p style="background-color: #f3f4f6; padding: 12px; border-radius: 4px; word-break: break-all;">${resetLink}</p>
         <p>Link này sẽ hết hạn sau 1 giờ.</p>
         <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
-      `,
-    });
+      `
+    );
 
     return res.status(200).json({
       success: true,

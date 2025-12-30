@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string, captcha: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
+  resendOTP: () => Promise<{ success: boolean; message: string }>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -106,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [BACKEND_URL]);
 
   const login = async (email: string, password: string, captcha: string) => {
@@ -142,6 +144,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resendOTP = async (): Promise<{
+    success: boolean;
+    message: string;
+  }> => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/new-otp`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || "Failed to resend OTP",
+        };
+      }
+
+      return {
+        success: true,
+        message: data.message || "OTP sent successfully",
+      };
+    } catch (error) {
+      console.error("Resend OTP error:", error);
+      return {
+        success: false,
+        message: "Failed to resend OTP",
+      };
+    }
+  };
+
   const logout = async () => {
     try {
       await fetch(`${BACKEND_URL}/logout`, {
@@ -160,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     refreshAccessToken,
+    resendOTP,
     isAuthenticated: !!user,
     isLoading,
   };

@@ -96,7 +96,11 @@ const router = createBrowserRouter([
   // Bidder routes (protected)
   {
     path: "/bidder",
-    element: <ProtectedRoute allowedRoles={['BIDDER', 'SELLER', 'ADMIN']}><Outlet /></ProtectedRoute>,
+    element: (
+      <ProtectedRoute allowedRoles={["BIDDER", "SELLER", "ADMIN"]}>
+        <Outlet />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "watchlist",
@@ -121,17 +125,33 @@ const router = createBrowserRouter([
     ],
   },
   {
+    path: "/profile",
+    element: (
+      <ProtectedRoute allowedRoles={["BIDDER", "SELLER", "ADMIN"]}>
+        <UserProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/profile/:id",
     element: <UserProfilePage />,
   },
   {
     path: "/review/:orderId",
-    element: <ProtectedRoute allowedRoles={['BIDDER', 'SELLER', 'ADMIN']}><ReviewOrderPage /></ProtectedRoute>,
+    element: (
+      <ProtectedRoute allowedRoles={["BIDDER", "SELLER", "ADMIN"]}>
+        <ReviewOrderPage />
+      </ProtectedRoute>
+    ),
   },
   // Seller routes (protected)
   {
     path: "/seller",
-    element: <ProtectedRoute allowedRoles={['SELLER', 'ADMIN']}><Outlet /></ProtectedRoute>,
+    element: (
+      <ProtectedRoute allowedRoles={["SELLER", "ADMIN"]}>
+        <Outlet />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "",
@@ -153,12 +173,20 @@ const router = createBrowserRouter([
   },
   {
     path: "/order/:id",
-    element: <ProtectedRoute allowedRoles={["BIDDER", 'SELLER', 'ADMIN']}><OrderFinalizationPage /></ProtectedRoute>,
+    element: (
+      <ProtectedRoute allowedRoles={["BIDDER", "SELLER", "ADMIN"]}>
+        <OrderFinalizationPage />
+      </ProtectedRoute>
+    ),
   },
   // Admin routes (protected)
   {
     path: "/admin",
-    element: <ProtectedRoute allowedRoles={['ADMIN']}><Outlet /></ProtectedRoute>,
+    element: (
+      <ProtectedRoute allowedRoles={["ADMIN"]}>
+        <Outlet />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "",

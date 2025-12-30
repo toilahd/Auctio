@@ -49,10 +49,11 @@ class QuestionService {
       // Send email notification to seller
       try {
         const productUrl = `${process.env.FRONTEND_URL}/products/${productId}`;
-        await sendEmail({
-          to: product.seller.email,
-          subject: `New question about your product: ${product.title}`,
-          html: `
+        await sendEmail(
+          product.seller.email,
+          `New question about your product: ${product.title}`,
+          `Someone asked a question about your product ${product.title}: ${content}`,
+          `
             <h2>New Question from Buyer</h2>
             <p>Hello ${product.seller.fullName},</p>
             <p>Someone asked a question about your product <strong>${product.title}</strong>:</p>
@@ -63,7 +64,7 @@ class QuestionService {
             <p><a href="${productUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Product and Answer</a></p>
             <p>Best regards,<br>Auctio Team</p>
           `
-        });
+        );
       } catch (emailError) {
         logger.error('Failed to send email notification:', emailError);
         // Don't fail the request if email fails
@@ -135,10 +136,11 @@ class QuestionService {
       // Send email notification to asker
       try {
         const productUrl = `${process.env.FRONTEND_URL}/products/${question.product.id}`;
-        await sendEmail({
-          to: question.asker.email,
-          subject: `Your question about "${question.product.title}" has been answered`,
-          html: `
+        await sendEmail(
+          question.asker.email,
+          `Your question about "${question.product.title}" has been answered`,
+          `The seller has answered your question about ${question.product.title}`,
+          `
             <h2>Your Question Has Been Answered</h2>
             <p>Hello ${question.asker.fullName},</p>
             <p>The seller has answered your question about <strong>${question.product.title}</strong>:</p>
@@ -153,7 +155,7 @@ class QuestionService {
             <p><a href="${productUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Product</a></p>
             <p>Best regards,<br>Auctio Team</p>
           `
-        });
+        );
       } catch (emailError) {
         logger.error('Failed to send email notification:', emailError);
       }
