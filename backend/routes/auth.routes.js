@@ -9,6 +9,10 @@ import {
   logout,
   refreshToken,
   googleOAuthCallback,
+  verifyEmail,
+  createNewOtp,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/auth.controllers.js";
 import getUserFromJwt from "../utils/getUserFromJwtMiddleware.js";
 import UserModel from "../models/User.js";
@@ -24,6 +28,14 @@ router.post("/signup", signup);
 router.post("/logout", getUserFromJwt, logout);
 
 router.post("/refresh-token", refreshToken);
+
+router.post("/verify-email", getUserFromJwt, verifyEmail);
+
+router.post("/new-otp", getUserFromJwt, createNewOtp);
+
+router.post("/forgot-password", forgotPassword);
+
+router.post("/reset-password", resetPassword);
 
 passport.use(
   new GoogleStrategy.Strategy(

@@ -1,7 +1,6 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
@@ -18,6 +17,7 @@ import {
   Hammer,
   AlertCircle,
   Loader2,
+  Heart,
 } from "lucide-react";
 
 interface Product {
@@ -71,11 +71,15 @@ const ProductDetailPage = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [isTogglingWatchlist, setIsTogglingWatchlist] = useState(false);
+
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/products/${id}`);
+        const response = await fetch(`${BACKEND_URL}/api/products/${id}`);
         const data = await response.json();
         if (data.success) {
           setProduct(data.data);
@@ -90,6 +94,58 @@ const ProductDetailPage = () => {
     };
     if (id) fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    if (id) checkWatchlistStatus();
+  }, [id]);
+
+  const checkWatchlistStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/watchlist/check/${id}`, {
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setIsInWatchlist(data.data.inWatchlist);
+      }
+    } catch (error) {
+      console.error("Error checking watchlist status:", error);
+    }
+  };
+
+  const handleWatchlistToggle = async () => {
+    setIsTogglingWatchlist(true);
+    
+    try {
+      if (isInWatchlist) {
+        // Remove from watchlist
+        const response = await fetch(`${BACKEND_URL}/api/watchlist/${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.success) {
+          setIsInWatchlist(false);
+        }
+      } else {
+        // Add to watchlist
+        const response = await fetch(`${BACKEND_URL}/api/watchlist/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ productId: id }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          setIsInWatchlist(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling watchlist:", error);
+    } finally {
+      setIsTogglingWatchlist(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -424,6 +480,18 @@ const ProductDetailPage = () => {
                     Mua ngay
                   </Button>
                 )}
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={handleWatchlistToggle}
+                  disabled={isTogglingWatchlist}
+                >
+                  <Heart className={`w-4 h-4 mr-2 ${
+                    isInWatchlist ? "fill-red-500 text-red-500" : ""
+                  }`} />
+                  {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
+                </Button>
               </div>
             </Card>
           </div>

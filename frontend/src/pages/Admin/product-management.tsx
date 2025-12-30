@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,133 +15,146 @@ import Footer from "@/components/layout/Footer";
 import {
   Package,
   Search,
-  Filter,
   Eye,
   Ban,
   Trash2,
   AlertCircle,
   CheckCircle,
   Clock,
+  Loader2,
 } from "lucide-react";
 
 interface Product {
   id: string;
   title: string;
-  imageUrl: string;
-  category: string;
-  seller: string;
-  sellerId: string;
-  currentPrice: number;
+  description: string;
+  images: string[];
   startingPrice: number;
-  totalBids: number;
-  status: "active" | "ended" | "removed" | "reported";
+  currentPrice: number;
+  buyNowPrice: number | null;
   endTime: string;
+  status: string;
   createdAt: string;
-  reportCount: number;
+  seller: {
+    id: string;
+    fullName: string;
+  };
+  category: {
+    id: string;
+    name: string;
+  };
+  _count: {
+    bids: number;
+  };
 }
 
 export default function ProductManagementPage() {
   const navigate = useNavigate();
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [searchedProduct, setSearchedProduct] = useState<Product | null>(null);
+  const [searchingById, setSearchingById] = useState(false);
 
-  // Calculate dates once at component mount
-  const [productDates] = useState(() => {
-    const now = Date.now();
-    return {
-      p1End: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
-      p1Created: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      p2End: new Date(now + 5 * 60 * 60 * 1000).toISOString(),
-      p2Created: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      p3End: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      p3Created: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      p4End: new Date(now + 1 * 60 * 60 * 1000).toISOString(),
-      p4Created: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      p5End: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      p5Created: new Date(now - 15 * 24 * 60 * 60 * 1000).toISOString(),
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "20",
+      });
+
+      if (statusFilter && statusFilter !== "all") {
+        params.append("status", statusFilter.toUpperCase());
+      }
+
+      const response = await fetch(`${BACKEND_URL}/api/admin/products?${params}`, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        const isJson = contentType?.includes("application/json");
+        if (isJson) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch products");
+        }
+        throw new Error(`Failed to fetch products (${response.status})`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setProducts(data.data.products || []);
+        setTotalPages(data.data.totalPages || 1);
+        setTotalProducts(data.data.total || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      const errorMessage = err instanceof Error ? err.message : "Không thể tải danh sách sản phẩm";
+      setError(errorMessage + " - Kiểm tra backend server");
+    } finally {
+      setLoading(false);
+    }
+  }, [page, statusFilter, BACKEND_URL]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Fetch product by ID when search query changes
+  useEffect(() => {
+    const searchProductById = async () => {
+      if (!searchQuery.trim()) {
+        setSearchedProduct(null);
+        return;
+      }
+
+      // Check if the product with this ID is already in the current page
+      const existingProduct = products.find(p => p.id === searchQuery.trim());
+      if (existingProduct) {
+        setSearchedProduct(null);
+        return;
+      }
+
+      try {
+        setSearchingById(true);
+        const response = await fetch(`${BACKEND_URL}/api/admin/products/${searchQuery.trim()}`, {
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            setSearchedProduct(data.data);
+          } else {
+            setSearchedProduct(null);
+          }
+        } else {
+          setSearchedProduct(null);
+        }
+      } catch (err) {
+        console.error("Error searching product by ID:", err);
+        setSearchedProduct(null);
+      } finally {
+        setSearchingById(false);
+      }
     };
-  });
 
-  // Mock products data
-  // TODO: Replace with API call to fetch products
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: "1",
-      title: "iPhone 15 Pro Max 256GB Titan Tự Nhiên",
-      imageUrl: "https://via.placeholder.com/400x300",
-      category: "Điện tử",
-      seller: "TechStore VN",
-      sellerId: "seller1",
-      currentPrice: 25000000,
-      startingPrice: 20000000,
-      totalBids: 45,
-      status: "active",
-      endTime: productDates.p1End,
-      createdAt: productDates.p1Created,
-      reportCount: 0,
-    },
-    {
-      id: "2",
-      title: "MacBook Pro M3 14 inch 2024",
-      imageUrl: "https://via.placeholder.com/400x300",
-      category: "Điện tử",
-      seller: "Apple Premium",
-      sellerId: "seller2",
-      currentPrice: 35000000,
-      startingPrice: 30000000,
-      totalBids: 32,
-      status: "active",
-      endTime: productDates.p2End,
-      createdAt: productDates.p2Created,
-      reportCount: 0,
-    },
-    {
-      id: "3",
-      title: "Đồng hồ Rolex Submariner - Hàng nhái",
-      imageUrl: "https://via.placeholder.com/400x300",
-      category: "Thời trang",
-      seller: "WatchFake Shop",
-      sellerId: "seller3",
-      currentPrice: 5000000,
-      startingPrice: 3000000,
-      totalBids: 12,
-      status: "reported",
-      endTime: productDates.p3End,
-      createdAt: productDates.p3Created,
-      reportCount: 5,
-    },
-    {
-      id: "4",
-      title: "iPad Pro 12.9 inch M2 256GB WiFi",
-      imageUrl: "https://via.placeholder.com/400x300",
-      category: "Điện tử",
-      seller: "TechStore VN",
-      sellerId: "seller1",
-      currentPrice: 18000000,
-      startingPrice: 15000000,
-      totalBids: 28,
-      status: "active",
-      endTime: productDates.p4End,
-      createdAt: productDates.p4Created,
-      reportCount: 0,
-    },
-    {
-      id: "5",
-      title: "Mercedes-Benz C200 2020",
-      imageUrl: "https://via.placeholder.com/400x300",
-      category: "Xe cộ",
-      seller: "AutoSales",
-      sellerId: "seller4",
-      currentPrice: 950000000,
-      startingPrice: 900000000,
-      totalBids: 8,
-      status: "ended",
-      endTime: productDates.p5End,
-      createdAt: productDates.p5Created,
-      reportCount: 0,
-    },
-  ]);
+    // Debounce the search
+    const timeoutId = setTimeout(() => {
+      searchProductById();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, products, BACKEND_URL]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -160,31 +173,31 @@ export default function ProductManagementPage() {
     }).format(new Date(dateString));
   };
 
-  const getStatusBadge = (status: Product["status"]) => {
-    const statusConfig = {
-      active: {
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, any> = {
+      ACTIVE: {
         label: "Đang đấu giá",
         color: "bg-green-100 text-green-800 border-green-300",
         icon: CheckCircle,
       },
-      ended: {
+      ENDED: {
         label: "Đã kết thúc",
         color: "bg-gray-100 text-gray-800 border-gray-300",
         icon: Clock,
       },
-      removed: {
+      REMOVED: {
         label: "Đã gỡ",
         color: "bg-red-100 text-red-800 border-red-300",
         icon: Ban,
       },
-      reported: {
+      REPORTED: {
         label: "Bị báo cáo",
         color: "bg-yellow-100 text-yellow-800 border-yellow-300",
         icon: AlertCircle,
       },
     };
 
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig.ACTIVE;
     const Icon = config.icon;
 
     return (
@@ -201,35 +214,40 @@ export default function ProductManagementPage() {
     navigate(`/product/${id}`);
   };
 
-  const handleRemoveProduct = (id: string) => {
+  const handleDeleteProduct = async (id: string) => {
     const product = products.find((p) => p.id === id);
     if (!product) return;
 
-    if (
-      confirm(
-        `Bạn có chắc muốn gỡ sản phẩm "${product.title}"? Hành động này không thể hoàn tác.`
-      )
-    ) {
-      // TODO: Replace with API call to remove product
-      setProducts(
-        products.map((p) =>
-          p.id === id ? { ...p, status: "removed" as const } : p
-        )
-      );
-    }
-  };
-
-  const handleDeleteProduct = (id: string) => {
-    const product = products.find((p) => p.id === id);
-    if (!product) return;
+    const reason = prompt(
+      `Nhập lý do gỡ sản phẩm "${product.title}":`,
+      "Vi phạm chính sách"
+    );
+    if (!reason) return;
 
     if (
       confirm(
-        `Bạn có chắc muốn XÓA VĨNH VIỄN sản phẩm "${product.title}"? Hành động này không thể hoàn tác.`
+        `Bạn có chắc muốn GỠ sản phẩm "${product.title}"? Hành động này không thể hoàn tác.`
       )
     ) {
-      // TODO: Replace with API call to delete product
-      setProducts(products.filter((p) => p.id !== id));
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/admin/products/${id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ reason }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          alert("Gỡ sản phẩm thành công!");
+          fetchProducts();
+        } else {
+          alert(data.message || "Không thể gỡ sản phẩm");
+        }
+      } catch (err) {
+        console.error("Error removing product:", err);
+        alert("Lỗi khi gỡ sản phẩm");
+      }
     }
   };
 
@@ -241,24 +259,18 @@ export default function ProductManagementPage() {
     const matchesSearch =
       searchQuery === "" ||
       product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.seller.toLowerCase().includes(searchQuery.toLowerCase());
+      product.seller.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.id === searchQuery.trim();
 
-    const matchesStatus =
-      statusFilter === "all" || product.status === statusFilter;
-
-    const matchesCategory =
-      categoryFilter === "all" || product.category === categoryFilter;
-
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch;
   });
 
-  const stats = {
-    total: products.length,
-    active: products.filter((p) => p.status === "active").length,
-    ended: products.filter((p) => p.status === "ended").length,
-    reported: products.filter((p) => p.status === "reported").length,
-    removed: products.filter((p) => p.status === "removed").length,
-  };
+  // Combine filtered products with searched product (if exists and not already in list)
+  let displayProducts = searchQuery ? filteredProducts : products;
+  
+  if (searchedProduct && !displayProducts.find(p => p.id === searchedProduct.id)) {
+    displayProducts = [searchedProduct, ...displayProducts];
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -275,50 +287,56 @@ export default function ProductManagementPage() {
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <Card className="p-4">
-            <div className="text-sm text-gray-600 mb-1">Tổng số</div>
-            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-gray-600 mb-1">Đang đấu giá</div>
-            <div className="text-2xl font-bold text-green-600">
-              {stats.active}
+        {/* Stats - showing from API */}
+        <Card className="p-6 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-sm text-gray-600 mb-1">Tổng sản phẩm</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {totalProducts.toLocaleString()}
+              </div>
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-gray-600 mb-1">Đã kết thúc</div>
-            <div className="text-2xl font-bold text-gray-600">{stats.ended}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-gray-600 mb-1">Bị báo cáo</div>
-            <div className="text-2xl font-bold text-yellow-600">
-              {stats.reported}
+            <div>
+              <div className="text-sm text-gray-600 mb-1">Trang hiện tại</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {page} / {totalPages}
+              </div>
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-gray-600 mb-1">Đã gỡ</div>
-            <div className="text-2xl font-bold text-red-600">{stats.removed}</div>
-          </Card>
-        </div>
+            <div>
+              <div className="text-sm text-gray-600 mb-1">Sản phẩm hiển thị</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {products.length}
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Filters */}
         <Card className="p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                Tìm kiếm
+                Tìm kiếm theo ID hoặc tên
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm theo tên sản phẩm, người bán..."
+                  placeholder="Nhập ID sản phẩm, tên sản phẩm hoặc tên người bán..."
                   className="pl-10"
                 />
+                {searchingById && (
+                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 animate-spin text-blue-600" />
+                )}
               </div>
+              {searchQuery && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {searchedProduct 
+                    ? "✓ Tìm thấy sản phẩm theo ID" 
+                    : "Tìm kiếm trong trang hiện tại và theo ID"}
+                </p>
+              )}
             </div>
 
             <div>
@@ -333,153 +351,147 @@ export default function ProductManagementPage() {
                   <SelectItem value="all">Tất cả</SelectItem>
                   <SelectItem value="active">Đang đấu giá</SelectItem>
                   <SelectItem value="ended">Đã kết thúc</SelectItem>
-                  <SelectItem value="reported">Bị báo cáo</SelectItem>
                   <SelectItem value="removed">Đã gỡ</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Danh mục
-              </label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="Điện tử">Điện tử</SelectItem>
-                  <SelectItem value="Thời trang">Thời trang</SelectItem>
-                  <SelectItem value="Xe cộ">Xe cộ</SelectItem>
-                  <SelectItem value="Nhà cửa">Nhà cửa</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </Card>
 
-        {/* Products List */}
-        <div className="space-y-4">
-          {filteredProducts.length === 0 ? (
-            <Card className="p-12">
-              <div className="text-center">
-                <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Không tìm thấy sản phẩm
-                </h3>
-                <p className="text-gray-600">
-                  Thử thay đổi bộ lọc hoặc tìm kiếm khác
-                </p>
-              </div>
-            </Card>
-          ) : (
-            filteredProducts.map((product) => (
-              <Card key={product.id} className="p-6">
-                <div className="flex gap-6">
-                  {/* Product Image */}
-                  <img
-                    src={product.imageUrl}
-                    alt={product.title}
-                    className="w-32 h-32 object-cover rounded-lg"
-                  />
-
-                  {/* Product Info */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {product.title}
-                        </h3>
-                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <span>ID: {product.id}</span>
-                          <span>•</span>
-                          <span>{product.category}</span>
-                          <span>•</span>
-                          <button
-                            onClick={() => handleViewSeller(product.sellerId)}
-                            className="text-blue-600 hover:underline"
-                          >
-                            {product.seller}
-                          </button>
-                        </div>
-                      </div>
-                      {getStatusBadge(product.status)}
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <div className="text-sm text-gray-600">Giá hiện tại</div>
-                        <div className="font-semibold text-gray-900">
-                          {formatPrice(product.currentPrice)}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Số lượt đấu</div>
-                        <div className="font-semibold text-gray-900">
-                          {product.totalBids}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Thời gian kết thúc</div>
-                        <div className="font-semibold text-gray-900 text-sm">
-                          {formatDateTime(product.endTime)}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Ngày tạo</div>
-                        <div className="font-semibold text-gray-900 text-sm">
-                          {formatDateTime(product.createdAt)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {product.reportCount > 0 && (
-                      <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-yellow-800">
-                          <AlertCircle className="w-4 h-4" />
-                          <span className="text-sm font-medium">
-                            Sản phẩm này có {product.reportCount} báo cáo vi phạm
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleViewProduct(product.id)}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Xem chi tiết
-                      </Button>
-                      {product.status !== "removed" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRemoveProduct(product.id)}
-                        >
-                          <Ban className="w-4 h-4 mr-2" />
-                          Gỡ sản phẩm
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Xóa vĩnh viễn
-                      </Button>
-                    </div>
+        {/* Loading/Error/Products List */}
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </div>
+        ) : error ? (
+          <Card className="p-6 mb-8 border-red-200 bg-red-50">
+            <p className="text-red-600">{error}</p>
+          </Card>
+        ) : (
+          <>
+            {/* Products List */}
+            <div className="space-y-4 mb-6">
+              {displayProducts.length === 0 ? (
+                <Card className="p-12">
+                  <div className="text-center">
+                    <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Không tìm thấy sản phẩm
+                    </h3>
+                    <p className="text-gray-600">
+                      Thử thay đổi bộ lọc hoặc tìm kiếm khác
+                    </p>
                   </div>
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
+                </Card>
+              ) : (
+                displayProducts.map((product) => (
+                  <Card key={product.id} className="p-6">
+                    <div className="flex gap-6">
+                      {/* Product Image */}
+                      <img
+                        src={product.images[0] || "https://via.placeholder.com/400x300"}
+                        alt={product.title}
+                        className="w-32 h-32 object-cover rounded-lg"
+                      />
+
+                      {/* Product Info */}
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                              {product.title}
+                            </h3>
+                            <div className="flex items-center gap-3 text-sm text-gray-600">
+                              <span>ID: {product.id}</span>
+                              <span>•</span>
+                              <span>{product.category.name}</span>
+                              <span>•</span>
+                              <button
+                                onClick={() => handleViewSeller(product.seller.id)}
+                                className="text-blue-600 hover:underline"
+                              >
+                                {product.seller.fullName}
+                              </button>
+                            </div>
+                          </div>
+                          {getStatusBadge(product.status)}
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          <div>
+                            <div className="text-sm text-gray-600">Giá hiện tại</div>
+                            <div className="font-semibold text-gray-900">
+                              {formatPrice(product.currentPrice)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-gray-600">Số lượt đấu</div>
+                            <div className="font-semibold text-gray-900">
+                              {product._count.bids}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-gray-600">Thời gian kết thúc</div>
+                            <div className="font-semibold text-gray-900 text-sm">
+                              {formatDateTime(product.endTime)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-gray-600">Ngày tạo</div>
+                            <div className="font-semibold text-gray-900 text-sm">
+                              {formatDateTime(product.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewProduct(product.id)}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Xem chi tiết
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="text-red-600 border-red-200 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Gỡ sản phẩm
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Pagination */}
+            <div className="flex justify-between items-center mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Trang trước
+              </Button>
+              <span className="text-sm text-gray-600">
+                Trang {page} / {totalPages} (Tổng {totalProducts} sản phẩm)
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+              >
+                Trang sau
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       <Footer />

@@ -153,7 +153,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/order/:id",
-    element: <ProtectedRoute allowedRoles={['SELLER', 'ADMIN']}><OrderFinalizationPage /></ProtectedRoute>,
+    element: <ProtectedRoute allowedRoles={["BIDDER", 'SELLER', 'ADMIN']}><OrderFinalizationPage /></ProtectedRoute>,
   },
   // Admin routes (protected)
   {

@@ -49,8 +49,7 @@ const ResetPassword = () => {
     }
 
     try {
-      // TODO: Replace with actual API endpoint when backend implements password reset
-      const response = await fetch(`${BACKEND_URL}/reset-password`, {
+      const response = await fetch(`${BACKEND_URL}/auth/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -61,18 +60,17 @@ const ResetPassword = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Không thể đặt lại mật khẩu");
-      }
-
       const responseData = await response.json();
-      console.log("Password reset successful:", responseData);
+
+      if (!response.ok) {
+        throw new Error(responseData.message || "Không thể đặt lại mật khẩu");
+      }
       
       alert("Mật khẩu đã được đặt lại thành công!");
       navigate("/log-in");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Password reset failed:", error);
-      setErrorMessage("Đã xảy ra lỗi. Token có thể đã hết hạn.");
+      setErrorMessage(error.message || "Đã xảy ra lỗi. Token có thể đã hết hạn.");
     }
   };
 

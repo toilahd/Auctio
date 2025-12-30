@@ -10,7 +10,7 @@ export interface User {
     positive: number;
     negative: number;
   };
-//   isVerified?: boolean;
+  isVerified: boolean;
 }
 
 interface AuthContextType {
@@ -57,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fullName: userData.user.fullName,
             role: userData.user.role,
             rating: userData.user.rating,
+            isVerified: userData.user.isVerified,
           });
           return true;
         }
@@ -87,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               fullName: data.user.fullName,
               role: data.user.role,
               rating: data.user.rating,
+              isVerified: data.user.isVerified,
             });
           }
         } else if (response.status === 401) {
@@ -134,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fullName: userData.user.fullName,
           role: userData.user.role,
           rating: userData.user.rating,
+          isVerified: userData.user.isVerified,
         });
       }
     }
