@@ -2,8 +2,16 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useMemo } from "react";
-import { Gavel, Package, DollarSign, Star, Eye, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Gavel,
+  Package,
+  DollarSign,
+  Star,
+  Eye,
+  Heart,
+  Loader2,
+} from "lucide-react";
 
 interface Product {
   id: string;
@@ -19,108 +27,105 @@ interface Product {
 }
 
 const SellerDashboardPage = () => {
+  const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
   const [activeTab, setActiveTab] = useState<"active" | "ended">("active");
-
-  // Mock data - TODO: Fetch from backend
-  const stats = {
-    activeAuctions: 5,
-    totalSold: 42,
-    totalRevenue: 850000000,
-    averageRating: 4.8,
-    totalViews: 12450,
-    totalWatchers: 345,
-  };
-
-  // Calculate end times once at component mount
-  const [productDates] = useState(() => {
-    const now = Date.now();
-    return {
-      active1: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
-      active2: new Date(now + 4 * 60 * 60 * 1000).toISOString(),
-      active3: new Date(now + 6 * 60 * 60 * 1000).toISOString(),
-      ended1: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      ended2: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      ended3: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    };
+  const [activeProducts, setActiveProducts] = useState<Product[]>([]);
+  const [endedProducts, setEndedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    activeAuctions: 0,
+    totalSold: 0,
+    totalRevenue: 0,
+    averageRating: 0,
+    totalViews: 0,
+    totalWatchers: 0,
   });
 
-  const activeProducts: Product[] = [
-    {
-      id: "1",
-      title: "iPhone 15 Pro Max 256GB - Nguyên seal",
-      imageUrl: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500",
-      currentPrice: 25000000,
-      startingPrice: 20000000,
-      totalBids: 45,
-      endTime: productDates.active1,
-      status: "active",
-      views: 1250,
-      watchers: 89,
-    },
-    {
-      id: "2",
-      title: "MacBook Pro M3 14 inch 2024",
-      imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500",
-      currentPrice: 35000000,
-      startingPrice: 30000000,
-      totalBids: 32,
-      endTime: productDates.active2,
-      status: "active",
-      views: 980,
-      watchers: 67,
-    },
-    {
-      id: "3",
-      title: "Sony WH-1000XM5 - Tai nghe chống ồn",
-      imageUrl: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=500",
-      currentPrice: 6500000,
-      startingPrice: 5000000,
-      totalBids: 18,
-      endTime: productDates.active3,
-      status: "active",
-      views: 560,
-      watchers: 34,
-    },
-  ];
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
 
-  const endedProducts: Product[] = [
-    {
-      id: "101",
-      title: "iPad Air M2 2024 - WiFi 128GB",
-      imageUrl: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500",
-      currentPrice: 12000000,
-      startingPrice: 10000000,
-      totalBids: 28,
-      endTime: productDates.ended1,
-      status: "sold",
-      views: 850,
-      watchers: 45,
-    },
-    {
-      id: "102",
-      title: "AirPods Pro 2 - Chính hãng VN",
-      imageUrl: "https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=500",
-      currentPrice: 4500000,
-      startingPrice: 4000000,
-      totalBids: 15,
-      endTime: productDates.ended2,
-      status: "sold",
-      views: 420,
-      watchers: 28,
-    },
-    {
-      id: "103",
-      title: "Samsung Galaxy Watch 6 Classic",
-      imageUrl: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=500",
-      currentPrice: 3000000,
-      startingPrice: 3000000,
-      totalBids: 0,
-      endTime: productDates.ended3,
-      status: "unsold",
-      views: 125,
-      watchers: 8,
-    },
-  ];
+        // Fetch active products
+        const activeResponse = await fetch(
+          `${BACKEND_URL}/api/seller/products/active?page=1&limit=20`,
+          { credentials: "include" }
+        );
+        const activeData = await activeResponse.json();
+
+        // Fetch completed products
+        const completedResponse = await fetch(
+          `${BACKEND_URL}/api/seller/products/completed?page=1&limit=20`,
+          { credentials: "include" }
+        );
+        const completedData = await completedResponse.json();
+
+        if (activeData.success && activeData.data) {
+          const formattedActive = activeData.data.products.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            imageUrl: p.images[0] || "https://via.placeholder.com/500",
+            currentPrice: p.currentPrice,
+            startingPrice: p.startPrice,
+            totalBids: p._count?.bids || 0,
+            endTime: p.endTime,
+            status: "active" as const,
+            views: 0, // Not available in backend
+            watchers: p._count?.watchLists || 0,
+          }));
+          setActiveProducts(formattedActive);
+        }
+
+        if (completedData.success && completedData.data) {
+          const formattedCompleted = completedData.data.products.map(
+            (p: any) => ({
+              id: p.id,
+              title: p.title,
+              imageUrl: p.images[0] || "https://via.placeholder.com/500",
+              currentPrice: p.currentPrice,
+              startingPrice: p.startPrice,
+              totalBids: p._count?.bids || 0,
+              endTime: p.endTime,
+              status: p.currentWinnerId
+                ? ("sold" as const)
+                : ("unsold" as const),
+              views: 0, // Not available in backend
+              watchers: 0,
+            })
+          );
+          setEndedProducts(formattedCompleted);
+
+          // Calculate stats
+          const totalSold = completedData.data.products.filter(
+            (p: any) => p.currentWinnerId
+          ).length;
+          const totalRevenue = completedData.data.products
+            .filter((p: any) => p.currentWinnerId)
+            .reduce((sum: number, p: any) => sum + p.currentPrice, 0);
+
+          setStats({
+            activeAuctions: activeData.data.products.length,
+            totalSold,
+            totalRevenue,
+            averageRating: 0, // Not calculated yet
+            totalViews: 0, // Not available in backend
+            totalWatchers: activeData.data.products.reduce(
+              (sum: number, p: any) => sum + (p._count?.watchLists || 0),
+              0
+            ),
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -147,15 +152,45 @@ const SellerDashboardPage = () => {
 
   const getStatusBadge = (status: Product["status"]) => {
     const badges = {
-      active: { text: "Đang đấu giá", color: "bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400" },
-      ended: { text: "Đã kết thúc", color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400" },
-      sold: { text: "Đã bán", color: "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400" },
-      unsold: { text: "Chưa bán", color: "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400" },
+      active: {
+        text: "Đang đấu giá",
+        color:
+          "bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400",
+      },
+      ended: {
+        text: "Đã kết thúc",
+        color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400",
+      },
+      sold: {
+        text: "Đã bán",
+        color:
+          "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400",
+      },
+      unsold: {
+        text: "Chưa bán",
+        color: "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400",
+      },
     };
     return badges[status];
   };
 
-  const currentProducts = activeTab === "active" ? activeProducts : endedProducts;
+  const currentProducts =
+    activeTab === "active" ? activeProducts : endedProducts;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
+            <p className="text-gray-600 dark:text-gray-400">Đang tải...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950">
@@ -173,7 +208,10 @@ const SellerDashboardPage = () => {
                 Quản lý sản phẩm và theo dõi hoạt động bán hàng
               </p>
             </div>
-            <Button onClick={() => (window.location.href = "/seller/create-product")} size="lg">
+            <Button
+              onClick={() => (window.location.href = "/seller/create-product")}
+              size="lg"
+            >
               + Đăng sản phẩm mới
             </Button>
           </div>
@@ -318,7 +356,9 @@ const SellerDashboardPage = () => {
                         Lượt đấu giá
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {activeTab === "active" ? "Thời gian còn lại" : "Trạng thái"}
+                        {activeTab === "active"
+                          ? "Thời gian còn lại"
+                          : "Trạng thái"}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Thống kê
@@ -332,7 +372,10 @@ const SellerDashboardPage = () => {
                     {currentProducts.map((product) => {
                       const badge = getStatusBadge(product.status);
                       return (
-                        <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <tr
+                          key={product.id}
+                          className="hover:bg-gray-50 dark:hover:bg-slate-800"
+                        >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <img
@@ -359,7 +402,10 @@ const SellerDashboardPage = () => {
                             </div>
                             {product.currentPrice > product.startingPrice && (
                               <div className="text-xs text-green-600">
-                                +{formatPrice(product.currentPrice - product.startingPrice)}
+                                +
+                                {formatPrice(
+                                  product.currentPrice - product.startingPrice
+                                )}
                               </div>
                             )}
                           </td>
@@ -372,17 +418,25 @@ const SellerDashboardPage = () => {
                                 {getTimeRemaining(product.endTime)}
                               </div>
                             ) : (
-                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${badge.color}`}>
+                              <span
+                                className={`px-2 py-1 text-xs font-semibold rounded-full ${badge.color}`}
+                              >
                                 {badge.text}
                               </span>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                             <div className="flex items-center gap-3">
-                              <span className="flex items-center gap-1" title="Lượt xem">
+                              <span
+                                className="flex items-center gap-1"
+                                title="Lượt xem"
+                              >
                                 <Eye className="w-4 h-4" /> {product.views}
                               </span>
-                              <span className="flex items-center gap-1" title="Theo dõi">
+                              <span
+                                className="flex items-center gap-1"
+                                title="Theo dõi"
+                              >
                                 <Heart className="w-4 h-4" /> {product.watchers}
                               </span>
                             </div>
@@ -391,17 +445,22 @@ const SellerDashboardPage = () => {
                             <div className="flex items-center justify-end gap-2">
                               {activeTab === "active" ? (
                                 <>
-                                  <Button 
-                                    variant="ghost" 
+                                  <Button
+                                    variant="ghost"
                                     size="sm"
-                                    onClick={() => (window.location.href = `/seller/edit-product/${product.id}`)}
+                                    onClick={() =>
+                                      (window.location.href = `/seller/edit-product/${product.id}`)
+                                    }
                                   >
                                     Sửa
                                   </Button>
-                                  <Button 
-                                    variant="ghost" 
+                                  <Button
+                                    variant="ghost"
                                     size="sm"
-                                    onClick={() => (window.location.href = "/seller/qa-management")}
+                                    onClick={() =>
+                                      (window.location.href =
+                                        "/seller/qa-management")
+                                    }
                                   >
                                     Q&A
                                   </Button>
@@ -409,18 +468,23 @@ const SellerDashboardPage = () => {
                               ) : (
                                 <>
                                   {product.status === "sold" ? (
-                                    <Button 
-                                      variant="outline" 
+                                    <Button
+                                      variant="outline"
                                       size="sm"
-                                      onClick={() => (window.location.href = `/order/${product.id}`)}
+                                      onClick={() =>
+                                        (window.location.href = `/order/${product.id}`)
+                                      }
                                     >
                                       Hoàn tất
                                     </Button>
                                   ) : (
-                                    <Button 
-                                      variant="outline" 
+                                    <Button
+                                      variant="outline"
                                       size="sm"
-                                      onClick={() => (window.location.href = "/seller/create-product")}
+                                      onClick={() =>
+                                        (window.location.href =
+                                          "/seller/create-product")
+                                      }
                                     >
                                       Đăng lại
                                     </Button>
