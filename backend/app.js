@@ -15,6 +15,8 @@ import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import sellerRoutes from "./routes/sellerRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 dotenv.config();
 
 BigInt.prototype.toJSON = function () {
@@ -64,6 +66,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

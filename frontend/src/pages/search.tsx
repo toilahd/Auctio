@@ -51,6 +51,10 @@ interface Product {
     fullName: string;
     email: string;
   };
+  currentWinner?: {
+    id: string;
+    fullName: string;
+  };
   _count?: {
     bids: number;
   };
@@ -82,8 +86,14 @@ export default function SearchPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [categories, setCategories] = useState<
-    { value: string; label: string }[]
+    { value: string; label: string; indent?: number; isParent?: boolean }[]
   >([{ value: "all", label: "Tất cả danh mục" }]);
+  const [categoryMap, setCategoryMap] = useState<Map<string, string>>(
+    new Map()
+  );
+  const [categoryChildrenMap, setCategoryChildrenMap] = useState<
+    Map<string, string[]>
+  >(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,21 +107,68 @@ export default function SearchPage() {
     }
   }, [searchParams]);
 
+  // Sync category with URL params when they change
+  useEffect(() => {
+    const categoryParam = searchParams.get("categoryId");
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    } else {
+      setSelectedCategory("all");
+    }
+  }, [searchParams]);
+
   // Fetch categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/categories");
+        const response = await fetch(
+          "http://localhost:3000/api/categories/menu"
+        );
         const data = await response.json();
         if (data.success) {
-          const categoryOptions = [
-            { value: "all", label: "Tất cả danh mục" },
-            ...data.data.map((cat: any) => ({
+          const categoryOptions: {
+            value: string;
+            label: string;
+            indent?: number;
+            isParent?: boolean;
+          }[] = [{ value: "all", label: "Tất cả danh mục" }];
+          const idToNameMap = new Map<string, string>();
+          const parentToChildrenMap = new Map<string, string[]>();
+
+          // Build flat list with parent and children, and create ID to name map
+          data.data.forEach((cat: any) => {
+            const hasChildren = cat.children && cat.children.length > 0;
+
+            // Add parent category
+            categoryOptions.push({
               value: cat.id.toString(),
               label: cat.name,
-            })),
-          ];
+              indent: 0,
+              isParent: hasChildren,
+            });
+            idToNameMap.set(cat.id.toString(), cat.name);
+
+            // Add subcategories with indentation
+            if (cat.children && cat.children.length > 0) {
+              const childIds = cat.children.map((subcat: any) =>
+                subcat.id.toString()
+              );
+              parentToChildrenMap.set(cat.id.toString(), childIds);
+
+              cat.children.forEach((subcat: any) => {
+                categoryOptions.push({
+                  value: subcat.id.toString(),
+                  label: subcat.name,
+                  indent: 1,
+                });
+                idToNameMap.set(subcat.id.toString(), subcat.name);
+              });
+            }
+          });
+
           setCategories(categoryOptions);
+          setCategoryMap(idToNameMap);
+          setCategoryChildrenMap(parentToChildrenMap);
         }
       } catch (err) {
         console.error("Error fetching categories:", err);
@@ -144,6 +201,7 @@ export default function SearchPage() {
 
         if (data.success) {
           setProducts(data.data.products || []);
+          console.log("Fetched products:", data.data.products || []);
           setTotalProducts(data.data.pagination?.total || 0);
         } else {
           setError("Không thể tải danh sách sản phẩm");
@@ -157,7 +215,16 @@ export default function SearchPage() {
     };
 
     fetchProducts();
-  }, [searchQuery, selectedCategory, page, limit, sortBy, order, highlightMinutes]);
+  }, [
+    searchQuery,
+    selectedCategory,
+    page,
+    limit,
+    sortBy,
+    order,
+    highlightMinutes,
+    categoryChildrenMap,
+  ]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,10 +335,16 @@ export default function SearchPage() {
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Filter className="w-5 h-5" />
                   Bộ lọc
-                  {(selectedCategory !== "all" || sortBy !== "endTime" || order !== "asc") && (
+                  {(selectedCategory !== "all" ||
+                    sortBy !== "endTime" ||
+                    order !== "asc") && (
                     <span className="ml-2 px-2 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
-                      {[selectedCategory !== "all", sortBy !== "endTime" || order !== "asc"]
-                        .filter(Boolean).length}
+                      {
+                        [
+                          selectedCategory !== "all",
+                          sortBy !== "endTime" || order !== "asc",
+                        ].filter(Boolean).length
+                      }
                     </span>
                   )}
                 </h2>
@@ -280,7 +353,12 @@ export default function SearchPage() {
                   size="sm"
                   onClick={handleClearFilters}
                   className="text-sm"
-                  disabled={selectedCategory === "all" && sortBy === "endTime" && order === "asc" && !searchQuery}
+                  disabled={
+                    selectedCategory === "all" &&
+                    sortBy === "endTime" &&
+                    order === "asc" &&
+                    !searchQuery
+                  }
                 >
                   <X className="w-4 h-4 mr-1" />
                   Xóa
@@ -297,8 +375,7 @@ export default function SearchPage() {
                     <div className="flex flex-wrap gap-2">
                       {searchQuery && (
                         <div className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded">
-                          <SearchIcon className="w-3 h-3" />
-                          "{searchQuery}"
+                          <SearchIcon className="w-3 h-3" />"{searchQuery}"
                           <button
                             onClick={() => {
                               setSearchQuery("");
@@ -314,7 +391,10 @@ export default function SearchPage() {
                       )}
                       {selectedCategory !== "all" && (
                         <div className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded">
-                          {categories.find(c => c.value === selectedCategory)?.label}
+                          {categoryMap.get(selectedCategory) ||
+                            categories.find((c) => c.value === selectedCategory)
+                              ?.label ||
+                            selectedCategory}
                           <button
                             onClick={() => handleCategoryChange("all")}
                             className="ml-1 hover:text-destructive"
@@ -341,8 +421,19 @@ export default function SearchPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
+                        <SelectItem
+                          key={cat.value}
+                          value={cat.value}
+                          disabled={cat.isParent}
+                        >
+                          <span
+                            style={{
+                              paddingLeft: `${(cat.indent || 0) * 1}rem`,
+                            }}
+                          >
+                            {cat.indent ? "└ " : ""}
+                            {cat.label}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -467,7 +558,9 @@ export default function SearchPage() {
                     </div>
                     <Button
                       variant="outline"
-                      onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                      onClick={() =>
+                        handlePageChange(Math.min(totalPages, page + 1))
+                      }
                       disabled={page === totalPages}
                     >
                       Sau

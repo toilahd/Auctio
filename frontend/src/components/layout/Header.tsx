@@ -136,15 +136,15 @@ const Header = () => {
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                     <div className="py-2">
                       <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white text-ellipsis overflow-hidden whitespace-nowrap">
                           {user?.fullName}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 text-ellipsis overflow-hidden whitespace-nowrap">
                           {user?.email}
                         </p>
                       </div>
                       <button
-                        onClick={() => navigate("/bidder/profile")}
+                        onClick={() => navigate("/profile")}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         Tài khoản của tôi
@@ -220,7 +220,7 @@ const Header = () => {
             Danh mục
           </button>
           <button
-            onClick={() => navigate("/products")}
+            onClick={() => navigate("/search")}
             className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
           >
             Đấu giá

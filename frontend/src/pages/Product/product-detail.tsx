@@ -3,6 +3,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -18,7 +19,28 @@ import {
   AlertCircle,
   Loader2,
   Heart,
+  MessageSquare,
+  Send,
 } from "lucide-react";
+
+interface Question {
+  id: string;
+  content: string;
+  createdAt: string;
+  asker: {
+    id: string;
+    fullName: string;
+  };
+  answer?: {
+    id: string;
+    content: string;
+    createdAt: string;
+    seller: {
+      id: string;
+      fullName: string;
+    };
+  };
+}
 
 interface Product {
   id: string;
@@ -67,14 +89,23 @@ interface Product {
 
 const ProductDetailPage = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [isTogglingWatchlist, setIsTogglingWatchlist] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [answerInputs, setAnswerInputs] = useState<Record<string, string>>({});
+  const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false);
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState<string | null>(
+    null
+  );
 
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -92,8 +123,25 @@ const ProductDetailPage = () => {
         setLoading(false);
       }
     };
-    if (id) fetchProduct();
+    if (id) {
+      fetchProduct();
+      fetchQuestions();
+    }
   }, [id]);
+
+  const fetchQuestions = async () => {
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/questions/product/${id}`
+      );
+      const data = await response.json();
+      if (data.success) {
+        setQuestions(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+    }
+  };
 
   useEffect(() => {
     if (id) checkWatchlistStatus();
@@ -115,7 +163,7 @@ const ProductDetailPage = () => {
 
   const handleWatchlistToggle = async () => {
     setIsTogglingWatchlist(true);
-    
+
     try {
       if (isInWatchlist) {
         // Remove from watchlist
@@ -144,6 +192,70 @@ const ProductDetailPage = () => {
       console.error("Error toggling watchlist:", error);
     } finally {
       setIsTogglingWatchlist(false);
+    }
+  };
+
+  const handleAskQuestion = async () => {
+    if (!newQuestion.trim() || newQuestion.length < 5) {
+      alert("Câu hỏi phải có ít nhất 5 ký tự");
+      return;
+    }
+
+    setIsSubmittingQuestion(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/questions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ productId: id, content: newQuestion }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNewQuestion("");
+        fetchQuestions();
+        // alert("Câu hỏi đã được gửi thành công!");
+      } else {
+        alert(data.message || "Không thể gửi câu hỏi");
+      }
+    } catch (error) {
+      console.error("Error asking question:", error);
+      alert("Đã xảy ra lỗi khi gửi câu hỏi");
+    } finally {
+      setIsSubmittingQuestion(false);
+    }
+  };
+
+  const handleAnswerQuestion = async (questionId: string) => {
+    const answerContent = answerInputs[questionId];
+    if (!answerContent?.trim() || answerContent.length < 5) {
+      alert("Câu trả lời phải có ít nhất 5 ký tự");
+      return;
+    }
+
+    setIsSubmittingAnswer(questionId);
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/questions/${questionId}/answer`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ content: answerContent }),
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setAnswerInputs({ ...answerInputs, [questionId]: "" });
+        fetchQuestions();
+        // alert("Câu trả lời đã được gửi thành công!");
+      } else {
+        alert(data.message || "Không thể gửi câu trả lời");
+      }
+    } catch (error) {
+      console.error("Error answering question:", error);
+      alert("Đã xảy ra lỗi khi gửi câu trả lời");
+    } finally {
+      setIsSubmittingAnswer(null);
     }
   };
 
@@ -226,7 +338,9 @@ const ProductDetailPage = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="mb-6 text-sm text-muted-foreground">
-          <a href="/" className="hover:text-primary">Trang chủ</a>
+          <a href="/" className="hover:text-primary">
+            Trang chủ
+          </a>
           <span className="mx-2">/</span>
           {product.category?.parent && (
             <>
@@ -245,7 +359,10 @@ const ProductDetailPage = () => {
               <div className="aspect-4/3 bg-muted flex items-center justify-center">
                 {product.images && product.images.length > 0 ? (
                   <img
-                    src={product.images[selectedImage] || "https://via.placeholder.com/800x600?text=No+Image"}
+                    src={
+                      product.images[selectedImage] ||
+                      "https://via.placeholder.com/800x600?text=No+Image"
+                    }
                     alt={product.title}
                     className="max-h-full max-w-full object-contain"
                   />
@@ -260,25 +377,25 @@ const ProductDetailPage = () => {
 
             {/* Thumbnail Gallery */}
             {product.images && product.images.length > 0 && (
-            <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === index
-                      ? "border-primary ring-2 ring-primary/20"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.title} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+              <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImage === index
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${product.title} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
             )}
 
             {/* Product Description */}
@@ -335,6 +452,21 @@ const ProductDetailPage = () => {
           {/* Right: Product Info & Actions */}
           <div className="space-y-4">
             <Card className="p-6 sticky top-4">
+              {/* Seller Notice */}
+              {user && product.seller?.id === user.id && (
+                <div className="mb-4 p-4 bg-primary/10 rounded-lg border-2 border-primary">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-primary" />
+                    <span className="font-semibold text-primary">
+                      Đây là sản phẩm của bạn
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1 ml-7">
+                    Bạn không thể đấu giá sản phẩm của chính mình
+                  </p>
+                </div>
+              )}
+
               <h1 className="text-2xl font-bold text-foreground mb-4 leading-tight">
                 {product.title}
               </h1>
@@ -397,28 +529,42 @@ const ProductDetailPage = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Tên:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Tên:
+                      </span>
                       <span className="font-medium text-foreground">
                         {product.seller.fullName}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Đánh giá:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Đánh giá:
+                      </span>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 text-sm">
                           <ThumbsUp className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="font-medium">{product.seller.positiveRatings}</span>
+                          <span className="font-medium">
+                            {product.seller.positiveRatings}
+                          </span>
                         </div>
                         <div className="flex items-center gap-1 text-sm">
                           <ThumbsDown className="w-3.5 h-3.5 text-destructive" />
-                          <span className="font-medium">{product.seller.negativeRatings}</span>
+                          <span className="font-medium">
+                            {product.seller.negativeRatings}
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Độ tin cậy:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Độ tin cậy:
+                      </span>
                       <Badge variant="secondary">
-                        {getRatingPercentage(product.seller.positiveRatings, product.seller.negativeRatings)}%
+                        {getRatingPercentage(
+                          product.seller.positiveRatings,
+                          product.seller.negativeRatings
+                        )}
+                        %
                       </Badge>
                     </div>
                   </div>
@@ -434,21 +580,29 @@ const ProductDetailPage = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Tên:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Tên:
+                      </span>
                       <span className="font-medium text-foreground">
                         {product.currentWinner.fullName}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Đánh giá:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Đánh giá:
+                      </span>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 text-sm">
                           <ThumbsUp className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="font-medium">{product.currentWinner.positiveRatings}</span>
+                          <span className="font-medium">
+                            {product.currentWinner.positiveRatings}
+                          </span>
                         </div>
                         <div className="flex items-center gap-1 text-sm">
                           <ThumbsDown className="w-3.5 h-3.5 text-destructive" />
-                          <span className="font-medium">{product.currentWinner.negativeRatings}</span>
+                          <span className="font-medium">
+                            {product.currentWinner.negativeRatings}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -468,33 +622,179 @@ const ProductDetailPage = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <Button className="w-full" size="lg">
-                  <Hammer className="w-4 h-4 mr-2" />
-                  Đấu giá ngay
-                </Button>
-                {product.buyNowPrice && (
-                  <Button variant="secondary" className="w-full" size="lg">
-                    <Tag className="w-4 h-4 mr-2" />
-                    Mua ngay
+              {/* Action Buttons - Hidden for sellers */}
+              {user?.id !== product.seller?.id && (
+                <div className="space-y-3">
+                  <Button className="w-full" size="lg">
+                    <Hammer className="w-4 h-4 mr-2" />
+                    Đấu giá ngay
                   </Button>
-                )}
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  size="lg"
-                  onClick={handleWatchlistToggle}
-                  disabled={isTogglingWatchlist}
-                >
-                  <Heart className={`w-4 h-4 mr-2 ${
-                    isInWatchlist ? "fill-red-500 text-red-500" : ""
-                  }`} />
-                  {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
-                </Button>
-              </div>
+                  {product.buyNowPrice && (
+                    <Button variant="secondary" className="w-full" size="lg">
+                      <Tag className="w-4 h-4 mr-2" />
+                      Mua ngay
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                    onClick={handleWatchlistToggle}
+                    disabled={isTogglingWatchlist}
+                  >
+                    <Heart
+                      className={`w-4 h-4 mr-2 ${
+                        isInWatchlist ? "fill-red-500 text-red-500" : ""
+                      }`}
+                    />
+                    {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
+                  </Button>
+                </div>
+              )}
             </Card>
           </div>
+        </div>
+
+        {/* Q&A Section */}
+        <div className="mt-12">
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+              <MessageSquare className="w-6 h-6" />
+              Hỏi & Đáp
+            </h2>
+
+            {/* Ask Question Form (for non-sellers) */}
+            {user && product.seller?.id !== user.id && (
+              <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                <h3 className="text-sm font-semibold text-foreground mb-3">
+                  Đặt câu hỏi cho người bán
+                </h3>
+                <div className="space-y-3">
+                  <textarea
+                    value={newQuestion}
+                    onChange={(e) => setNewQuestion(e.target.value)}
+                    placeholder="Nhập câu hỏi của bạn về sản phẩm này..."
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                    rows={3}
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {newQuestion.length} ký tự (tối thiểu 5)
+                    </span>
+                    <Button
+                      onClick={handleAskQuestion}
+                      disabled={isSubmittingQuestion || newQuestion.length < 5}
+                      size="sm"
+                    >
+                      {isSubmittingQuestion ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4 mr-2" />
+                      )}
+                      Gửi câu hỏi
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Questions List */}
+            <div className="space-y-6">
+              {questions.length > 0 ? (
+                questions.map((question) => (
+                  <div
+                    key={question.id}
+                    className="border-b border-border pb-6 last:border-0 last:pb-0"
+                  >
+                    {/* Question */}
+                    <div className="mb-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-medium text-foreground">
+                            {question.asker.fullName}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            hỏi {formatDate(question.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-foreground bg-muted/30 p-3 rounded-lg">
+                        {question.content}
+                      </p>
+                    </div>
+
+                    {/* Answer or Answer Form */}
+                    {question.answer ? (
+                      <div className="pl-6 border-l-2 border-primary/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-medium text-primary">
+                            {question.answer.seller.fullName}
+                          </span>
+                          <Badge variant="secondary">Người bán</Badge>
+                          <span className="text-sm text-muted-foreground">
+                            trả lời {formatDate(question.answer.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-foreground">
+                          {question.answer.content}
+                        </p>
+                      </div>
+                    ) : user?.id === product.seller?.id ? (
+                      <div className="pl-6 border-l-2 border-muted">
+                        <div className="space-y-3">
+                          <textarea
+                            value={answerInputs[question.id] || ""}
+                            onChange={(e) =>
+                              setAnswerInputs({
+                                ...answerInputs,
+                                [question.id]: e.target.value,
+                              })
+                            }
+                            placeholder="Nhập câu trả lời của bạn..."
+                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                            rows={2}
+                          />
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">
+                              {(answerInputs[question.id] || "").length} ký tự
+                              (tối thiểu 5)
+                            </span>
+                            <Button
+                              onClick={() => handleAnswerQuestion(question.id)}
+                              disabled={
+                                isSubmittingAnswer === question.id ||
+                                (answerInputs[question.id] || "").length < 5
+                              }
+                              size="sm"
+                            >
+                              {isSubmittingAnswer === question.id ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <Send className="w-4 h-4 mr-2" />
+                              )}
+                              Gửi câu trả lời
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="pl-6 text-sm text-muted-foreground italic">
+                        Chưa có câu trả lời
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-20" />
+                  <p className="text-muted-foreground">
+                    Chưa có câu hỏi nào. Hãy là người đầu tiên đặt câu hỏi!
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
       </main>
 
