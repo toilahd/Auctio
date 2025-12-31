@@ -461,9 +461,9 @@ export default function SearchPage() {
                       <SelectItem value="price-desc">
                         Giá cao đến thấp
                       </SelectItem>
-                      {/* <SelectItem value="bidCount-desc">
+                      <SelectItem value="bidCount-desc">
                         Nhiều lượt đấu giá
-                      </SelectItem> */}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

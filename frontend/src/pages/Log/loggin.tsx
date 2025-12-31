@@ -1,4 +1,3 @@
-import ReCAPTCHA from "react-google-recaptcha";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import GoogleIcon from "./google";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,7 +21,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-  const RE_SITE_KEY = import.meta.env.VITE_RE_SITE_KEY;
 
   const googleLogin = async () => {
     window.location.href = `${BACKEND_URL}/login/federated/google`;
@@ -31,35 +29,27 @@ const Login = () => {
   const {
     register,
     handleSubmit,
-    setValue,
-    trigger,
-    control,
     formState: { errors },
   } = useForm<{
     email: string;
     password: string;
-    captcha: string;
   }>();
-
-  const onChangeCaptcha = (value: string | null) => {
-    console.log("Captcha value:", value);
-    setValue("captcha", value || "", { shouldValidate: true });
-    trigger("captcha");
-  };
 
   const onSubmit: SubmitHandler<any> = async (data) => {
     setErrorMessage("");
     setIsLoading(true);
-    
+
     try {
       // Use AuthContext login which handles httpOnly cookies
-      await login(data.email, data.password, data.captcha);
-      
+      await login(data.email, data.password);
+
       // Redirect to home page after successful login
       navigate("/", { replace: true });
     } catch (error: any) {
       console.error("Login failed:", error);
-      setErrorMessage(error.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+      setErrorMessage(
+        error.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -81,10 +71,12 @@ const Login = () => {
           {errorMessage && (
             <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start">
               <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mr-2 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {errorMessage}
+              </p>
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <label
@@ -123,7 +115,10 @@ const Login = () => {
                 >
                   Mật khẩu
                 </label>
-                <a href="/forgot-password" className="text-sm text-primary hover:underline">
+                <a
+                  href="/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                >
                   Quên mật khẩu?
                 </a>
               </div>
@@ -146,26 +141,6 @@ const Login = () => {
               {errors.password && (
                 <p className="text-sm text-red-600">
                   {errors.password.message as string}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2 flex flex-col items-center">
-              <Controller
-                name={"captcha"}
-                control={control}
-                rules={{ required: "Phải thực hiện reCAPTCHA" }}
-                render={({ field }) => (
-                  <ReCAPTCHA
-                    sitekey={RE_SITE_KEY}
-                    {...field}
-                    onChange={onChangeCaptcha}
-                  />
-                )}
-              />
-              {errors.captcha && (
-                <p className="text-sm text-red-600">
-                  {errors.captcha.message as string}
                 </p>
               )}
             </div>

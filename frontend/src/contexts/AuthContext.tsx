@@ -15,7 +15,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, captcha: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
   resendOTP: () => Promise<{ success: boolean; message: string }>;
@@ -110,12 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [BACKEND_URL]);
 
-  const login = async (email: string, password: string, captcha: string) => {
+  const login = async (email: string, password: string) => {
     const response = await fetch(`${BACKEND_URL}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include", // Important: allow cookies to be set
-      body: JSON.stringify({ email, password, captcha }),
+      body: JSON.stringify({ email, password }),
     });
 
     const data = await response.json();

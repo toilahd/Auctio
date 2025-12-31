@@ -93,8 +93,7 @@ export async function login(req, res) {
       required: true,
       schema: {
         email: 'nguyena@mail.com',
-        password: 'yourPassword',
-        captcha: 'reCAPTCHA response token'
+        password: 'yourPassword'
       }
     }
     #swagger.responses[200] = {
@@ -106,7 +105,7 @@ export async function login(req, res) {
       }
     }
     #swagger.responses[400] = {
-      description: 'Invalid input or reCAPTCHA verification failed.',
+      description: 'Invalid input.',
       schema: { message: 'Invalid input' }
     }
     #swagger.responses[401] = {
@@ -114,8 +113,8 @@ export async function login(req, res) {
       schema: { message: 'Invalid credentials' }
     }
     #swagger.responses[500] = {
-      description: 'reCAPTCHA verification failed.',
-      schema: { message: 'reCAPTCHA verification failed' }
+      description: 'Server error.',
+      schema: { message: 'Server error' }
     }
   */
 
@@ -123,7 +122,6 @@ export async function login(req, res) {
   const loginSchema = z.object({
     email: z.email(),
     password: z.string().max(20).min(3),
-    captcha: z.string().min(1),
   });
 
   // Validate input
@@ -137,30 +135,30 @@ export async function login(req, res) {
   }
 
   // Verify reCAPTCHA
-  try {
-    const captchaResponse = parseResult.data.captcha;
-    const secretKey = process.env.RE_SECRET_KEY;
+  // try {
+  //   const captchaResponse = parseResult.data.captcha;
+  //   const secretKey = process.env.RE_SECRET_KEY;
 
-    const response = await fetch(process.env.RE_VERIFY, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: `secret=${secretKey}&response=${captchaResponse}`,
-    });
+  //   const response = await fetch(process.env.RE_VERIFY, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/x-www-form-urlencoded",
+  //     },
+  //     body: `secret=${secretKey}&response=${captchaResponse}`,
+  //   });
 
-    const captchaResult = await response.json();
-    console.log("reCAPTCHA verification result:", captchaResult);
-    if (!captchaResult.success || captchaResult.success !== true) {
-      console.log("reCAPTCHA verification failed:", captchaResult);
-      return res.status(400).json({ message: "reCAPTCHA verification failed" });
-    }
+  //   const captchaResult = await response.json();
+  //   console.log("reCAPTCHA verification result:", captchaResult);
+  //   if (!captchaResult.success || captchaResult.success !== true) {
+  //     console.log("reCAPTCHA verification failed:", captchaResult);
+  //     return res.status(400).json({ message: "reCAPTCHA verification failed" });
+  //   }
 
-    console.log("reCAPTCHA verification succeeded");
-  } catch (error) {
-    console.log("reCAPTCHA verification failed:", error);
-    return res.status(500).json({ message: "reCAPTCHA verification failed" });
-  }
+  //   console.log("reCAPTCHA verification succeeded");
+  // } catch (error) {
+  //   console.log("reCAPTCHA verification failed:", error);
+  //   return res.status(500).json({ message: "reCAPTCHA verification failed" });
+  // }
 
   // Continue with login logic
   const { email, password } = parseResult.data;

@@ -128,10 +128,6 @@
                 "password": {
                   "type": "string",
                   "example": "yourPassword"
-                },
-                "captcha": {
-                  "type": "string",
-                  "example": "reCAPTCHA response token"
                 }
               }
             }
@@ -162,7 +158,7 @@
             }
           },
           "400": {
-            "description": "Invalid input or reCAPTCHA verification failed.",
+            "description": "Invalid input.",
             "schema": {
               "type": "object",
               "properties": {
@@ -192,13 +188,13 @@
             }
           },
           "500": {
-            "description": "reCAPTCHA verification failed.",
+            "description": "Server error.",
             "schema": {
               "type": "object",
               "properties": {
                 "message": {
                   "type": "string",
-                  "example": "reCAPTCHA verification failed"
+                  "example": "Server error"
                 }
               },
               "xml": {
@@ -4261,6 +4257,245 @@
             "cookieAuth": []
           }
         ]
+      }
+    },
+    "/api/payment/seller-upgrade/create": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Create ZaloPay payment order for seller upgrade",
+        "description": "Generate ZaloPay payment URL for seller upgrade",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "User ID for seller upgrade",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "example": "user-uuid"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment order created successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "order_url": {
+                      "type": "string",
+                      "example": "https://qcgateway.zalopay.vn/..."
+                    },
+                    "app_trans_id": {
+                      "type": "string",
+                      "example": "231231_SELLER_123456"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/payment/auction/create": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Create ZaloPay payment order for auction",
+        "description": "Generate ZaloPay payment URL for auction winner payment",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Order details",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "orderId": {
+                  "type": "string",
+                  "example": "order-uuid"
+                },
+                "buyerId": {
+                  "type": "string",
+                  "example": "user-uuid"
+                },
+                "amount": {
+                  "type": "number",
+                  "example": 1000000
+                },
+                "productTitle": {
+                  "type": "string",
+                  "example": "Product name"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/payment/zalopay-callback": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "ZaloPay payment callback webhook",
+        "description": "Webhook endpoint for ZaloPay to notify payment status",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/payment/seller-upgrade-callback": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Seller upgrade payment callback",
+        "description": "Mock payment callback for seller upgrade (simulates ZaloPay gateway)",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Payment callback data",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "example": "user-uuid"
+                },
+                "amount": {
+                  "type": "number",
+                  "example": 500000
+                },
+                "transactionId": {
+                  "type": "string",
+                  "example": "MOCK_1234567890"
+                },
+                "paymentMethod": {
+                  "type": "string",
+                  "example": "ZaloPay"
+                },
+                "status": {
+                  "type": "string",
+                  "example": "SUCCESS"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment processed successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "User upgraded to seller successfully"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payment data",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Invalid payment data"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
       }
     }
   },
