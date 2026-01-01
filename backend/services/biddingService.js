@@ -54,7 +54,7 @@ function resolveAutoBid({ currentMax, currentBidderId, newMax, newBidderId, step
 
 class BiddingService {
   async placeBid({ productId, bidderId, maxAmount }) {
-    if (!maxAmount) throw new Error('maxAmount is required');
+    if (!maxAmount) throw new Error('Số tiền đấu giá là bắt buộc');
 
     return prisma.$transaction(async (tx) => {
       const product = await tx.product.findUnique({
@@ -67,10 +67,10 @@ class BiddingService {
         }
       });
 
-      if (!product) throw new Error('Product not found');
-      if (product.status !== 'ACTIVE') throw new Error('Auction not active');
-      if (new Date() > product.endTime) throw new Error('Auction ended');
-      if (product.sellerId === bidderId) throw new Error('Seller cannot bid');
+      if (!product) throw new Error('Không tìm thấy sản phẩm');
+      if (product.status !== 'ACTIVE') throw new Error('Phiên đấu giá không còn hoạt động');
+      if (new Date() > product.endTime) throw new Error('Phiên đấu giá đã kết thúc');
+      if (product.sellerId === bidderId) throw new Error('Người bán không thể đấu giá sản phẩm của mình');
 
       // Check bidder rating
       const bidder = await tx.user.findUnique({
@@ -85,12 +85,47 @@ class BiddingService {
       if (totalRatings > 0) {
         const ratingPercentage = (bidder.positiveRatings / totalRatings) * 100;
         if (ratingPercentage < 80) {
-          throw new Error(`Rating too low: ${Math.round(ratingPercentage)}% (${bidder.positiveRatings}/${totalRatings}). Minimum required: 80%`);
+          throw new Error(`Điểm đánh giá quá thấp: ${Math.round(ratingPercentage)}% (${bidder.positiveRatings}/${totalRatings}). Yêu cầu tối thiểu: 80%`);
         }
       }
 
       const step = Number(product.stepPrice);
       const lastBid = product.bids[0];
+      const buyNowPrice = product.buyNowPrice ? Number(product.buyNowPrice) : null;
+
+      // Check if bid meets or exceeds buy now price
+      if (buyNowPrice && maxAmount >= buyNowPrice) {
+        // Create winning bid at buy now price
+        await tx.bid.create({
+          data: {
+            productId,
+            bidderId,
+            amount: buyNowPrice,
+            maxAmount: buyNowPrice,
+            isAutoBid: false
+          }
+        });
+
+        // Close auction immediately and mark as ended
+        await tx.product.update({
+          where: { id: productId },
+          data: {
+            currentPrice: buyNowPrice,
+            currentWinnerId: bidderId,
+            bidCount: { increment: 1 },
+            status: 'ENDED', // Kết thúc đấu giá (đã mua với giá mua ngay)
+            endTime: new Date() // Cập nhật thời gian kết thúc
+          }
+        });
+
+        return {
+          success: true,
+          winnerId: bidderId,
+          currentPrice: buyNowPrice,
+          buyNowTriggered: true,
+          message: 'Phiên đấu giá đã kết thúc - Đã đạt giá mua ngay!'
+        };
+      }
 
       if (!lastBid) {
         await tx.bid.create({
@@ -120,7 +155,7 @@ class BiddingService {
       }
 
       if (product.currentWinnerId === bidderId) {
-        throw new Error('Already highest bidder');
+        throw new Error('Bạn đã là người đấu giá cao nhất');
       }
 
       const resolved = resolveAutoBid({

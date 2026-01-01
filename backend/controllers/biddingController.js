@@ -24,14 +24,14 @@ class BiddingController {
       if (!productId || !maxAmount) {
         return res.status(400).json({
           success: false,
-          message: 'Product ID and max amount are required'
+          message: 'ID sản phẩm và số tiền đấu giá là bắt buộc'
         });
       }
 
       if (isNaN(maxAmount) || Number(maxAmount) <= 0) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid max amount'
+          message: 'Số tiền đấu giá không hợp lệ'
         });
       }
 
@@ -63,14 +63,14 @@ class BiddingController {
       console.error('BIDDING ERROR:', error.message);
       console.error('STACK:', error.stack);
 
-      if (error.message.includes('not found') ||
-          error.message.includes('not active') ||
-          error.message.includes('expired') ||
+      if (error.message.includes('not found') || error.message.includes('Không tìm thấy') ||
+          error.message.includes('not active') || error.message.includes('không còn hoạt động') ||
+          error.message.includes('expired') || error.message.includes('đã kết thúc') ||
           error.message.includes('not allowed') ||
-          error.message.includes('Seller cannot') ||
-          error.message.includes('Already highest') ||
+          error.message.includes('Seller cannot') || error.message.includes('Người bán không thể') ||
+          error.message.includes('Already highest') || error.message.includes('đã là người đấu giá cao nhất') ||
           error.message.includes('Auction ended') ||
-          error.message.includes('must be at least')) {
+          error.message.includes('must be at least') || error.message.includes('quá thấp')) {
         return res.status(400).json({
           success: false,
           message: error.message
@@ -110,7 +110,7 @@ class BiddingController {
       logger.error('Error in getBidHistory:', error);
       return res.status(500).json({
         success: false,
-        message: 'Failed to get bid history'
+        message: 'Không thể lấy lịch sử đấu giá'
       });
     }
   }
@@ -137,7 +137,7 @@ class BiddingController {
       logger.error('Error in getCurrentWinner:', error);
       return res.status(500).json({
         success: false,
-        message: 'Failed to get current winner'
+        message: 'Không thể lấy thông tin người thắng cuộc'
       });
     }
   }
