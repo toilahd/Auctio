@@ -8,7 +8,7 @@ import { sendEmail } from "../config/email.js";
 
 const prisma = new PrismaClient();
 
-const ACCESS_TOKEN_AGE = "10min";
+const ACCESS_TOKEN_AGE = "1h";  // Changed from 10min to 1 hour
 const REFRESH_TOKEN_AGE = "30d";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -200,9 +200,25 @@ export async function login(req, res) {
   // validRefreshTokens.add(refreshToken);
   UserModel.update(foundUser.id, { resetToken: refreshToken });
 
+  // Cookie options for access token (1 hour)
+  const accessCookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 1000, // 1 hour in milliseconds
+  };
+
+  // Cookie options for refresh token (30 days)
+  const refreshCookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+  };
+
   res
-    .cookie("access", accessToken, { httpOnly: true })
-    .cookie("refresh", refreshToken, { httpOnly: true })
+    .cookie("access", accessToken, accessCookieOptions)
+    .cookie("refresh", refreshToken, refreshCookieOptions)
     .json({
       message: "Login successful",
       accessToken: accessToken,
@@ -362,9 +378,24 @@ export async function signup(req, res) {
   // validRefreshTokens.add(refreshToken);
   UserModel.update(newUser.id, { resetToken: refreshToken });
 
+  // Cookie options (same as login)
+  const accessCookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 10 * 60 * 1000, // 10 minutes
+  };
+
+  const refreshCookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  };
+
   res
-    .cookie("access", accessToken, { httpOnly: true })
-    .cookie("refresh", refreshToken, { httpOnly: true })
+    .cookie("access", accessToken, accessCookieOptions)
+    .cookie("refresh", refreshToken, refreshCookieOptions)
     .status(201)
     .json({
       message: "Signup successful",
@@ -621,9 +652,24 @@ export async function refreshToken(req, res) {
   // Update stored refresh token
   UserModel.update(storedUser.id, { resetToken: newRefreshToken });
 
+  // Cookie options
+  const accessCookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 1000, // 1 hour
+  };
+
+  const refreshCookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  };
+
   res
-    .cookie("access", newAccessToken, { httpOnly: true })
-    .cookie("refresh", newRefreshToken, { httpOnly: true })
+    .cookie("access", newAccessToken, accessCookieOptions)
+    .cookie("refresh", newRefreshToken, refreshCookieOptions)
     .json({
       message: "Access token refreshed",
       accessToken: newAccessToken,
