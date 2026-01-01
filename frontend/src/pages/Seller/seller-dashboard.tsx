@@ -2,6 +2,15 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import {
   Gavel,
@@ -11,6 +20,9 @@ import {
   Eye,
   Heart,
   Loader2,
+  ThumbsUp,
+  ThumbsDown,
+  XCircle,
 } from "lucide-react";
 
 interface Product {
@@ -21,9 +33,12 @@ interface Product {
   startingPrice: number;
   totalBids: number;
   endTime: string;
-  status: "active" | "ended" | "sold" | "unsold";
+  status: "ACTIVE" | "ENDED" | "CANCELED" | "PAYED";
   views: number;
   watchers: number;
+  currentWinnerId?: string;
+  currentWinnerName?: string;
+  hasRated?: boolean;
 }
 
 const SellerDashboardPage = () => {
@@ -34,6 +49,12 @@ const SellerDashboardPage = () => {
   const [activeProducts, setActiveProducts] = useState<Product[]>([]);
   const [endedProducts, setEndedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [ratingType, setRatingType] = useState<1 | -1 | null>(null);
+  const [ratingComment, setRatingComment] = useState("");
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [stats, setStats] = useState({
     activeAuctions: 0,
     totalSold: 0,
@@ -71,7 +92,7 @@ const SellerDashboardPage = () => {
             startingPrice: p.startPrice,
             totalBids: p._count?.bids || 0,
             endTime: p.endTime,
-            status: "active" as const,
+            status: p.status as "ACTIVE" | "ENDED" | "CANCELED" | "PAYED",
             views: 0, // Not available in backend
             watchers: p._count?.watchLists || 0,
           }));
@@ -88,11 +109,12 @@ const SellerDashboardPage = () => {
               startingPrice: p.startPrice,
               totalBids: p._count?.bids || 0,
               endTime: p.endTime,
-              status: p.currentWinnerId
-                ? ("sold" as const)
-                : ("unsold" as const),
+              status: p.status as "ACTIVE" | "ENDED" | "CANCELED" | "PAYED",
               views: 0, // Not available in backend
               watchers: 0,
+              currentWinnerId: p.currentWinnerId,
+              currentWinnerName: p.currentWinner?.fullName || "Unknown",
+              hasRated: p.hasRatedWinner || false,
             })
           );
           setEndedProducts(formattedCompleted);
@@ -127,6 +149,105 @@ const SellerDashboardPage = () => {
     fetchProducts();
   }, []);
 
+  const handleOpenRatingModal = (product: Product) => {
+    setSelectedProduct(product);
+    setRatingType(null);
+    setRatingComment("");
+    setShowRatingModal(true);
+  };
+
+  const handleOpenCancelModal = (product: Product) => {
+    setSelectedProduct(product);
+    setShowCancelModal(true);
+  };
+
+  const handleSubmitRating = async () => {
+    if (!selectedProduct || !ratingType) {
+      alert("Vui lòng chọn loại đánh giá");
+      return;
+    }
+
+    if (ratingComment.trim().length < 10) {
+      alert("Nhận xét phải có ít nhất 10 ký tự");
+      return;
+    }
+
+    setIsSubmittingRating(true);
+
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/seller/products/${selectedProduct.id}/rate-winner`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            rating: ratingType,
+            comment: ratingComment.trim(),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể gửi đánh giá");
+      }
+
+      alert("Đánh giá đã được gửi thành công!");
+      setShowRatingModal(false);
+
+      // Update product in list
+      setEndedProducts((prev) =>
+        prev.map((p) =>
+          p.id === selectedProduct.id ? { ...p, hasRated: true } : p
+        )
+      );
+    } catch (error: any) {
+      alert(error.message || "Đã xảy ra lỗi");
+    } finally {
+      setIsSubmittingRating(false);
+    }
+  };
+
+  const handleCancelTransaction = async () => {
+    if (!selectedProduct) return;
+
+    setIsSubmittingRating(true);
+
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/seller/products/${selectedProduct.id}/cancel-transaction`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể hủy giao dịch");
+      }
+
+      alert(
+        "Giao dịch đã được hủy và người thắng đã nhận đánh giá tiêu cực (-1)"
+      );
+      setShowCancelModal(false);
+
+      // Update product in list
+      setEndedProducts((prev) =>
+        prev.map((p) =>
+          p.id === selectedProduct.id ? { ...p, hasRated: true } : p
+        )
+      );
+    } catch (error: any) {
+      alert(error.message || "Đã xảy ra lỗi");
+    } finally {
+      setIsSubmittingRating(false);
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -152,22 +273,22 @@ const SellerDashboardPage = () => {
 
   const getStatusBadge = (status: Product["status"]) => {
     const badges = {
-      active: {
+      ACTIVE: {
         text: "Đang đấu giá",
         color:
           "bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400",
       },
-      ended: {
-        text: "Đã kết thúc",
-        color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400",
+      ENDED: {
+        text: "Chờ thanh toán",
+        color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400",
       },
-      sold: {
-        text: "Đã bán",
+      PAYED: {
+        text: "Đã thanh toán",
         color:
           "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400",
       },
-      unsold: {
-        text: "Chưa bán",
+      CANCELED: {
+        text: "Không có người thắng",
         color: "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400",
       },
     };
@@ -371,6 +492,10 @@ const SellerDashboardPage = () => {
                   <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-gray-700">
                     {currentProducts.map((product) => {
                       const badge = getStatusBadge(product.status);
+                      console.log(
+                        `Product ID: ${product.id}, Status: ${product.status}, Badge:`,
+                        badge
+                      );
                       return (
                         <tr
                           key={product.id}
@@ -413,7 +538,7 @@ const SellerDashboardPage = () => {
                             {product.totalBids}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {activeTab === "active" ? (
+                            {product.status === "ACTIVE" ? (
                               <div className="text-sm text-gray-900 dark:text-white">
                                 {getTimeRemaining(product.endTime)}
                               </div>
@@ -443,7 +568,7 @@ const SellerDashboardPage = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                             <div className="flex items-center justify-end gap-2">
-                              {activeTab === "active" ? (
+                              {product.status === "ACTIVE" ? (
                                 <>
                                   <Button
                                     variant="ghost"
@@ -465,31 +590,50 @@ const SellerDashboardPage = () => {
                                     Q&A
                                   </Button>
                                 </>
-                              ) : (
-                                <>
-                                  {product.status === "sold" ? (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        (window.location.href = `/order/${product.id}`)
-                                      }
-                                    >
-                                      Hoàn tất
-                                    </Button>
+                              ) : product.status === "ENDED" || product.status === "PAYED" ? (
+                                <div className="flex items-center gap-2">
+                                  {!product.hasRated ? (
+                                    <>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleOpenRatingModal(product)
+                                        }
+                                      >
+                                        <Star className="w-4 h-4 mr-1" />
+                                        Đánh giá
+                                      </Button>
+                                      {product.status === "ENDED" && (
+                                        <Button
+                                          variant="destructive"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleOpenCancelModal(product)
+                                          }
+                                        >
+                                          <XCircle className="w-4 h-4 mr-1" />
+                                          Hủy
+                                        </Button>
+                                      )}
+                                    </>
                                   ) : (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        (window.location.href =
-                                          "/seller/create-product")
-                                      }
-                                    >
-                                      Đăng lại
-                                    </Button>
+                                    <span className="text-sm text-gray-500">
+                                      Đã đánh giá
+                                    </span>
                                   )}
-                                </>
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    (window.location.href =
+                                      "/seller/create-product")
+                                  }
+                                >
+                                  Đăng lại
+                                </Button>
                               )}
                             </div>
                           </td>
@@ -503,6 +647,130 @@ const SellerDashboardPage = () => {
           </Card>
         </div>
       </main>
+
+      {/* Rating Modal */}
+      <Dialog open={showRatingModal} onOpenChange={setShowRatingModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Đánh giá người thắng đấu giá</DialogTitle>
+            <DialogDescription>
+              {selectedProduct?.title}
+              <br />
+              Người thắng: <strong>{selectedProduct?.currentWinnerName}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="block text-sm font-medium mb-3">
+                Đánh giá của bạn
+              </label>
+              <div className="flex gap-4">
+                <Button
+                  variant={ratingType === 1 ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setRatingType(1)}
+                >
+                  <ThumbsUp className="w-5 h-5 mr-2" />
+                  Tích cực (+1)
+                </Button>
+                <Button
+                  variant={ratingType === -1 ? "destructive" : "outline"}
+                  className="flex-1"
+                  onClick={() => setRatingType(-1)}
+                >
+                  <ThumbsDown className="w-5 h-5 mr-2" />
+                  Tiêu cực (-1)
+                </Button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Nhận xét (tối thiểu 10 ký tự)
+              </label>
+              <Textarea
+                value={ratingComment}
+                onChange={(e) => setRatingComment(e.target.value)}
+                placeholder="Chia sẻ trải nghiệm của bạn với người thắng..."
+                rows={4}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                {ratingComment.length} ký tự
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowRatingModal(false)}
+              disabled={isSubmittingRating}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleSubmitRating}
+              disabled={isSubmittingRating || !ratingType}
+            >
+              {isSubmittingRating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang gửi...
+                </>
+              ) : (
+                "Gửi đánh giá"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Transaction Modal */}
+      <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Xác nhận hủy giao dịch</DialogTitle>
+            <DialogDescription>
+              {selectedProduct?.title}
+              <br />
+              Người thắng: <strong>{selectedProduct?.currentWinnerName}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                <strong>Lưu ý:</strong> Khi hủy giao dịch:
+              </p>
+              <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-2 ml-4 list-disc space-y-1">
+                <li>Người thắng sẽ tự động nhận đánh giá tiêu cực (-1)</li>
+                <li>Nhận xét mặc định: "Người thắng không thanh toán"</li>
+                <li>Hành động này không thể hoàn tác</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelModal(false)}
+              disabled={isSubmittingRating}
+            >
+              Quay lại
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelTransaction}
+              disabled={isSubmittingRating}
+            >
+              {isSubmittingRating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Xác nhận hủy"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
