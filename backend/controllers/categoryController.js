@@ -5,6 +5,27 @@ import { getLogger } from "../config/logger.js";
 const logger = getLogger("CategoryController");
 
 class CategoryController {
+  async getAll(req, res) {
+    /*
+     * GET /api/categories
+     * #swagger.tags = ['Categories']
+     * #swagger.summary = 'Get all categories'
+     * #swagger.description = 'Get all categories with their product counts'
+     */
+    try {
+      const categories = await CategoryModel.getAll();
+      return res.status(200).json({
+        success: true,
+        data: categories
+      });
+    } catch (error) {
+      logger.error("Error getAll:", error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to load categories" });
+    }
+  }
+
   async getMenu(req, res) {
     /*
      * GET /api/categories/menu
