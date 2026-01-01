@@ -22,6 +22,9 @@ import {
   MessageSquare,
   Send,
 } from "lucide-react";
+import { BidForm } from "@/components/BidForm";
+import { BidHistoryList } from "@/components/BidHistoryList";
+import { CurrentWinnerDisplay } from "@/components/CurrentWinnerDisplay";
 
 interface Question {
   id: string;
@@ -414,39 +417,11 @@ const ProductDetailPage = () => {
             </Card>
 
             {/* Bid History */}
-            {product.bids && product.bids.length > 0 && (
-              <Card className="p-6">
-                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                  <Hammer className="w-5 h-5" />
-                  Lịch sử đấu giá
-                </h2>
-                <div className="space-y-3">
-                  {product.bids.map((bid, index) => (
-                    <div
-                      key={bid.id}
-                      className="flex items-center justify-between py-3 border-b border-border last:border-0"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Badge variant={index === 0 ? "default" : "secondary"}>
-                          #{index + 1}
-                        </Badge>
-                        <div>
-                          <div className="font-medium text-foreground">
-                            {bid.bidder.fullName}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {formatDate(bid.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-lg font-bold text-primary">
-                        {formatPrice(parseFloat(bid.amount))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
+            <BidHistoryList
+              productId={product.id}
+              autoRefresh={true}
+              refreshInterval={5000}
+            />
           </div>
 
           {/* Right: Product Info & Actions */}
@@ -519,6 +494,13 @@ const ProductDetailPage = () => {
                   </Badge>
                 )}
               </div>
+
+              {/* Current Winner - Real-time */}
+              <CurrentWinnerDisplay
+                productId={product.id}
+                autoRefresh={true}
+                refreshInterval={3000}
+              />
 
               {/* Seller Info */}
               {product.seller && (
@@ -622,35 +604,38 @@ const ProductDetailPage = () => {
                 </div>
               </div>
 
-              {/* Action Buttons - Hidden for sellers */}
-              {user?.id !== product.seller?.id && (
-                <div className="space-y-3">
-                  <Button className="w-full" size="lg">
-                    <Hammer className="w-4 h-4 mr-2" />
-                    Đấu giá ngay
+              {/* Action Buttons & Bidding */}
+              <div className="space-y-4">
+                <BidForm
+                  productId={product.id}
+                  currentPrice={parseFloat(product.currentPrice)}
+                  stepPrice={parseFloat(product.stepPrice)}
+                  onBidPlaced={() => {
+                    // Refresh product data after successful bid
+                    window.location.reload();
+                  }}
+                />
+
+                {product.buyNowPrice && (
+                  <Button variant="secondary" className="w-full" size="lg">
+                    <Tag className="w-4 h-4 mr-2" />
+                    Mua ngay - {formatPrice(parseFloat(product.buyNowPrice))}
                   </Button>
-                  {product.buyNowPrice && (
-                    <Button variant="secondary" className="w-full" size="lg">
-                      <Tag className="w-4 h-4 mr-2" />
-                      Mua ngay
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    size="lg"
-                    onClick={handleWatchlistToggle}
-                    disabled={isTogglingWatchlist}
-                  >
-                    <Heart
-                      className={`w-4 h-4 mr-2 ${
-                        isInWatchlist ? "fill-red-500 text-red-500" : ""
-                      }`}
-                    />
-                    {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
-                  </Button>
-                </div>
-              )}
+                )}
+
+                <Button
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={handleWatchlistToggle}
+                  disabled={isTogglingWatchlist}
+                >
+                  <Heart className={`w-4 h-4 mr-2 ${
+                    isInWatchlist ? "fill-red-500 text-red-500" : ""
+                  }`} />
+                  {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
+                </Button>
+              </div>
             </Card>
           </div>
         </div>

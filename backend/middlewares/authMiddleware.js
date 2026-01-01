@@ -1,39 +1,59 @@
 // middlewares/authMiddleware.js
-// Simple auth middleware for testing - bypasses real JWT validation
+// JWT authentication middleware
 
 import { getLogger } from '../config/logger.js';
+import { decodeJwt } from '../utils/jwtUtil.js';
 
 const logger = getLogger('AuthMiddleware');
 
-
 /**
- * Mock authentication middleware for testing
- *
- * Usage: Add header "X-Mock-User: bidder1" to requests
- * Valid users: bidder1, bidder2, bidder3, bidder4, seller1
+ * Authenticate user using JWT from cookies or Authorization header
+ * Requires valid access token
  */
-import prisma from '../config/prisma.js';
-
 export const authenticateToken = async (req, res, next) => {
-  const mockUserKey = req.headers['x-mock-user'];
-  if (!mockUserKey) {
-    return res.status(401).json({ message: 'Missing X-Mock-User' });
-  }
+  try {
+    // Try to get token from cookie first
+    let token = req.cookies?.access;
 
-  const email = `${mockUserKey}@example.com`;
+    // If not in cookie, check Authorization header
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
 
-  const user = await prisma.user.findUnique({
-    where: { email }
-  });
+    if (!token) {
+      logger.warn('No authentication token provided');
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required. Please log in.'
+      });
+    }
 
-  if (!user) {
+    // Decode and verify token
+    const { payload: user, error } = decodeJwt(token);
+
+    if (error || !user) {
+      logger.warn('Invalid or expired token:', error?.message);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token. Please log in again.'
+      });
+    }
+
+    // Attach user to request
+    req.user = user;
+    logger.debug(`User authenticated: ${user.email} (${user.role})`);
+
+    next();
+  } catch (error) {
+    logger.error('Authentication error:', error);
     return res.status(401).json({
-      message: `Mock user ${mockUserKey} not found in database`
+      success: false,
+      message: 'Authentication failed'
     });
   }
-
-  req.user = user;
-  return next();
 };
 
 // Alias for consistency
