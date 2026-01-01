@@ -33,6 +33,9 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
 
   const { socket, isConnected, joinProduct, leaveProduct } = useSocket();
 
+  // Get offset for calculating bid numbers
+  const offset = bidHistory ? (currentPage - 1) * 20 : 0;
+
   // Initial fetch
   useEffect(() => {
     fetchBidHistory();
@@ -103,32 +106,76 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
           <div className="text-center py-8 text-muted-foreground">Đang tải lịch sử đấu giá...</div>
         ) : bidHistory && bidHistory.bids.length > 0 ? (
           <>
-            <div className="space-y-3">
-              {bidHistory.bids.map((bid) => (
-                <div
-                  key={bid.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{bid.bidder.fullName}</span>
-                      {bid.isAutoBid && (
-                        <Badge variant="secondary" className="text-xs">
-                          Đấu Giá Tự Động
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {formatDate(bid.createdAt)}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-lg">
-                      {bid.amount.toLocaleString()} VND
-                    </div>
-                  </div>
+            {/* Explanation Banner */}
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-start gap-2">
+                <div className="text-blue-600 dark:text-blue-400 mt-0.5">ℹ️</div>
+                <div className="text-sm text-blue-900 dark:text-blue-100">
+                  <strong>Đấu giá tự động:</strong> Bạn chỉ cần đặt giá tối đa một lần.
+                  Hệ thống sẽ tự động tăng giá <strong>vừa đủ để thắng</strong> đối thủ, giúp bạn tiết kiệm thời gian
+                  và giữ bí mật giá tối đa của mình.
                 </div>
-              ))}
+              </div>
+            </div>
+
+            {/* Bid History Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-border">
+                    <th className="text-left py-3 px-2 font-semibold text-sm">STT</th>
+                    <th className="text-left py-3 px-2 font-semibold text-sm">Người Đấu Giá</th>
+                    <th className="text-right py-3 px-2 font-semibold text-sm">Giá Vào Sản Phẩm</th>
+                    <th className="text-left py-3 px-2 font-semibold text-sm">Thời Gian</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bidHistory.bids.map((bid, index) => {
+                    const isWinning = index === 0;
+                    return (
+                      <tr
+                        key={bid.id}
+                        className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${
+                          isWinning ? 'bg-green-50 dark:bg-green-900/10' : ''
+                        }`}
+                      >
+                        {/* STT */}
+                        <td className="py-3 px-2 text-sm font-medium text-muted-foreground">
+                          #{bidHistory.total - (offset + index)}
+                        </td>
+
+                        {/* Người Đấu Giá */}
+                        <td className="py-3 px-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">
+                              {bid.bidder.fullName}
+                            </span>
+                            {isWinning && (
+                              <Badge variant="default" className="text-xs">
+                                🏆 Đang Dẫn Đầu
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Giá Vào Sản Phẩm */}
+                        <td className="py-3 px-2 text-right">
+                          <div className="flex flex-col items-end">
+                            <span className={`font-semibold ${isWinning ? 'text-green-600 dark:text-green-400 text-base' : 'text-sm'}`}>
+                              {bid.amount.toLocaleString()} VND
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Thời Gian */}
+                        <td className="py-3 px-2 text-xs text-muted-foreground">
+                          {formatDate(bid.createdAt)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
             {/* Pagination */}
