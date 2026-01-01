@@ -419,8 +419,6 @@ const ProductDetailPage = () => {
             {/* Bid History */}
             <BidHistoryList
               productId={product.id}
-              autoRefresh={true}
-              refreshInterval={5000}
             />
           </div>
 
@@ -498,8 +496,6 @@ const ProductDetailPage = () => {
               {/* Current Winner - Real-time */}
               <CurrentWinnerDisplay
                 productId={product.id}
-                autoRefresh={true}
-                refreshInterval={3000}
               />
 
               {/* Seller Info */}

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useBidHistory } from '@/hooks/useBidding';
+import { useSocket } from '@/contexts/SocketContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -7,18 +8,14 @@ import { Badge } from '@/components/ui/badge';
 
 interface BidHistoryListProps {
   productId: string;
-  autoRefresh?: boolean;
-  refreshInterval?: number; // in milliseconds
 }
 
 /**
  * Component for displaying bid history with pagination
- * Supports auto-refresh for real-time updates
+ * Uses Socket.io for real-time updates
  */
 export const BidHistoryList: React.FC<BidHistoryListProps> = ({
   productId,
-  autoRefresh = false,
-  refreshInterval = 5000,
 }) => {
   const {
     bidHistory,
@@ -34,21 +31,37 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
     totalPages,
   } = useBidHistory(productId, 20);
 
+  const { socket, isConnected, joinProduct, leaveProduct } = useSocket();
+
   // Initial fetch
   useEffect(() => {
     fetchBidHistory();
   }, [fetchBidHistory]);
 
-  // Auto-refresh
+  // Join product room and listen for real-time bid updates
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (!socket || !isConnected) return;
 
-    const interval = setInterval(() => {
-      refresh();
-    }, refreshInterval);
+    // Join the product room
+    joinProduct(productId);
 
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, refresh]);
+    // Listen for bid updates
+    const handleBidPlaced = (data: any) => {
+      console.log('🔔 New bid received in history:', data);
+      if (data.productId === productId) {
+        // Refresh bid history when new bid is placed
+        refresh();
+      }
+    };
+
+    socket.on('bid:placed', handleBidPlaced);
+
+    // Cleanup
+    return () => {
+      socket.off('bid:placed', handleBidPlaced);
+      leaveProduct(productId);
+    };
+  }, [socket, isConnected, productId, joinProduct, leaveProduct, refresh]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -73,7 +86,14 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Lịch Sử Đấu Giá</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          Lịch Sử Đấu Giá
+          {isConnected && (
+            <Badge variant="outline" className="text-xs">
+              🟢 Live
+            </Badge>
+          )}
+        </CardTitle>
         <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
           {loading ? 'Đang Tải...' : 'Làm Mới'}
         </Button>

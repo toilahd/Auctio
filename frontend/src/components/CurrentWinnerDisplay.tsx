@@ -1,51 +1,70 @@
 import { useState, useEffect } from 'react';
 import { useBidding } from '@/hooks/useBidding';
+import { useSocket } from '@/contexts/SocketContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { CurrentWinner } from '@/services/biddingService';
 
 interface CurrentWinnerDisplayProps {
   productId: string;
-  autoRefresh?: boolean;
-  refreshInterval?: number; // in milliseconds
 }
 
 /**
  * Component for displaying the current winner of an auction
- * Supports auto-refresh for real-time updates
+ * Uses Socket.io for real-time updates
  */
 export const CurrentWinnerDisplay: React.FC<CurrentWinnerDisplayProps> = ({
   productId,
-  autoRefresh = false,
-  refreshInterval = 3000,
 }) => {
   const { getCurrentWinner } = useBidding();
+  const { socket, isConnected, joinProduct, leaveProduct } = useSocket();
   const [winnerData, setWinnerData] = useState<CurrentWinner | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchWinner = async () => {
-    const result = await getCurrentWinner(productId);
-    if (result) {
-      setWinnerData(result);
-    }
-    setLoading(false);
-  };
-
   // Initial fetch
   useEffect(() => {
+    const fetchWinner = async () => {
+      const result = await getCurrentWinner(productId);
+      if (result) {
+        setWinnerData(result);
+      }
+      setLoading(false);
+    };
+
     fetchWinner();
-  }, [productId]);
+  }, [productId, getCurrentWinner]);
 
-  // Auto-refresh
+  // Join product room and listen for real-time updates
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (!socket || !isConnected) return;
 
-    const interval = setInterval(() => {
-      fetchWinner();
-    }, refreshInterval);
+    // Join the product room
+    joinProduct(productId);
 
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, productId]);
+    // Listen for bid updates
+    const handleBidPlaced = (data: any) => {
+      console.log('🔔 Bid placed event received:', data);
+      if (data.productId === productId) {
+        // Update winner data in real-time
+        setWinnerData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            currentPrice: data.currentPrice,
+            bidCount: data.bidCount,
+          };
+        });
+      }
+    };
+
+    socket.on('bid:placed', handleBidPlaced);
+
+    // Cleanup
+    return () => {
+      socket.off('bid:placed', handleBidPlaced);
+      leaveProduct(productId);
+    };
+  }, [socket, isConnected, productId, joinProduct, leaveProduct]);
 
   if (loading) {
     return (
@@ -64,7 +83,14 @@ export const CurrentWinnerDisplay: React.FC<CurrentWinnerDisplayProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Trạng Thái Hiện Tại</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          Trạng Thái Hiện Tại
+          {isConnected && (
+            <Badge variant="outline" className="text-xs">
+              🟢 Live
+            </Badge>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
