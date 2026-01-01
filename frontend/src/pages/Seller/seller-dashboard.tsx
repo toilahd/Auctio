@@ -590,37 +590,29 @@ const SellerDashboardPage = () => {
                                     Q&A
                                   </Button>
                                 </>
-                              ) : product.status === "ENDED" || product.status === "PAYED" ? (
+                              ) : product.status === "ENDED" || product.status === "PAYED" || 
+                                 product.status === "SHIPPING" || product.status === "DELIVERED" ? (
                                 <div className="flex items-center gap-2">
-                                  {!product.hasRated ? (
-                                    <>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          handleOpenRatingModal(product)
-                                        }
-                                      >
-                                        <Star className="w-4 h-4 mr-1" />
-                                        Đánh giá
-                                      </Button>
-                                      {product.status === "ENDED" && (
-                                        <Button
-                                          variant="destructive"
-                                          size="sm"
-                                          onClick={() =>
-                                            handleOpenCancelModal(product)
-                                          }
-                                        >
-                                          <XCircle className="w-4 h-4 mr-1" />
-                                          Hủy
-                                        </Button>
-                                      )}
-                                    </>
-                                  ) : (
-                                    <span className="text-sm text-gray-500">
-                                      Đã đánh giá
-                                    </span>
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() =>
+                                      (window.location.href = `/order/${product.id}`)
+                                    }
+                                  >
+                                    Quản lý đơn hàng
+                                  </Button>
+                                  {!product.hasRated && product.status === "ENDED" && (
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleOpenCancelModal(product)
+                                      }
+                                    >
+                                      <XCircle className="w-4 h-4 mr-1" />
+                                      Hủy
+                                    </Button>
                                   )}
                                 </div>
                               ) : (

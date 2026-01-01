@@ -13,7 +13,7 @@ import SellerDashboardPage from "./pages/Seller/seller-dashboard";
 import CreateProductPage from "./pages/Seller/create-product";
 import EditProductPage from "./pages/Seller/edit-product";
 import QAManagementPage from "./pages/Seller/qa-management";
-import OrderFinalizationPage from "./pages/Seller/order-finalization";
+import OrderCompletionPage from "./pages/order-completion";
 import AdminDashboardPage from "./pages/Admin/admin-dashboard";
 import CategoryManagementPage from "./pages/Admin/category-management";
 import ProductManagementPage from "./pages/Admin/product-management";
@@ -190,7 +190,7 @@ const router = createBrowserRouter([
     path: "/order/:id",
     element: (
       <ProtectedRoute allowedRoles={["BIDDER", "SELLER", "ADMIN"]}>
-        <OrderFinalizationPage />
+        <OrderCompletionPage />
       </ProtectedRoute>
     ),
   },

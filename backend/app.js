@@ -17,6 +17,7 @@ import sellerRoutes from "./routes/sellerRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 dotenv.config();
 
 BigInt.prototype.toJSON = function () {
@@ -59,6 +60,7 @@ app.use(docsRouter);
 app.use(authRouter);
 app.use("/api/bids", biddingRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/products", orderRoutes); // Order completion routes
 app.use("/api/categories", categoryRoutes);
 app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/questions", questionRoutes);

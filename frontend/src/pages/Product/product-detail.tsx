@@ -620,18 +620,58 @@ const ProductDetailPage = () => {
                 )}
 
                 <Button
-                  variant="outline" 
-                  className="w-full" 
+                  variant="outline"
+                  className="w-full"
                   size="lg"
                   onClick={handleWatchlistToggle}
                   disabled={isTogglingWatchlist}
                 >
-                  <Heart className={`w-4 h-4 mr-2 ${
-                    isInWatchlist ? "fill-red-500 text-red-500" : ""
-                  }`} />
+                  <Heart
+                    className={`w-4 h-4 mr-2 ${
+                      isInWatchlist ? "fill-red-500 text-red-500" : ""
+                    }`}
+                  />
                   {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
                 </Button>
               </div>
+
+              {/* Order Completion Button - For seller and winner on ended auctions */}
+              {(product.status === "ENDED" ||
+                product.status === "PAYED" ||
+                product.status === "SHIPPING" ||
+                product.status === "DELIVERED" ||
+                product.status === "COMPLETED") &&
+                (user?.id === product.seller?.id ||
+                  user?.id === product.currentWinner?.id) && (
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() =>
+                      (window.location.href = `/order/${product.id}`)
+                    }
+                  >
+                    {user?.id === product.seller?.id
+                      ? "Quản lý đơn hàng"
+                      : "Hoàn tất đơn hàng"}
+                  </Button>
+                )}
+
+              {/* Auction Ended Message - For others */}
+              {(product.status === "ENDED" ||
+                product.status === "PAYED" ||
+                product.status === "SHIPPING" ||
+                product.status === "DELIVERED" ||
+                product.status === "COMPLETED" ||
+                product.status === "CANCELLED") &&
+                user?.id !== product.seller?.id &&
+                user?.id !== product.currentWinner?.id && (
+                  <div className="p-4 bg-muted/50 rounded-lg text-center">
+                    <AlertCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Sản phẩm đã kết thúc
+                    </p>
+                  </div>
+                )}
             </Card>
           </div>
         </div>
