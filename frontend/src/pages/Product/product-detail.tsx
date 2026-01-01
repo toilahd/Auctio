@@ -106,6 +106,7 @@ const ProductDetailPage = () => {
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState<string | null>(
     null
   );
+  const [countdown, setCountdown] = useState<string>("");
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -149,6 +150,23 @@ const ProductDetailPage = () => {
   useEffect(() => {
     if (id) checkWatchlistStatus();
   }, [id]);
+
+  // Update countdown every second
+  useEffect(() => {
+    if (!product?.endTime) return;
+
+    const updateCountdown = () => {
+      setCountdown(getRelativeTime(product.endTime));
+    };
+
+    // Initial update
+    updateCountdown();
+
+    // Update every second
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [product?.endTime]);
 
   const checkWatchlistStatus = async () => {
     try {
@@ -289,16 +307,20 @@ const ProductDetailPage = () => {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    if (days >= 3) {
-      return `${days} ngày`;
-    } else if (days > 0) {
-      return `${days} ngày ${hours} giờ nữa`;
-    } else if (hours > 0) {
-      return `${hours} giờ ${minutes} phút nữa`;
-    } else {
-      return `${minutes} phút nữa`;
+    const parts = [];
+    if (days > 0) parts.push(`${days} ngày`);
+    if (hours > 0) parts.push(`${hours} giờ`);
+    if (minutes > 0) parts.push(`${minutes} phút`);
+    if (seconds > 0 || parts.length === 0) parts.push(`${seconds} giây`);
+
+    // If less than 3 days, add "nữa" (remaining)
+    if (days < 3) {
+      return parts.join(" ") + " nữa";
     }
+
+    return parts.join(" ");
   };
 
   const getRatingPercentage = (positive: number, negative: number) => {
@@ -484,7 +506,7 @@ const ProductDetailPage = () => {
                   Thời gian còn lại
                 </div>
                 <div className="text-2xl font-bold text-destructive">
-                  {getRelativeTime(product.endTime)}
+                  {countdown || getRelativeTime(product.endTime)}
                 </div>
                 {product.timeLeft?.isLessThan3Days && (
                   <Badge variant="destructive" className="mt-2">
@@ -601,39 +623,41 @@ const ProductDetailPage = () => {
               </div>
 
               {/* Action Buttons & Bidding */}
-              <div className="space-y-4">
-                <BidForm
-                  productId={product.id}
-                  currentPrice={parseFloat(product.currentPrice)}
-                  stepPrice={parseFloat(product.stepPrice)}
-                  onBidPlaced={() => {
-                    // Refresh product data after successful bid
-                    window.location.reload();
-                  }}
-                />
-
-                {product.buyNowPrice && (
-                  <Button variant="secondary" className="w-full" size="lg">
-                    <Tag className="w-4 h-4 mr-2" />
-                    Mua ngay - {formatPrice(parseFloat(product.buyNowPrice))}
-                  </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  size="lg"
-                  onClick={handleWatchlistToggle}
-                  disabled={isTogglingWatchlist}
-                >
-                  <Heart
-                    className={`w-4 h-4 mr-2 ${
-                      isInWatchlist ? "fill-red-500 text-red-500" : ""
-                    }`}
+              {!(user && product.seller?.id === user.id) && (
+                <div className="space-y-4">
+                  <BidForm
+                    productId={product.id}
+                    currentPrice={parseFloat(product.currentPrice)}
+                    stepPrice={parseFloat(product.stepPrice)}
+                    onBidPlaced={() => {
+                      // Refresh product data after successful bid
+                      window.location.reload();
+                    }}
                   />
-                  {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
-                </Button>
-              </div>
+
+                  {product.buyNowPrice && (
+                    <Button variant="secondary" className="w-full" size="lg">
+                      <Tag className="w-4 h-4 mr-2" />
+                      Mua ngay - {formatPrice(parseFloat(product.buyNowPrice))}
+                    </Button>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                    onClick={handleWatchlistToggle}
+                    disabled={isTogglingWatchlist}
+                  >
+                    <Heart
+                      className={`w-4 h-4 mr-2 ${
+                        isInWatchlist ? "fill-red-500 text-red-500" : ""
+                      }`}
+                    />
+                    {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
+                  </Button>
+                </div>
+              )}
 
               {/* Order Completion Button - For seller and winner on ended auctions */}
               {(product.status === "ENDED" ||
