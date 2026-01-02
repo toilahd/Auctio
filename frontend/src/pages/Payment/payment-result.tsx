@@ -113,7 +113,7 @@ const PaymentResultPage = () => {
       navigate("/profile?upgradeSuccess=true");
     } else if (type === "auction") {
       if (orderId) {
-        navigate(`/order-completion/${orderId}`);
+        navigate(`/order/${orderId}`, { replace: true });
       } else {
         navigate("/my-bids");
       }

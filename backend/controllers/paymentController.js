@@ -528,7 +528,7 @@ class PaymentController {
         order.id,
         product.id,
         userId,
-        parseFloat(product.currentPrice),
+        Math.max(parseFloat(product.currentPrice), 20000),
         product.title
       );
 
@@ -706,9 +706,11 @@ class PaymentController {
       // Handle the event
       switch (event.type) {
         case "payment_intent.succeeded":
+          console.log("Handling payment succeeded event");
           await paymentController.handleStripePaymentSuccess(event.data.object);
           break;
         case "payment_intent.payment_failed":
+          console.log("Handling payment failed event");
           await paymentController.handleStripePaymentFailed(event.data.object);
           break;
         default:
@@ -730,6 +732,7 @@ class PaymentController {
    * Handle successful Stripe payment
    */
   async handleStripePaymentSuccess(paymentIntent) {
+    console.log("Handling Stripe payment success");
     try {
       const { id: paymentIntentId, metadata, amount } = paymentIntent;
       const { type, orderId, userId, productId } = metadata;
@@ -739,6 +742,7 @@ class PaymentController {
       );
 
       if (type === "AUCTION_PAYMENT") {
+        console.log("Updating order and product status for auction payment");
         // Update order status
         await prisma.order.update({
           where: { id: orderId },
@@ -751,7 +755,7 @@ class PaymentController {
           },
         });
 
-        // Update product status to PAYED
+        // Update product status to PAID
         await prisma.product.update({
           where: { id: productId },
           data: { status: "PAYED" },

@@ -1136,82 +1136,238 @@
     },
     "/api/products/{id}/ship": {
       "put": {
-        "description": "",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Seller confirms shipment",
+        "description": "Seller confirms that the product has been shipped (PAYED → SHIPPING)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Shipment confirmed successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Đã xác nhận gửi hàng thành công"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Invalid status or request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Chỉ có thể xác nhận gửi hàng khi đã thanh toán"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Not authorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bạn không phải người bán"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Product not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Sản phẩm không tồn tại"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/products/{id}/deliver": {
       "put": {
-        "description": "",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Buyer confirms delivery",
+        "description": "Buyer confirms that the product has been received (SHIPPING → DELIVERED)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Delivery confirmed successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Đã xác nhận nhận hàng thành công"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Invalid status",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Chỉ có thể xác nhận nhận hàng khi đang giao hàng"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Not authorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bạn không phải người mua"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Product not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Sản phẩm không tồn tại"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/products/{id}/cancel": {
       "put": {
-        "description": "",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Seller cancels order",
+        "description": "Seller cancels the order and automatically gives -1 rating to buyer",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Cancellation reason",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "reason": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "string (min 10 chars)"
                 }
               }
             }
@@ -1219,41 +1375,118 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Order cancelled successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Đã hủy đơn hàng và đánh giá -1 người mua"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Invalid request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Lý do hủy phải có ít nhất 10 ký tự"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Not authorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bạn không phải người bán"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Product not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Sản phẩm không tồn tại"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/products/{id}/reject-winner": {
       "put": {
-        "description": "",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Reject current winner",
+        "description": "Seller rejects the current winner and moves to the next highest bidder. Automatically gives -1 rating to rejected winner",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Rejection reason",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "reason": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "string (min 10 chars)"
                 }
               }
             }
@@ -1261,71 +1494,261 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Winner rejected and moved to next bidder",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Đã từ chối người thắng và chuyển sang người đấu giá cao thứ 2"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "newWinner": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "user-uuid"
+                        },
+                        "fullName": {
+                          "type": "string",
+                          "example": "string"
+                        }
+                      }
+                    },
+                    "newPrice": {
+                      "type": "string",
+                      "example": "decimal"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Invalid request or no second bidder",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Không có người đấu giá thứ 2 để chuyển đổi"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Not authorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bạn không phải người bán"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Product not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Sản phẩm không tồn tại"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/products/{id}/bidders": {
       "get": {
-        "description": "",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Get list of bidders",
+        "description": "Get unique list of bidders for a product (seller and winner only)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Bidders list retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "user-uuid"
+                      },
+                      "fullName": {
+                        "type": "string",
+                        "example": "string"
+                      },
+                      "amount": {
+                        "type": "string",
+                        "example": "string"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "example": "datetime"
+                      },
+                      "positiveRatings": {
+                        "type": "string",
+                        "example": "number"
+                      },
+                      "negativeRatings": {
+                        "type": "string",
+                        "example": "number"
+                      },
+                      "isCurrentWinner": {
+                        "type": "string",
+                        "example": "boolean"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Not authorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bạn không có quyền xem danh sách người đấu giá"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Product not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Sản phẩm không tồn tại"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/products/{id}/rate": {
       "post": {
-        "description": "",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Submit or edit rating",
+        "description": "Buyer or seller submits/edits rating for the other party after delivery",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Rating data",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "rating": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "number (1 or -1)"
                 },
                 "comment": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "string (min 10 chars)"
                 }
               }
             }
@@ -1333,68 +1756,235 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Rating submitted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Đã gửi đánh giá thành công"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Invalid rating data or status",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Đánh giá phải là +1 hoặc -1"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Not authorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bạn không có quyền đánh giá"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Product not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Sản phẩm không tồn tại"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/products/{id}/ratings": {
       "get": {
-        "description": "",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Get ratings for product",
+        "description": "Get ratings for a product order (seller and buyer only)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Ratings retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "rating-uuid"
+                      },
+                      "fromUserId": {
+                        "type": "string",
+                        "example": "user-uuid"
+                      },
+                      "toUserId": {
+                        "type": "string",
+                        "example": "user-uuid"
+                      },
+                      "rating": {
+                        "type": "string",
+                        "example": "number (1 or -1)"
+                      },
+                      "comment": {
+                        "type": "string",
+                        "example": "string"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "example": "datetime"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "example": "datetime"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Not authorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bạn không có quyền xem đánh giá"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Product not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Sản phẩm không tồn tại"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/products/{id}/chat": {
       "post": {
-        "description": "",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Send chat message",
+        "description": "Send a chat message between buyer and seller",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           },
           {
             "name": "body",
             "in": "body",
+            "description": "Message content",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "content": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "string"
                 }
               }
             }
@@ -1402,46 +1992,218 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Message sent successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "message-uuid"
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "string"
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "example": "user-uuid"
+                    },
+                    "senderName": {
+                      "type": "string",
+                      "example": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "datetime"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Invalid message content",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Nội dung tin nhắn không được để trống"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Not authorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bạn không có quyền gửi tin nhắn"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Product not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Sản phẩm không tồn tại"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "get": {
-        "description": "",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Get chat messages",
+        "description": "Get all chat messages for a product order (seller and buyer only)",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Product ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Messages retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "message-uuid"
+                      },
+                      "content": {
+                        "type": "string",
+                        "example": "string"
+                      },
+                      "senderId": {
+                        "type": "string",
+                        "example": "user-uuid"
+                      },
+                      "senderName": {
+                        "type": "string",
+                        "example": "string"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "example": "datetime"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Not authorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Bạn không có quyền xem tin nhắn"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Product not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Sản phẩm không tồn tại"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/categories/": {

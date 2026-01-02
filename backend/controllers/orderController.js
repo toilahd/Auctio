@@ -4,8 +4,35 @@ import prisma from "../config/prisma.js";
 const orderController = {
   /**
    * Seller confirms shipment (PAYED → SHIPPING)
+   * PUT /api/products/:id/ship
    */
   confirmShipment: async (req, res) => {
+    /*
+      #swagger.summary = 'Seller confirms shipment'
+      #swagger.description = 'Seller confirms that the product has been shipped (PAYED → SHIPPING)'
+      #swagger.tags = ['Orders']
+      #swagger.security = [{ "bearerAuth": [] }]
+      #swagger.parameters['id'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+      #swagger.responses[200] = {
+        description: 'Shipment confirmed successfully',
+        schema: {
+          success: true,
+          message: 'Đã xác nhận gửi hàng thành công'
+        }
+      }
+      #swagger.responses[400] = {
+        description: 'Invalid status or request',
+        schema: { success: false, message: 'Chỉ có thể xác nhận gửi hàng khi đã thanh toán' }
+      }
+      #swagger.responses[403] = {
+        description: 'Not authorized',
+        schema: { success: false, message: 'Bạn không phải người bán' }
+      }
+      #swagger.responses[404] = {
+        description: 'Product not found',
+        schema: { success: false, message: 'Sản phẩm không tồn tại' }
+      }
+    */
     try {
       const { id: productId } = req.params;
       const userId = req.user.id;
@@ -67,8 +94,35 @@ const orderController = {
 
   /**
    * Buyer confirms delivery (SHIPPING → DELIVERED)
+   * PUT /api/products/:id/deliver
    */
   confirmDelivery: async (req, res) => {
+    /*
+      #swagger.summary = 'Buyer confirms delivery'
+      #swagger.description = 'Buyer confirms that the product has been received (SHIPPING → DELIVERED)'
+      #swagger.tags = ['Orders']
+      #swagger.security = [{ "bearerAuth": [] }]
+      #swagger.parameters['id'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+      #swagger.responses[200] = {
+        description: 'Delivery confirmed successfully',
+        schema: {
+          success: true,
+          message: 'Đã xác nhận nhận hàng thành công'
+        }
+      }
+      #swagger.responses[400] = {
+        description: 'Invalid status',
+        schema: { success: false, message: 'Chỉ có thể xác nhận nhận hàng khi đang giao hàng' }
+      }
+      #swagger.responses[403] = {
+        description: 'Not authorized',
+        schema: { success: false, message: 'Bạn không phải người mua' }
+      }
+      #swagger.responses[404] = {
+        description: 'Product not found',
+        schema: { success: false, message: 'Sản phẩm không tồn tại' }
+      }
+    */
     try {
       const { id: productId } = req.params;
       const userId = req.user.id;
@@ -131,8 +185,43 @@ const orderController = {
 
   /**
    * Seller cancels order (auto -1 rating to buyer)
+   * PUT /api/products/:id/cancel
    */
   cancelOrder: async (req, res) => {
+    /*
+      #swagger.summary = 'Seller cancels order'
+      #swagger.description = 'Seller cancels the order and automatically gives -1 rating to buyer'
+      #swagger.tags = ['Orders']
+      #swagger.security = [{ "bearerAuth": [] }]
+      #swagger.parameters['id'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+      #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Cancellation reason',
+        required: true,
+        schema: {
+          reason: 'string (min 10 chars)'
+        }
+      }
+      #swagger.responses[200] = {
+        description: 'Order cancelled successfully',
+        schema: {
+          success: true,
+          message: 'Đã hủy đơn hàng và đánh giá -1 người mua'
+        }
+      }
+      #swagger.responses[400] = {
+        description: 'Invalid request',
+        schema: { success: false, message: 'Lý do hủy phải có ít nhất 10 ký tự' }
+      }
+      #swagger.responses[403] = {
+        description: 'Not authorized',
+        schema: { success: false, message: 'Bạn không phải người bán' }
+      }
+      #swagger.responses[404] = {
+        description: 'Product not found',
+        schema: { success: false, message: 'Sản phẩm không tồn tại' }
+      }
+    */
     try {
       const { id: productId } = req.params;
       const { reason } = req.body;
@@ -230,8 +319,47 @@ const orderController = {
 
   /**
    * Seller rejects current winner and moves to next highest bidder
+   * PUT /api/products/:id/reject-winner
    */
   rejectWinner: async (req, res) => {
+    /*
+      #swagger.summary = 'Reject current winner'
+      #swagger.description = 'Seller rejects the current winner and moves to the next highest bidder. Automatically gives -1 rating to rejected winner'
+      #swagger.tags = ['Orders']
+      #swagger.security = [{ "bearerAuth": [] }]
+      #swagger.parameters['id'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+      #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Rejection reason',
+        required: true,
+        schema: {
+          reason: 'string (min 10 chars)'
+        }
+      }
+      #swagger.responses[200] = {
+        description: 'Winner rejected and moved to next bidder',
+        schema: {
+          success: true,
+          message: 'Đã từ chối người thắng và chuyển sang người đấu giá cao thứ 2',
+          data: {
+            newWinner: { id: 'user-uuid', fullName: 'string' },
+            newPrice: 'decimal'
+          }
+        }
+      }
+      #swagger.responses[400] = {
+        description: 'Invalid request or no second bidder',
+        schema: { success: false, message: 'Không có người đấu giá thứ 2 để chuyển đổi' }
+      }
+      #swagger.responses[403] = {
+        description: 'Not authorized',
+        schema: { success: false, message: 'Bạn không phải người bán' }
+      }
+      #swagger.responses[404] = {
+        description: 'Product not found',
+        schema: { success: false, message: 'Sản phẩm không tồn tại' }
+      }
+    */
     try {
       const { id: productId } = req.params;
       const { reason } = req.body;
@@ -371,8 +499,39 @@ const orderController = {
 
   /**
    * Get list of bidders for a product
+   * GET /api/products/:id/bidders
    */
   getBidders: async (req, res) => {
+    /*
+      #swagger.summary = 'Get list of bidders'
+      #swagger.description = 'Get unique list of bidders for a product (seller and winner only)'
+      #swagger.tags = ['Orders']
+      #swagger.security = [{ "bearerAuth": [] }]
+      #swagger.parameters['id'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+      #swagger.responses[200] = {
+        description: 'Bidders list retrieved successfully',
+        schema: {
+          success: true,
+          data: [{
+            id: 'user-uuid',
+            fullName: 'string',
+            amount: 'string',
+            createdAt: 'datetime',
+            positiveRatings: 'number',
+            negativeRatings: 'number',
+            isCurrentWinner: 'boolean'
+          }]
+        }
+      }
+      #swagger.responses[403] = {
+        description: 'Not authorized',
+        schema: { success: false, message: 'Bạn không có quyền xem danh sách người đấu giá' }
+      }
+      #swagger.responses[404] = {
+        description: 'Product not found',
+        schema: { success: false, message: 'Sản phẩm không tồn tại' }
+      }
+    */
     try {
       const { id: productId } = req.params;
       const userId = req.user.id;
@@ -447,8 +606,44 @@ const orderController = {
 
   /**
    * Submit or edit rating
+   * POST /api/products/:id/rating
    */
   submitRating: async (req, res) => {
+    /*
+      #swagger.summary = 'Submit or edit rating'
+      #swagger.description = 'Buyer or seller submits/edits rating for the other party after delivery'
+      #swagger.tags = ['Orders']
+      #swagger.security = [{ "bearerAuth": [] }]
+      #swagger.parameters['id'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+      #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Rating data',
+        required: true,
+        schema: {
+          rating: 'number (1 or -1)',
+          comment: 'string (min 10 chars)'
+        }
+      }
+      #swagger.responses[200] = {
+        description: 'Rating submitted successfully',
+        schema: {
+          success: true,
+          message: 'Đã gửi đánh giá thành công'
+        }
+      }
+      #swagger.responses[400] = {
+        description: 'Invalid rating data or status',
+        schema: { success: false, message: 'Đánh giá phải là +1 hoặc -1' }
+      }
+      #swagger.responses[403] = {
+        description: 'Not authorized',
+        schema: { success: false, message: 'Bạn không có quyền đánh giá' }
+      }
+      #swagger.responses[404] = {
+        description: 'Product not found',
+        schema: { success: false, message: 'Sản phẩm không tồn tại' }
+      }
+    */
     try {
       const { id: productId } = req.params;
       const { rating, comment } = req.body;
@@ -630,8 +825,39 @@ const orderController = {
 
   /**
    * Get ratings for a product
+   * GET /api/products/:id/ratings
    */
   getRatings: async (req, res) => {
+    /*
+      #swagger.summary = 'Get ratings for product'
+      #swagger.description = 'Get ratings for a product order (seller and buyer only)'
+      #swagger.tags = ['Orders']
+      #swagger.security = [{ "bearerAuth": [] }]
+      #swagger.parameters['id'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+      #swagger.responses[200] = {
+        description: 'Ratings retrieved successfully',
+        schema: {
+          success: true,
+          data: [{
+            id: 'rating-uuid',
+            fromUserId: 'user-uuid',
+            toUserId: 'user-uuid',
+            rating: 'number (1 or -1)',
+            comment: 'string',
+            createdAt: 'datetime',
+            updatedAt: 'datetime'
+          }]
+        }
+      }
+      #swagger.responses[403] = {
+        description: 'Not authorized',
+        schema: { success: false, message: 'Bạn không có quyền xem đánh giá' }
+      }
+      #swagger.responses[404] = {
+        description: 'Product not found',
+        schema: { success: false, message: 'Sản phẩm không tồn tại' }
+      }
+    */
     try {
       const { id: productId } = req.params;
       const userId = req.user.id;
@@ -704,8 +930,49 @@ const orderController = {
 
   /**
    * Send chat message
+   * POST /api/products/:id/messages
    */
   sendMessage: async (req, res) => {
+    /*
+      #swagger.summary = 'Send chat message'
+      #swagger.description = 'Send a chat message between buyer and seller'
+      #swagger.tags = ['Orders']
+      #swagger.security = [{ "bearerAuth": [] }]
+      #swagger.parameters['id'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+      #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Message content',
+        required: true,
+        schema: {
+          content: 'string'
+        }
+      }
+      #swagger.responses[200] = {
+        description: 'Message sent successfully',
+        schema: {
+          success: true,
+          data: {
+            id: 'message-uuid',
+            content: 'string',
+            senderId: 'user-uuid',
+            senderName: 'string',
+            createdAt: 'datetime'
+          }
+        }
+      }
+      #swagger.responses[400] = {
+        description: 'Invalid message content',
+        schema: { success: false, message: 'Nội dung tin nhắn không được để trống' }
+      }
+      #swagger.responses[403] = {
+        description: 'Not authorized',
+        schema: { success: false, message: 'Bạn không có quyền gửi tin nhắn' }
+      }
+      #swagger.responses[404] = {
+        description: 'Product not found',
+        schema: { success: false, message: 'Sản phẩm không tồn tại' }
+      }
+    */
     try {
       const { id: productId } = req.params;
       const { content } = req.body;
@@ -798,8 +1065,37 @@ const orderController = {
 
   /**
    * Get chat messages
+   * GET /api/products/:id/messages
    */
   getMessages: async (req, res) => {
+    /*
+      #swagger.summary = 'Get chat messages'
+      #swagger.description = 'Get all chat messages for a product order (seller and buyer only)'
+      #swagger.tags = ['Orders']
+      #swagger.security = [{ "bearerAuth": [] }]
+      #swagger.parameters['id'] = { in: 'path', description: 'Product ID', required: true, type: 'string' }
+      #swagger.responses[200] = {
+        description: 'Messages retrieved successfully',
+        schema: {
+          success: true,
+          data: [{
+            id: 'message-uuid',
+            content: 'string',
+            senderId: 'user-uuid',
+            senderName: 'string',
+            createdAt: 'datetime'
+          }]
+        }
+      }
+      #swagger.responses[403] = {
+        description: 'Not authorized',
+        schema: { success: false, message: 'Bạn không có quyền xem tin nhắn' }
+      }
+      #swagger.responses[404] = {
+        description: 'Product not found',
+        schema: { success: false, message: 'Sản phẩm không tồn tại' }
+      }
+    */
     try {
       const { id: productId } = req.params;
       const userId = req.user.id;

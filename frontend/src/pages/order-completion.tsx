@@ -25,14 +25,32 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
+  Wallet,
 } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+type PaymentMethod = "ZALOPAY" | "STRIPE";
 
 interface Product {
   id: string;
   title: string;
   images: string[];
   currentPrice: string;
-  status: "ENDED" | "PAYED" | "SHIPPING" | "DELIVERED" | "COMPLETED" | "CANCELLED";
+  status:
+    | "ENDED"
+    | "PAYED"
+    | "SHIPPING"
+    | "DELIVERED"
+    | "COMPLETED"
+    | "CANCELLED";
   endTime: string;
   seller: {
     id: string;
@@ -82,11 +100,95 @@ interface Rating {
   updatedAt: string;
 }
 
+const StripePaymentForm = ({
+  productId,
+  onCancel,
+}: {
+  productId: string;
+  onCancel: () => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setErrorMessage(null);
+
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/payment-result?type=auction&orderId=${productId}`,
+        },
+      });
+
+      if (error) {
+        setErrorMessage(error.message || "Đã xảy ra lỗi khi thanh toán");
+        setIsProcessing(false);
+      }
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      setErrorMessage("Đã xảy ra lỗi khi xử lý thanh toán");
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement />
+
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
+          {errorMessage}
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <Button
+          type="submit"
+          className="flex-1"
+          disabled={!stripe || isProcessing}
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Đang xử lý...
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-5 h-5 mr-2" />
+              Thanh toán
+            </>
+          )}
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isProcessing}
+        >
+          Hủy
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 const OrderCompletionPage = () => {
   const { user } = useAuth();
   const { id: productId } = useParams();
   const navigate = useNavigate();
-  
+
   const [product, setProduct] = useState<Product | null>(null);
   const [bidders, setBidders] = useState<Bidder[]>([]);
   const [showBidderList, setShowBidderList] = useState(false);
@@ -94,26 +196,33 @@ const OrderCompletionPage = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
+  // Payment state
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
+    null
+  );
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+
   // Rating state
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingType, setRatingType] = useState<1 | -1 | null>(null);
   const [ratingComment, setRatingComment] = useState("");
   const [ratings, setRatings] = useState<Rating[]>([]);
-  
+
   // Cancel modal
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  
+
   // Reject winner modal
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatIntervalRef = useRef<number | undefined>(undefined);
   const prevMessagesLengthRef = useRef<number>(0);
 
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   const isSeller = user?.id === product?.seller.id;
   const isBuyer = user?.id === product?.currentWinner.id;
@@ -123,12 +232,12 @@ const OrderCompletionPage = () => {
     fetchBidders();
     fetchMessages();
     fetchRatings();
-    
+
     // Poll messages every 3 seconds
     chatIntervalRef.current = setInterval(() => {
       fetchMessages();
     }, 3000);
-    
+
     return () => {
       if (chatIntervalRef.current) {
         clearInterval(chatIntervalRef.current);
@@ -155,12 +264,16 @@ const OrderCompletionPage = () => {
         credentials: "include",
       });
       const data = await response.json();
-      
+
       if (data.success) {
         setProduct(data.data);
-        
+
         // Check access control
-        if (user && data.data.seller.id !== user.id && data.data.currentWinner?.id !== user.id) {
+        if (
+          user &&
+          data.data.seller.id !== user.id &&
+          data.data.currentWinner?.id !== user.id
+        ) {
           alert("Bạn không có quyền truy cập trang này");
           navigate(`/product/${productId}`);
         }
@@ -174,11 +287,14 @@ const OrderCompletionPage = () => {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${productId}/chat`, {
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/${productId}/chat`,
+        {
+          credentials: "include",
+        }
+      );
       const data = await response.json();
-      
+
       if (data.success) {
         setMessages(data.data);
       }
@@ -189,11 +305,14 @@ const OrderCompletionPage = () => {
 
   const fetchBidders = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${productId}/bidders`, {
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/${productId}/bidders`,
+        {
+          credentials: "include",
+        }
+      );
       const data = await response.json();
-      
+
       if (data.success) {
         setBidders(data.data);
       }
@@ -204,11 +323,14 @@ const OrderCompletionPage = () => {
 
   const fetchRatings = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${productId}/ratings`, {
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/${productId}/ratings`,
+        {
+          credentials: "include",
+        }
+      );
       const data = await response.json();
-      
+
       if (data.success) {
         setRatings(data.data);
       }
@@ -219,17 +341,20 @@ const OrderCompletionPage = () => {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
-    
+
     try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${productId}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ content: newMessage.trim() }),
-      });
-      
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/${productId}/chat`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ content: newMessage.trim() }),
+        }
+      );
+
       const data = await response.json();
-      
+
       if (data.success) {
         setNewMessage("");
         fetchMessages();
@@ -242,43 +367,84 @@ const OrderCompletionPage = () => {
     }
   };
 
-  const handlePayment = async () => {
+  const handleZaloPayment = async () => {
+    setIsSubmitting(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/payment/auction/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          productId: product?.id,
-          amount: product?.currentPrice,
-        }),
-      });
-      
+      const response = await fetch(
+        `${BACKEND_URL}/api/payment/auction/create`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            productId: product?.id,
+            amount: product?.currentPrice,
+          }),
+        }
+      );
+
       const data = await response.json();
-      
+
       if (data.success && data.data.order_url) {
         window.location.href = data.data.order_url;
       } else {
         alert(data.message || "Không thể tạo đơn thanh toán");
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Error creating payment:", error);
       alert("Đã xảy ra lỗi");
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStripePayment = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/payment/stripe/auction/create`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            productId: product?.id,
+            amount: parseFloat(product?.currentPrice || "0"),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success && data.data.clientSecret) {
+        setClientSecret(data.data.clientSecret);
+        setPaymentMethod("STRIPE");
+      } else {
+        alert(data.message || "Không thể tạo thanh toán Stripe");
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("Stripe payment error:", error);
+      alert("Đã xảy ra lỗi khi tạo thanh toán Stripe");
+      setIsSubmitting(false);
     }
   };
 
   const handleConfirmShipment = async () => {
     if (!confirm("Xác nhận bạn đã gửi hàng?")) return;
-    
+
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${productId}/ship`, {
-        method: "PUT",
-        credentials: "include",
-      });
-      
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/${productId}/ship`,
+        {
+          method: "PUT",
+          credentials: "include",
+        }
+      );
+
       const data = await response.json();
-      
+
       if (data.success) {
         alert("Đã xác nhận gửi hàng thành công!");
         fetchProduct();
@@ -295,16 +461,19 @@ const OrderCompletionPage = () => {
 
   const handleConfirmDelivery = async () => {
     if (!confirm("Xác nhận bạn đã nhận hàng và hài lòng với sản phẩm?")) return;
-    
+
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${productId}/deliver`, {
-        method: "PUT",
-        credentials: "include",
-      });
-      
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/${productId}/deliver`,
+        {
+          method: "PUT",
+          credentials: "include",
+        }
+      );
+
       const data = await response.json();
-      
+
       if (data.success) {
         alert("Đã xác nhận nhận hàng thành công!");
         fetchProduct();
@@ -324,26 +493,29 @@ const OrderCompletionPage = () => {
       alert("Vui lòng chọn loại đánh giá");
       return;
     }
-    
+
     if (ratingComment.trim().length < 10) {
       alert("Nhận xét phải có ít nhất 10 ký tự");
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${productId}/rate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          rating: ratingType,
-          comment: ratingComment.trim(),
-        }),
-      });
-      
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/${productId}/rate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            rating: ratingType,
+            comment: ratingComment.trim(),
+          }),
+        }
+      );
+
       const data = await response.json();
-      
+
       if (data.success) {
         alert("Đã gửi đánh giá thành công!");
         setShowRatingModal(false);
@@ -367,22 +539,30 @@ const OrderCompletionPage = () => {
       alert("Lý do hủy phải có ít nhất 10 ký tự");
       return;
     }
-    
-    if (!confirm("Xác nhận hủy đơn hàng? Người mua sẽ nhận đánh giá -1 và hành động này không thể hoàn tác.")) return;
-    
+
+    if (
+      !confirm(
+        "Xác nhận hủy đơn hàng? Người mua sẽ nhận đánh giá -1 và hành động này không thể hoàn tác."
+      )
+    )
+      return;
+
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${productId}/cancel`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          reason: cancelReason.trim(),
-        }),
-      });
-      
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/${productId}/cancel`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            reason: cancelReason.trim(),
+          }),
+        }
+      );
+
       const data = await response.json();
-      
+
       if (data.success) {
         alert("Đã hủy đơn hàng thành công!");
         setShowCancelModal(false);
@@ -403,22 +583,30 @@ const OrderCompletionPage = () => {
       alert("Lý do từ chối phải có ít nhất 10 ký tự");
       return;
     }
-    
-    if (!confirm("Xác nhận từ chối người thắng hiện tại? Họ sẽ nhận đánh giá -1 và người đấu giá cao thứ 2 sẽ trở thành người thắng mới.")) return;
-    
+
+    if (
+      !confirm(
+        "Xác nhận từ chối người thắng hiện tại? Họ sẽ nhận đánh giá -1 và người đấu giá cao thứ 2 sẽ trở thành người thắng mới."
+      )
+    )
+      return;
+
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${productId}/reject-winner`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          reason: rejectReason.trim(),
-        }),
-      });
-      
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/${productId}/reject-winner`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            reason: rejectReason.trim(),
+          }),
+        }
+      );
+
       const data = await response.json();
-      
+
       if (data.success) {
         alert("Đã từ chối người thắng và chuyển sang người đấu giá cao thứ 2!");
         setShowRejectModal(false);
@@ -456,7 +644,9 @@ const OrderCompletionPage = () => {
   };
 
   const getTimeAgo = (dateString: string) => {
-    const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+    const seconds = Math.floor(
+      (Date.now() - new Date(dateString).getTime()) / 1000
+    );
     if (seconds < 60) return "vừa xong";
     if (seconds < 3600) return `${Math.floor(seconds / 60)} phút trước`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)} giờ trước`;
@@ -465,7 +655,7 @@ const OrderCompletionPage = () => {
 
   const getStepStatus = (step: number): "completed" | "active" | "pending" => {
     if (!product) return "pending";
-    
+
     const statusMap: Record<string, number> = {
       ENDED: 1,
       PAYED: 2,
@@ -473,7 +663,7 @@ const OrderCompletionPage = () => {
       DELIVERED: 4,
       COMPLETED: 5,
     };
-    
+
     const currentStep = statusMap[product.status] || 1;
     if (step < currentStep) return "completed";
     if (step === currentStep) return "active";
@@ -481,11 +671,11 @@ const OrderCompletionPage = () => {
   };
 
   const getMyRating = () => {
-    return ratings.find(r => r.fromUserId === user?.id);
+    return ratings.find((r) => r.fromUserId === user?.id);
   };
 
   const getCounterpartyRating = () => {
-    return ratings.find(r => r.fromUserId !== user?.id);
+    return ratings.find((r) => r.fromUserId !== user?.id);
   };
 
   if (isLoading) {
@@ -505,7 +695,9 @@ const OrderCompletionPage = () => {
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950">
         <Header />
         <main className="flex-1 flex items-center justify-center">
-          <p className="text-gray-600 dark:text-gray-400">Không tìm thấy đơn hàng</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Không tìm thấy đơn hàng
+          </p>
         </main>
         <Footer />
       </div>
@@ -599,7 +791,9 @@ const OrderCompletionPage = () => {
                 <CardContent>
                   <div className="flex gap-4">
                     <img
-                      src={product.images[0] || "https://via.placeholder.com/150"}
+                      src={
+                        product.images[0] || "https://via.placeholder.com/150"
+                      }
                       alt={product.title}
                       className="w-24 h-24 rounded-lg object-cover"
                     />
@@ -619,7 +813,9 @@ const OrderCompletionPage = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
-                          <span>Kết thúc {formatDateTime(product.endTime)}</span>
+                          <span>
+                            Kết thúc {formatDateTime(product.endTime)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -691,17 +887,17 @@ const OrderCompletionPage = () => {
                                   {getTimeAgo(bidder.createdAt)}
                                 </div>
                               </div>
-                              {bidder.isCurrentWinner && 
-                               product.status === "ENDED" && 
-                               bidders.length > 1 && (
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => setShowRejectModal(true)}
-                                >
-                                  Từ chối
-                                </Button>
-                              )}
+                              {bidder.isCurrentWinner &&
+                                product.status === "ENDED" &&
+                                bidders.length > 1 && (
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => setShowRejectModal(true)}
+                                  >
+                                    Từ chối
+                                  </Button>
+                                )}
                             </div>
                           </div>
                         ))}
@@ -709,7 +905,8 @@ const OrderCompletionPage = () => {
                       {bidders.length > 1 && product.status === "ENDED" && (
                         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                           <p className="text-sm text-blue-800 dark:text-blue-200">
-                            💡 Bạn có thể từ chối người thắng hiện tại và chuyển sang người đấu giá cao thứ 2.
+                            💡 Bạn có thể từ chối người thắng hiện tại và chuyển
+                            sang người đấu giá cao thứ 2.
                           </p>
                         </div>
                       )}
@@ -734,20 +931,101 @@ const OrderCompletionPage = () => {
                           <div className="flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
                             <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                              <p className="font-semibold mb-1">Vui lòng thanh toán trong vòng 24 giờ</p>
-                              <p>Nếu không thanh toán đúng hạn, đơn hàng sẽ bị hủy và bạn sẽ nhận đánh giá tiêu cực.</p>
+                              <p className="font-semibold mb-1">
+                                Vui lòng thanh toán trong vòng 24 giờ
+                              </p>
+                              <p>
+                                Nếu không thanh toán đúng hạn, đơn hàng sẽ bị
+                                hủy và bạn sẽ nhận đánh giá tiêu cực.
+                              </p>
                             </div>
                           </div>
                         </div>
-                        <Button onClick={handlePayment} className="w-full" size="lg">
-                          <CreditCard className="w-5 h-5 mr-2" />
-                          Thanh toán qua ZaloPay
-                        </Button>
+
+                        {/* Payment Amount Display */}
+                        <div className="bg-muted/50 p-4 rounded-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">
+                              Tổng thanh toán:
+                            </span>
+                            <span className="text-2xl font-bold text-primary">
+                              {parseFloat(product.currentPrice).toLocaleString(
+                                "vi-VN"
+                              )}{" "}
+                              ₫
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Payment Method Selection or Stripe Form */}
+                        {!paymentMethod ? (
+                          <div className="space-y-3">
+                            <h3 className="font-semibold text-sm">
+                              Chọn phương thức thanh toán:
+                            </h3>
+
+                            {/* Stripe Payment Button */}
+                            <Button
+                              className="w-full justify-start"
+                              variant="outline"
+                              size="lg"
+                              onClick={handleStripePayment}
+                              disabled={isSubmitting}
+                            >
+                              <CreditCard className="w-5 h-5 mr-3" />
+                              <div className="flex-1 text-left">
+                                <div className="font-semibold">
+                                  Thẻ tín dụng/ghi nợ
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  Visa, Mastercard, American Express
+                                </div>
+                              </div>
+                            </Button>
+
+                            {/* ZaloPay Button */}
+                            <Button
+                              className="w-full justify-start"
+                              variant="outline"
+                              size="lg"
+                              onClick={handleZaloPayment}
+                              disabled={isSubmitting}
+                            >
+                              <Wallet className="w-5 h-5 mr-3" />
+                              <div className="flex-1 text-left">
+                                <div className="font-semibold">ZaloPay</div>
+                                <div className="text-xs text-muted-foreground">
+                                  Thanh toán qua ví điện tử ZaloPay
+                                </div>
+                              </div>
+                            </Button>
+                          </div>
+                        ) : paymentMethod === "STRIPE" && clientSecret ? (
+                          <Elements
+                            stripe={stripePromise}
+                            options={{
+                              clientSecret,
+                              appearance: {
+                                theme: "stripe",
+                              },
+                            }}
+                          >
+                            <StripePaymentForm
+                              productId={product.id}
+                              onCancel={() => {
+                                setPaymentMethod(null);
+                                setClientSecret(null);
+                                setIsSubmitting(false);
+                              }}
+                            />
+                          </Elements>
+                        ) : null}
                       </div>
                     ) : (
                       <div className="space-y-4">
                         <p className="text-gray-600 dark:text-gray-400">
-                          Đang chờ người mua thanh toán. Bạn có thể hủy đơn hàng nếu người mua không thanh toán đúng hạn.
+                          Đang chờ người mua thanh toán. Bạn có thể hủy đơn hàng
+                          nếu người mua không thanh toán đúng hạn.
                         </p>
                         <Button
                           variant="destructive"
@@ -777,8 +1055,13 @@ const OrderCompletionPage = () => {
                           <div className="flex items-start gap-3">
                             <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
                             <div className="text-sm text-green-800 dark:text-green-200">
-                              <p className="font-semibold mb-1">Đã nhận thanh toán</p>
-                              <p>Vui lòng gửi hàng và xác nhận sau khi đã giao cho đơn vị vận chuyển.</p>
+                              <p className="font-semibold mb-1">
+                                Đã nhận thanh toán
+                              </p>
+                              <p>
+                                Vui lòng gửi hàng và xác nhận sau khi đã giao
+                                cho đơn vị vận chuyển.
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -814,8 +1097,13 @@ const OrderCompletionPage = () => {
                         <div className="flex items-start gap-3">
                           <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                           <div className="text-sm text-blue-800 dark:text-blue-200">
-                            <p className="font-semibold mb-1">Đã thanh toán thành công</p>
-                            <p>Đang chờ người bán xác nhận và gửi hàng. Vui lòng kiên nhẫn.</p>
+                            <p className="font-semibold mb-1">
+                              Đã thanh toán thành công
+                            </p>
+                            <p>
+                              Đang chờ người bán xác nhận và gửi hàng. Vui lòng
+                              kiên nhẫn.
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -836,11 +1124,13 @@ const OrderCompletionPage = () => {
                     {isBuyer ? (
                       <div className="space-y-4">
                         <p className="text-gray-600 dark:text-gray-400">
-                          Người bán đã xác nhận gửi hàng. Vui lòng kiểm tra kỹ sản phẩm trước khi xác nhận đã nhận hàng.
+                          Người bán đã xác nhận gửi hàng. Vui lòng kiểm tra kỹ
+                          sản phẩm trước khi xác nhận đã nhận hàng.
                         </p>
                         <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                           <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                            ⚠️ Sau khi xác nhận nhận hàng, bạn sẽ không thể khiếu nại về sản phẩm.
+                            ⚠️ Sau khi xác nhận nhận hàng, bạn sẽ không thể
+                            khiếu nại về sản phẩm.
                           </p>
                         </div>
                         <Button
@@ -868,7 +1158,9 @@ const OrderCompletionPage = () => {
                           <div className="flex items-start gap-3">
                             <Truck className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
                             <div className="text-sm text-green-800 dark:text-green-200">
-                              <p className="font-semibold mb-1">Đang giao hàng</p>
+                              <p className="font-semibold mb-1">
+                                Đang giao hàng
+                              </p>
                               <p>Đang chờ người mua xác nhận đã nhận hàng.</p>
                             </div>
                           </div>
@@ -930,7 +1222,8 @@ const OrderCompletionPage = () => {
                         </div>
                         {!counterpartyRating && (
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Đang chờ {isSeller ? "người mua" : "người bán"} đánh giá...
+                            Đang chờ {isSeller ? "người mua" : "người bán"} đánh
+                            giá...
                           </p>
                         )}
                         <Button
@@ -968,7 +1261,9 @@ const OrderCompletionPage = () => {
                       {/* My Rating */}
                       {myRating && (
                         <div className="p-4 border rounded-lg dark:border-gray-700">
-                          <p className="text-sm font-medium mb-2">Đánh giá của bạn:</p>
+                          <p className="text-sm font-medium mb-2">
+                            Đánh giá của bạn:
+                          </p>
                           <div className="flex items-start gap-3">
                             {myRating.rating === 1 ? (
                               <ThumbsUp className="w-5 h-5 text-green-600 mt-0.5" />
@@ -1041,17 +1336,23 @@ const OrderCompletionPage = () => {
                       {isSeller ? "Người mua" : "Người bán"}:
                     </span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {isSeller ? product.currentWinner.fullName : product.seller.fullName}
+                      {isSeller
+                        ? product.currentWinner.fullName
+                        : product.seller.fullName}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Giá thành:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Giá thành:
+                    </span>
                     <span className="font-semibold text-primary">
                       {formatPrice(product.currentPrice)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Kết thúc:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Kết thúc:
+                    </span>
                     <span className="text-gray-900 dark:text-white text-xs">
                       {formatDateTime(product.endTime)}
                     </span>
@@ -1106,7 +1407,9 @@ const OrderCompletionPage = () => {
                           <div
                             key={msg.id}
                             className={`flex ${
-                              msg.senderId === user?.id ? "justify-end" : "justify-start"
+                              msg.senderId === user?.id
+                                ? "justify-end"
+                                : "justify-start"
                             }`}
                           >
                             <div
@@ -1257,7 +1560,8 @@ const OrderCompletionPage = () => {
               {bidders.length > 1 && (
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    Người thắng mới sẽ là: <strong>{bidders[1]?.fullName}</strong> với giá{" "}
+                    Người thắng mới sẽ là:{" "}
+                    <strong>{bidders[1]?.fullName}</strong> với giá{" "}
                     <strong>{formatPrice(bidders[1]?.amount)}</strong>
                   </p>
                 </div>
