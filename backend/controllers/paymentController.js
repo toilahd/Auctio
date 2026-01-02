@@ -765,10 +765,9 @@ class PaymentController {
         await prisma.user.update({
           where: { id: userId },
           data: {
-            role: "SELLER",
             upgradeRequested: true,
             upgradeRequestedAt: new Date(),
-            upgradeStatus: "APPROVED",
+            upgradeStatus: "PENDING",
           },
         });
 
