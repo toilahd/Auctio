@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, use } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UpgradeRequest {
   id: string;
@@ -33,10 +34,9 @@ interface UpgradeRequest {
 
 export default function SellerUpgradeRequestPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  // Mock current user role (would come from auth context)
-  const userRole: "BIDDER" | "SELLER" = "BIDDER";
-  const isAlreadySeller = userRole === "SELLER";
+  const isAlreadySeller = user?.role === "SELLER";
 
   // Form state
   const [businessName, setBusinessName] = useState("");
@@ -76,7 +76,9 @@ export default function SellerUpgradeRequestPage() {
   );
 
   // Check if user has pending request
-  const hasPendingRequest = previousRequests.some((r) => r.status === "pending");
+  const hasPendingRequest = previousRequests.some(
+    (r) => r.status === "pending"
+  );
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -173,8 +175,8 @@ export default function SellerUpgradeRequestPage() {
                 Bạn đã là người bán
               </h2>
               <p className="text-gray-600 mb-6">
-                Tài khoản của bạn đã có quyền người bán. Bạn có thể bắt đầu đăng sản
-                phẩm để đấu giá.
+                Tài khoản của bạn đã có quyền người bán. Bạn có thể bắt đầu đăng
+                sản phẩm để đấu giá.
               </p>
               <Button onClick={() => navigate("/seller")}>
                 Đến trang quản lý người bán
@@ -199,8 +201,8 @@ export default function SellerUpgradeRequestPage() {
                 Gửi yêu cầu thành công!
               </h2>
               <p className="text-gray-600 mb-6">
-                Yêu cầu nâng cấp tài khoản của bạn đã được gửi đi. Chúng tôi sẽ xem
-                xét và phản hồi trong vòng 2-3 ngày làm việc.
+                Yêu cầu nâng cấp tài khoản của bạn đã được gửi đi. Chúng tôi sẽ
+                xem xét và phản hồi trong vòng 2-3 ngày làm việc.
               </p>
               <Button onClick={() => navigate("/")}>Về trang chủ</Button>
             </div>
@@ -282,8 +284,8 @@ export default function SellerUpgradeRequestPage() {
               <div className="flex items-center gap-3 text-yellow-800">
                 <AlertCircle className="w-5 h-5" />
                 <p className="text-sm font-medium">
-                  Bạn đã có yêu cầu nâng cấp đang chờ duyệt. Vui lòng đợi kết quả
-                  trước khi gửi yêu cầu mới.
+                  Bạn đã có yêu cầu nâng cấp đang chờ duyệt. Vui lòng đợi kết
+                  quả trước khi gửi yêu cầu mới.
                 </p>
               </div>
             </Card>
@@ -369,7 +371,9 @@ export default function SellerUpgradeRequestPage() {
                   <Textarea
                     id="reason"
                     value={reason}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      setReason(e.target.value)
+                    }
                     placeholder="Mô tả kinh nghiệm bán hàng, loại sản phẩm bạn muốn bán, kế hoạch kinh doanh... (tối thiểu 20 ký tự)"
                     rows={5}
                     className="resize-none"

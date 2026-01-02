@@ -127,6 +127,7 @@ class ZaloPayService {
           orderId: orderId,
           buyerId: buyerId,
         }),
+        preferred_payment_method: [],
       };
 
       const items = [
