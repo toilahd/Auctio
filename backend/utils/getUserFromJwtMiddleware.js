@@ -6,9 +6,7 @@ import { decodeJwt } from "./jwtUtil.js";
  * If no valid token is found, sets req.user to null and req.tokenError with the error message.
  */
 const getUserFromJwt = (req, res, next) => {
-  console.log("All cookies:", req.cookies);
   const accessToken = req.cookies ? req.cookies.access : null;
-  console.log("Access token from cookie:", accessToken);
   let authHeader = req.headers.authorization;
   if (accessToken && !authHeader) {
     authHeader = `Bearer ${accessToken}`;

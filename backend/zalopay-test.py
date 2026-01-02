@@ -22,7 +22,7 @@ DESCRIPTION = "Demo thanh toán ZaloPay"
 
 # ================== AUTO GENERATED ==================
 APPTIME = str(int(time.time() * 1000))  # milliseconds
-APPTRANSID = time.strftime("%y%m%d") + "_0002" # Mã đơn hàng bên phía ứng dụng, format yymmdd của ngày hiện tại. Mã giao dịch nên theo format yymmdd_Mã đơn hàng thanh toán. Tạo lỗi -68 duplicate nếu trùng?
+APPTRANSID = time.strftime("%y%m%d") + "_0003" # Mã đơn hàng bên phía ứng dụng, format yymmdd của ngày hiện tại. Mã giao dịch nên theo format yymmdd_Mã đơn hàng thanh toán. Tạo lỗi -68 duplicate nếu trùng?
 
 EMBEDDATA = json.dumps({
     "promotioninfo": "",

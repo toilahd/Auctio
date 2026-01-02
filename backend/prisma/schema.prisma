@@ -95,6 +95,10 @@ model Category {
 enum ProductStatus {
   ACTIVE
   ENDED
+  PAYED
+  SHIPPING
+  DELIVERED
+  COMPLETED
   CANCELLED
 }
 

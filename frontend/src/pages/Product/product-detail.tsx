@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Clock,
   User,
@@ -93,6 +93,7 @@ interface Product {
 const ProductDetailPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,6 +107,7 @@ const ProductDetailPage = () => {
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState<string | null>(
     null
   );
+  const [countdown, setCountdown] = useState<string>("");
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -149,6 +151,23 @@ const ProductDetailPage = () => {
   useEffect(() => {
     if (id) checkWatchlistStatus();
   }, [id]);
+
+  // Update countdown every second
+  useEffect(() => {
+    if (!product?.endTime) return;
+
+    const updateCountdown = () => {
+      setCountdown(getRelativeTime(product.endTime));
+    };
+
+    // Initial update
+    updateCountdown();
+
+    // Update every second
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [product?.endTime]);
 
   const checkWatchlistStatus = async () => {
     try {
@@ -289,16 +308,20 @@ const ProductDetailPage = () => {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    if (days >= 3) {
-      return `${days} ngày`;
-    } else if (days > 0) {
-      return `${days} ngày ${hours} giờ nữa`;
-    } else if (hours > 0) {
-      return `${hours} giờ ${minutes} phút nữa`;
-    } else {
-      return `${minutes} phút nữa`;
+    const parts = [];
+    if (days > 0) parts.push(`${days} ngày`);
+    if (hours > 0) parts.push(`${hours} giờ`);
+    if (minutes > 0) parts.push(`${minutes} phút`);
+    if (seconds > 0 || parts.length === 0) parts.push(`${seconds} giây`);
+
+    // If less than 3 days, add "nữa" (remaining)
+    if (days < 3) {
+      return parts.join(" ") + " nữa";
     }
+
+    return parts.join(" ");
   };
 
   const getRatingPercentage = (positive: number, negative: number) => {
@@ -417,9 +440,7 @@ const ProductDetailPage = () => {
             </Card>
 
             {/* Bid History */}
-            <BidHistoryList
-              productId={product.id}
-            />
+            <BidHistoryList productId={product.id} productStatus={product.status} />
           </div>
 
           {/* Right: Product Info & Actions */}
@@ -484,19 +505,18 @@ const ProductDetailPage = () => {
                   Thời gian còn lại
                 </div>
                 <div className="text-2xl font-bold text-destructive">
-                  {getRelativeTime(product.endTime)}
+                  {countdown || getRelativeTime(product.endTime)}
                 </div>
-                {product.timeLeft?.isLessThan3Days && (
-                  <Badge variant="destructive" className="mt-2">
-                    Sắp kết thúc
-                  </Badge>
-                )}
+                {product.timeLeft?.isLessThan3Days &&
+                  product.status === "ACTIVE" && (
+                    <Badge variant="destructive" className="mt-2">
+                      Sắp kết thúc
+                    </Badge>
+                  )}
               </div>
 
               {/* Current Winner - Real-time */}
-              <CurrentWinnerDisplay
-                productId={product.id}
-              />
+              <CurrentWinnerDisplay productId={product.id} productStatus={product.status} />
 
               {/* Seller Info */}
               {product.seller && (
@@ -600,38 +620,80 @@ const ProductDetailPage = () => {
                 </div>
               </div>
 
-              {/* Action Buttons & Bidding */}
-              <div className="space-y-4">
-                <BidForm
-                  productId={product.id}
-                  currentPrice={parseFloat(product.currentPrice)}
-                  stepPrice={parseFloat(product.stepPrice)}
-                  onBidPlaced={() => {
-                    // Refresh product data after successful bid
-                    window.location.reload();
-                  }}
-                />
+              {/* Action Buttons & Bidding - Only show for ACTIVE auctions */}
+              {product.status === "ACTIVE" &&
+                !(user && product.seller?.id === user.id) && (
+                  <div className="space-y-4">
+                    <BidForm
+                      productId={product.id}
+                      currentPrice={parseFloat(product.currentPrice)}
+                      stepPrice={parseFloat(product.stepPrice)}
+                      onBidPlaced={() => {
+                        // Refresh product data after successful bid
+                        navigate(0);
+                      }}
+                    />
 
-                {product.buyNowPrice && (
-                  <Button variant="secondary" className="w-full" size="lg">
-                    <Tag className="w-4 h-4 mr-2" />
-                    Mua ngay - {formatPrice(parseFloat(product.buyNowPrice))}
+                    {product.buyNowPrice && (
+                      <Button variant="secondary" className="w-full" size="lg">
+                        <Tag className="w-4 h-4 mr-2" />
+                        Mua ngay -{" "}
+                        {formatPrice(parseFloat(product.buyNowPrice))}
+                      </Button>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                      onClick={handleWatchlistToggle}
+                      disabled={isTogglingWatchlist}
+                    >
+                      <Heart
+                        className={`w-4 h-4 mr-2 ${
+                          isInWatchlist ? "fill-red-500 text-red-500" : ""
+                        }`}
+                      />
+                      {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
+                    </Button>
+                  </div>
+                )}
+
+              {/* Order Completion Button - For seller and winner on ended auctions */}
+              {(product.status === "ENDED" ||
+                product.status === "PAYED" ||
+                product.status === "SHIPPING" ||
+                product.status === "DELIVERED" ||
+                product.status === "COMPLETED") &&
+                (user?.id === product.seller?.id ||
+                  user?.id === product.currentWinner?.id) && (
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => navigate(`/order/${product.id}`)}
+                  >
+                    {user?.id === product.seller?.id
+                      ? "Quản lý đơn hàng"
+                      : "Xem chi tiết đơn hàng"}
                   </Button>
                 )}
 
-                <Button
-                  variant="outline" 
-                  className="w-full" 
-                  size="lg"
-                  onClick={handleWatchlistToggle}
-                  disabled={isTogglingWatchlist}
-                >
-                  <Heart className={`w-4 h-4 mr-2 ${
-                    isInWatchlist ? "fill-red-500 text-red-500" : ""
-                  }`} />
-                  {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
-                </Button>
-              </div>
+              {/* Auction Ended Message - For others */}
+              {(product.status === "ENDED" ||
+                product.status === "PAYED" ||
+                product.status === "SHIPPING" ||
+                product.status === "DELIVERED" ||
+                product.status === "COMPLETED" ||
+                product.status === "CANCELLED") &&
+                user?.id !== product.seller?.id &&
+                user?.id !== product.currentWinner?.id && (
+                  <div className="p-4 bg-muted/50 rounded-lg text-center">
+                    <AlertCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Sản phẩm đã kết thúc
+                    </p>
+                  </div>
+                )}
             </Card>
           </div>
         </div>

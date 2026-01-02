@@ -359,19 +359,19 @@ class BiddingService {
       });
 
       if (!product) {
-        return { canBid: false, reason: 'Product not found' };
+        return { canBid: false, reason: 'Sản phẩm không tồn tại' };
       }
 
       if (product.status !== 'ACTIVE') {
-        return { canBid: false, reason: 'Auction is not active' };
+        return { canBid: false, reason: 'Đấu giá không hoạt động' };
       }
 
       if (new Date() > new Date(product.endTime)) {
-        return { canBid: false, reason: 'Auction has ended' };
+        return { canBid: false, reason: 'Đấu giá đã kết thúc' };
       }
 
       if (product.sellerId === userId) {
-        return { canBid: false, reason: 'Cannot bid on your own product' };
+        return { canBid: false, reason: 'Không thể đặt giá cho sản phẩm của chính bạn' };
       }
 
       const isDenied = await prisma.deniedBidder.findFirst({
@@ -379,7 +379,7 @@ class BiddingService {
       });
 
       if (isDenied) {
-        return { canBid: false, reason: 'You are blocked from bidding on this product' };
+        return { canBid: false, reason: 'Bạn bị chặn đặt giá cho sản phẩm này' };
       }
 
       return { canBid: true };

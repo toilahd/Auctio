@@ -71,9 +71,7 @@ const validRefreshTokens = new Set();
 
 // Middleware
 const getUserFromJwt = (req, res, next) => {
-  console.log("All cookies:", req.cookies);
   const accessToken = req.cookies ? req.cookies.access : null;
-  console.log("Access token from cookie:", accessToken);
   let authHeader = req.headers.authorization;
   if (accessToken && !authHeader) {
     authHeader = `Bearer ${accessToken}`;

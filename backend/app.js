@@ -17,6 +17,8 @@ import sellerRoutes from "./routes/sellerRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
+import paymentController from "./controllers/paymentController.js";
 dotenv.config();
 
 BigInt.prototype.toJSON = function () {
@@ -34,8 +36,16 @@ const app = express();
 const httpServer = createServer(app);
 const appLogger = getLogger("App");
 
-app.use(express.json());
+// Stripe webhook route MUST come before body parsers to preserve raw body
+app.post(
+  "/api/payment/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  paymentController.stripeWebhook
+);
+
 app.use(cookie());
+
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Test database connection
@@ -47,8 +57,6 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Initialize Socket.IO
 const io = initializeSocket(httpServer);
@@ -59,6 +67,7 @@ app.use(docsRouter);
 app.use(authRouter);
 app.use("/api/bids", biddingRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/products", orderRoutes); // Order completion routes
 app.use("/api/categories", categoryRoutes);
 app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/questions", questionRoutes);
@@ -67,7 +76,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api/payment", paymentRoutes);
+app.use("/api/payment", paymentRoutes); // Mount payment routes (except webhook which is already mounted)
 
 // Health check
 app.get("/health", (req, res) => {

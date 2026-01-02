@@ -7,6 +7,7 @@ import type { CurrentWinner } from '@/services/biddingService';
 
 interface CurrentWinnerDisplayProps {
   productId: string;
+  productStatus?: string;
 }
 
 /**
@@ -15,6 +16,7 @@ interface CurrentWinnerDisplayProps {
  */
 export const CurrentWinnerDisplay: React.FC<CurrentWinnerDisplayProps> = ({
   productId,
+  productStatus,
 }) => {
   const { getCurrentWinner } = useBidding();
   const { socket, isConnected, joinProduct, leaveProduct } = useSocket();
@@ -85,9 +87,10 @@ export const CurrentWinnerDisplay: React.FC<CurrentWinnerDisplayProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           Trạng Thái Hiện Tại
-          {isConnected && (
-            <Badge variant="outline" className="text-xs">
-              🟢 Live
+          {isConnected && productStatus === "ACTIVE" && (
+            <Badge variant="outline" className="text-xs flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              Live
             </Badge>
           )}
         </CardTitle>
