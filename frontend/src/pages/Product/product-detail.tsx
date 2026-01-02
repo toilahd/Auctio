@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Clock,
   User,
@@ -93,6 +93,7 @@ interface Product {
 const ProductDetailPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -439,9 +440,7 @@ const ProductDetailPage = () => {
             </Card>
 
             {/* Bid History */}
-            <BidHistoryList
-              productId={product.id}
-            />
+            <BidHistoryList productId={product.id} productStatus={product.status} />
           </div>
 
           {/* Right: Product Info & Actions */}
@@ -508,17 +507,16 @@ const ProductDetailPage = () => {
                 <div className="text-2xl font-bold text-destructive">
                   {countdown || getRelativeTime(product.endTime)}
                 </div>
-                {product.timeLeft?.isLessThan3Days && (
-                  <Badge variant="destructive" className="mt-2">
-                    Sắp kết thúc
-                  </Badge>
-                )}
+                {product.timeLeft?.isLessThan3Days &&
+                  product.status === "ACTIVE" && (
+                    <Badge variant="destructive" className="mt-2">
+                      Sắp kết thúc
+                    </Badge>
+                  )}
               </div>
 
               {/* Current Winner - Real-time */}
-              <CurrentWinnerDisplay
-                productId={product.id}
-              />
+              <CurrentWinnerDisplay productId={product.id} productStatus={product.status} />
 
               {/* Seller Info */}
               {product.seller && (
@@ -622,42 +620,44 @@ const ProductDetailPage = () => {
                 </div>
               </div>
 
-              {/* Action Buttons & Bidding */}
-              {!(user && product.seller?.id === user.id) && (
-                <div className="space-y-4">
-                  <BidForm
-                    productId={product.id}
-                    currentPrice={parseFloat(product.currentPrice)}
-                    stepPrice={parseFloat(product.stepPrice)}
-                    onBidPlaced={() => {
-                      // Refresh product data after successful bid
-                      window.location.reload();
-                    }}
-                  />
-
-                  {product.buyNowPrice && (
-                    <Button variant="secondary" className="w-full" size="lg">
-                      <Tag className="w-4 h-4 mr-2" />
-                      Mua ngay - {formatPrice(parseFloat(product.buyNowPrice))}
-                    </Button>
-                  )}
-
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    size="lg"
-                    onClick={handleWatchlistToggle}
-                    disabled={isTogglingWatchlist}
-                  >
-                    <Heart
-                      className={`w-4 h-4 mr-2 ${
-                        isInWatchlist ? "fill-red-500 text-red-500" : ""
-                      }`}
+              {/* Action Buttons & Bidding - Only show for ACTIVE auctions */}
+              {product.status === "ACTIVE" &&
+                !(user && product.seller?.id === user.id) && (
+                  <div className="space-y-4">
+                    <BidForm
+                      productId={product.id}
+                      currentPrice={parseFloat(product.currentPrice)}
+                      stepPrice={parseFloat(product.stepPrice)}
+                      onBidPlaced={() => {
+                        // Refresh product data after successful bid
+                        navigate(0);
+                      }}
                     />
-                    {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
-                  </Button>
-                </div>
-              )}
+
+                    {product.buyNowPrice && (
+                      <Button variant="secondary" className="w-full" size="lg">
+                        <Tag className="w-4 h-4 mr-2" />
+                        Mua ngay -{" "}
+                        {formatPrice(parseFloat(product.buyNowPrice))}
+                      </Button>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                      onClick={handleWatchlistToggle}
+                      disabled={isTogglingWatchlist}
+                    >
+                      <Heart
+                        className={`w-4 h-4 mr-2 ${
+                          isInWatchlist ? "fill-red-500 text-red-500" : ""
+                        }`}
+                      />
+                      {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
+                    </Button>
+                  </div>
+                )}
 
               {/* Order Completion Button - For seller and winner on ended auctions */}
               {(product.status === "ENDED" ||
@@ -670,13 +670,11 @@ const ProductDetailPage = () => {
                   <Button
                     className="w-full"
                     size="lg"
-                    onClick={() =>
-                      (window.location.href = `/order/${product.id}`)
-                    }
+                    onClick={() => navigate(`/order/${product.id}`)}
                   >
                     {user?.id === product.seller?.id
                       ? "Quản lý đơn hàng"
-                      : "Hoàn tất đơn hàng"}
+                      : "Xem chi tiết đơn hàng"}
                   </Button>
                 )}
 
