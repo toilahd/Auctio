@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "binary"
 }
 
@@ -71,6 +71,7 @@ model User {
   deniedBidders          DeniedBidder[]
   chatMessages           ChatMessage[]
 }
+
 // =====================
 // CATEGORY
 // =====================
@@ -401,6 +402,21 @@ model SystemConfig {
   updatedAt DateTime @updatedAt
 
   @@index([key])
+}
+
+// =====================
+// AUCTION SETTINGS
+// =====================
+
+model AuctionSettings {
+  id                  String @id @default(uuid())
+  autoExtendThreshold Int    @default(5) // Thời gian gia hạn tự động (phút)
+  autoExtendDuration  Int    @default(10) // Thời lượng gia hạn (phút)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("auction_settings")
 }
 
 // For storing auto-extend parameters

@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
 import { getLogger } from '../config/logger.js';
+import AuctionSchedulerService from './auctionSchedulerService.js';
 
 const logger = getLogger('AdminService');
 
@@ -92,6 +93,13 @@ class AdminService {
   // ==================== PRODUCT MANAGEMENT ====================
 
   async getAllProducts({ page = 1, limit = 20, status, sellerId }) {
+    // Auto-close expired auctions before fetching
+    // This ensures admin always sees accurate status
+    await AuctionSchedulerService.closeExpiredAuctions().catch(err => {
+      logger.warn('Failed to close expired auctions:', err);
+      // Continue anyway - scheduler will catch them later
+    });
+
     const skip = (page - 1) * limit;
     const where = {};
 

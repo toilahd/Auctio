@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
 import { getLogger } from '../config/logger.js';
+import AuctionSettingsService from './auctionSettingsService.js';
 
 const logger = getLogger('SellerService');
 
@@ -39,6 +40,10 @@ class SellerService {
     // Remove Vietnamese accents for search
     const titleNoAccent = this.removeVietnameseAccents(title);
 
+    // Auto-extend is enabled by default for all products
+    // Seller can override by setting autoExtend explicitly to false
+    const autoExtendValue = autoExtend !== undefined ? autoExtend : true;
+
     // Create product
     const product = await prisma.product.create({
       data: {
@@ -52,7 +57,7 @@ class SellerService {
         currentPrice: startPrice,
         categoryId,
         sellerId,
-        autoExtend: autoExtend || false,
+        autoExtend: autoExtendValue,
         endTime: new Date(endTime),
         status: 'ACTIVE'
       },
