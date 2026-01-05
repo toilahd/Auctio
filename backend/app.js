@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import { getLogger } from "./config/logger.js";
 import { initializeSocket } from "./config/socket.js";
 import { testDatabase } from "./config/prisma.js";
+import AuctionSchedulerService from "./services/auctionSchedulerService.js";
 import biddingRoutes from "./routes/biddingRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
@@ -106,6 +107,10 @@ app.use((err, req, res, next) => {
 // Start server
 httpServer.listen(PORT, () => {
   appLogger.info(`Server is running on port ${PORT}`);
+
+  // Start auction scheduler
+  AuctionSchedulerService.startScheduler();
+  appLogger.info('Auction scheduler initialized');
 });
 
 export default app;

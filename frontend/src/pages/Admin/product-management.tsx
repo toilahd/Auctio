@@ -22,6 +22,9 @@ import {
   CheckCircle,
   Clock,
   Loader2,
+  Settings,
+  Save,
+  RefreshCw,
 } from "lucide-react";
 
 interface Product {
@@ -61,6 +64,16 @@ export default function ProductManagementPage() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [searchedProduct, setSearchedProduct] = useState<Product | null>(null);
   const [searchingById, setSearchingById] = useState(false);
+
+  // Auction Settings
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
+  const [auctionSettings, setAuctionSettings] = useState({
+    autoExtendThreshold: 5,
+    autoExtendDuration: 10,
+  });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [closingExpired, setClosingExpired] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -105,9 +118,82 @@ export default function ProductManagementPage() {
     }
   }, [page, statusFilter, BACKEND_URL]);
 
+  const fetchAuctionSettings = async () => {
+    try {
+      setSettingsLoading(true);
+      const response = await fetch(`${BACKEND_URL}/api/admin/auction-settings`, {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setAuctionSettings(data.data);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching auction settings:", err);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const saveAuctionSettings = async () => {
+    try {
+      setSettingsSaving(true);
+      const response = await fetch(`${BACKEND_URL}/api/admin/auction-settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(auctionSettings),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert("✓ Cập nhật cấu hình thành công!");
+        setAuctionSettings(data.data);
+      } else {
+        alert("✗ " + (data.message || "Không thể cập nhật cấu hình"));
+      }
+    } catch (err) {
+      console.error("Error saving auction settings:", err);
+      alert("✗ Lỗi khi lưu cấu hình");
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const closeExpiredAuctions = async () => {
+    try {
+      setClosingExpired(true);
+      const response = await fetch(`${BACKEND_URL}/api/admin/close-expired-auctions`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert(`✓ ${data.message}\n${data.data.closed} sản phẩm đã được cập nhật status.`);
+        // Reload products to see updated statuses
+        fetchProducts();
+      } else {
+        alert("✗ " + (data.message || "Không thể đóng phiên đấu giá"));
+      }
+    } catch (err) {
+      console.error("Error closing expired auctions:", err);
+      alert("✗ Lỗi khi đóng phiên đấu giá hết hạn");
+    } finally {
+      setClosingExpired(false);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  useEffect(() => {
+    fetchAuctionSettings();
+  }, []);
 
   // Fetch product by ID when search query changes
   useEffect(() => {
@@ -287,6 +373,137 @@ export default function ProductManagementPage() {
           </p>
         </div>
 
+        {/* Auction Settings */}
+        <Card className="p-6 mb-6 border-blue-200 bg-blue-50/50">
+          <div
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setSettingsExpanded(!settingsExpanded)}
+          >
+            <div className="flex items-center gap-3">
+              <Settings className="w-5 h-5 text-blue-600" />
+              <div>
+                <h3 className="font-semibold text-gray-900">
+                  Cấu hình đấu giá toàn cục
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Áp dụng cho tất cả sản phẩm trong hệ thống
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-blue-600"
+            >
+              {settingsExpanded ? "Thu gọn ▲" : "Mở rộng ▼"}
+            </Button>
+          </div>
+
+          {settingsExpanded && (
+            <div className="mt-6 pt-6 border-t border-blue-200">
+              {settingsLoading ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Auto Extend Threshold */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <label className="block font-medium text-gray-900 mb-1">
+                        Thời gian gia hạn tự động
+                      </label>
+                      <p className="text-sm text-gray-600">
+                        Nếu có bid mới trong khoảng thời gian này trước khi kết thúc, sẽ gia hạn thêm
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        (Giá trị: 1-60 phút)
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-4">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={auctionSettings.autoExtendThreshold}
+                        onChange={(e) =>
+                          setAuctionSettings({
+                            ...auctionSettings,
+                            autoExtendThreshold: Number(e.target.value),
+                          })
+                        }
+                        className="w-24"
+                      />
+                      <span className="text-sm text-gray-600">phút</span>
+                    </div>
+                  </div>
+
+                  {/* Auto Extend Duration */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <label className="block font-medium text-gray-900 mb-1">
+                        Thời lượng gia hạn
+                      </label>
+                      <p className="text-sm text-gray-600">
+                        Thời gian gia hạn thêm khi có bid mới
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        (Giá trị: 1-120 phút)
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-4">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="120"
+                        value={auctionSettings.autoExtendDuration}
+                        onChange={(e) =>
+                          setAuctionSettings({
+                            ...auctionSettings,
+                            autoExtendDuration: Number(e.target.value),
+                          })
+                        }
+                        className="w-24"
+                      />
+                      <span className="text-sm text-gray-600">phút</span>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end pt-4 border-t border-blue-200">
+                    <Button
+                      onClick={saveAuctionSettings}
+                      disabled={settingsSaving}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {settingsSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Đang lưu...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Lưu cấu hình
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="bg-blue-100 border border-blue-300 rounded-lg p-4">
+                    <p className="text-sm text-blue-900">
+                      <strong>ℹ️ Lưu ý:</strong> Cấu hình này áp dụng cho tất cả sản phẩm đấu giá.
+                      Tính năng gia hạn tự động được bật mặc định cho tất cả sản phẩm mới,
+                      seller có thể tắt khi đăng sản phẩm nếu muốn.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+
         {/* Stats - showing from API */}
         <Card className="p-6 mb-6">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -313,6 +530,29 @@ export default function ProductManagementPage() {
 
         {/* Filters */}
         <Card className="p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900">Bộ lọc & Tìm kiếm</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={closeExpiredAuctions}
+              disabled={closingExpired}
+              className="text-orange-600 border-orange-300 hover:bg-orange-50"
+            >
+              {closingExpired ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang đóng...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Đóng phiên hết hạn
+                </>
+              )}
+            </Button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">

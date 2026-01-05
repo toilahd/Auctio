@@ -1,5 +1,7 @@
 import express from 'express';
 import * as adminController from '../controllers/adminController.js';
+import * as auctionSettingsController from '../controllers/auctionSettingsController.js';
+import * as auctionSchedulerController from '../controllers/auctionSchedulerController.js';
 import { authenticateToken } from '../middlewares/authMiddleware.js';
 import { requireAdmin } from '../middlewares/adminMiddleware.js';
 import getUserFromJwt from '../utils/getUserFromJwtMiddleware.js';
@@ -39,6 +41,13 @@ router.get('/dashboard/user-growth', adminController.getUserGrowth);
 router.get('/dashboard/product-growth', adminController.getProductGrowth);
 router.get('/dashboard/top-sellers', adminController.getTopSellers);
 router.get('/dashboard/top-products', adminController.getTopProducts);
+
+// ==================== AUCTION SETTINGS ====================
+router.get('/auction-settings', auctionSettingsController.getAuctionSettings);
+router.put('/auction-settings', auctionSettingsController.updateAuctionSettings);
+
+// ==================== AUCTION SCHEDULER ====================
+router.post('/close-expired-auctions', auctionSchedulerController.closeExpiredAuctions);
 
 export default router;
 

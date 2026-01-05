@@ -1,6 +1,7 @@
 // services/biddingService.js
 import prisma from '../config/prisma.js';
 import { getLogger } from '../config/logger.js';
+import AuctionSettingsService from './auctionSettingsService.js';
 
 const logger = getLogger('BiddingService');
 
@@ -230,12 +231,19 @@ class BiddingService {
         }
       });
 
+      // Auto-extend logic with dynamic settings
+      const settings = await AuctionSettingsService.getSettings();
+      const autoExtendThreshold = settings.autoExtendThreshold * 60 * 1000; // Convert minutes to ms
+      const autoExtendDuration = settings.autoExtendDuration * 60 * 1000;
+
       const timeLeft = new Date(product.endTime) - new Date();
-      if (product.autoExtend && timeLeft < 300000) {
+      if (product.autoExtend && timeLeft < autoExtendThreshold) {
         await tx.product.update({
           where: { id: productId },
-          data: { endTime: new Date(Date.now() + 600000) }
+          data: { endTime: new Date(Date.now() + autoExtendDuration) }
         });
+
+        logger.info(`Auto-extended product ${productId} by ${settings.autoExtendDuration} minutes`);
       }
 
       return {
