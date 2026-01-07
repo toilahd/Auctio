@@ -4,6 +4,9 @@ import { Clock, Hammer, Tag, Calendar, User, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
+// Products created within this many minutes are considered "new"
+const NEW_PRODUCT_THRESHOLD_MINUTES = 10;
+
 interface Product {
   id: string;
   title: string;
@@ -61,6 +64,13 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+  // Check if product is new based on creation time
+  const isProductNew = () => {
+    const createdAt = new Date(product.createdAt).getTime();
+    const threshold = NEW_PRODUCT_THRESHOLD_MINUTES * 60 * 1000;
+    return now - createdAt < threshold;
+  };
 
   // Update countdown every minute
   useEffect(() => {
@@ -195,7 +205,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
       return "bg-destructive text-destructive-foreground";
     }
 
-    // More than 30 minutes - blue
+    // MisProductNew()inutes - blue
     return "bg-blue-500 text-white";
   };
 
@@ -239,13 +249,17 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
         </button>
 
         {/* Time Remaining Badge */}
-        <div className={`absolute top-3 right-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg ${getTimeRemainingColor(product.endTime)}`}>
+        <div
+          className={`absolute top-3 right-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg ${getTimeRemainingColor(
+            product.endTime
+          )}`}
+        >
           <Clock className="w-3 h-3" />
           {getTimeRemaining(product.endTime)}
         </div>
 
         {/* New Badge */}
-        {product.isNew && (
+        {isProductNew() && (
           <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground shadow-lg">
             MỚI
           </Badge>
@@ -267,7 +281,10 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
       {/* Content Section */}
       <div className="p-4 space-y-3">
         {/* Title */}
-        <h3 className="text-base font-semibold text-foreground line-clamp-2 min-h-[3rem] leading-tight">
+        <h3
+          title={product.title}
+          className="text-base font-semibold text-foreground line-clamp-2 min-h-[2.5rem] leading-tight"
+        >
           {product.title}
         </h3>
 
