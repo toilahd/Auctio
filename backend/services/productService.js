@@ -9,21 +9,21 @@ class ProductService {
    * Search products with full-text search (Vietnamese accent-insensitive)
    */
   async searchProducts({
-    searchQuery,
-    categoryId,
-    page = 1,
-    limit = 20,
-    sortBy = 'endTime',
-    order = 'desc',
-    highlightMinutes = 30
-  }) {
+                         searchQuery,
+                         categoryId,
+                         page = 1,
+                         limit = 20,
+                         sortBy = 'endTime',
+                         order = 'desc',
+                         highlightMinutes = 30
+                       }) {
     try {
       const skip = (page - 1) * limit;
       const where = {
         status: 'ACTIVE'
       };
 
-
+      // Search query filter
       if (searchQuery) {
         where.OR = [
           {
@@ -41,9 +41,23 @@ class ProductService {
         ];
       }
 
-      // Category filter
+      // Category filter - handle both parent and child categories
       if (categoryId) {
-        where.categoryId = categoryId;
+        // Check if this category has subcategories (is a parent)
+        const subcategories = await prisma.category.findMany({
+          where: {
+            parentId: categoryId
+          },
+          select: { id: true }
+        });
+
+        // If it has subcategories, search in parent + all subcategories
+        // If it doesn't, just search in this category
+        const categoryIds = subcategories.length > 0
+            ? [categoryId, ...subcategories.map(cat => cat.id)]
+            : [categoryId];
+
+        where.categoryId = { in: categoryIds };
       }
 
       // Build orderBy
@@ -136,6 +150,7 @@ class ProductService {
       throw error;
     }
   }
+
 
   /**
    * Get product by ID with full details
@@ -399,8 +414,6 @@ class ProductService {
       throw error;
     }
   }
-
-
 }
 
 export default new ProductService();
