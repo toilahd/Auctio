@@ -383,7 +383,78 @@ class ProductService {
       logger.error('Error getting products by category:', error);
       throw error;
     }
+  }async getProductsByParentCategory(parentCategoryId, page = 1, limit = 20) {
+    try {
+      const skip = (page - 1) * limit;
+
+      // First, get all subcategories under the parent category
+      const subcategories = await prisma.category.findMany({
+        where: {
+          parentId: parentCategoryId
+        },
+        select: { id: true }
+      });
+
+      // Include both parent category and all subcategories
+      const categoryIds = [
+        parentCategoryId,
+        ...subcategories.map(cat => cat.id)
+      ];
+
+      // Get products from parent category AND all subcategories
+      const [products, total] = await Promise.all([
+        prisma.product.findMany({
+          where: {
+            categoryId: { in: categoryIds },
+            status: 'ACTIVE'
+          },
+          skip,
+          take: limit,
+          orderBy: { endTime: 'asc' },
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            currentWinner: {
+              select: {
+                id: true,
+                fullName: true
+              }
+            },
+            _count: {
+              select: {
+                bids: true
+              }
+            }
+          }
+        }),
+        prisma.product.count({
+          where: {
+            categoryId: { in: categoryIds },
+            status: 'ACTIVE'
+          }
+        })
+      ]);
+
+      return {
+        products: products.map(p => ({ ...p, bidCount: p._count.bids })),
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          hasMore: skip + products.length < total
+        }
+      };
+    } catch (error) {
+      logger.error("Error in getProductsByParentCategory service:", error);
+      throw error;
+    }
   }
+
 }
 
 export default new ProductService();

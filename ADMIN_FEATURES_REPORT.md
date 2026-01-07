@@ -183,24 +183,28 @@ This report documents the current state of admin functionality in the Auctio pla
    - **Use Existing:** `/api/admin/dashboard/product-growth?days=30`
    - **Frontend Work:** Add chart library (e.g., Recharts) and visualize growth data
 
-7. **System Settings**
-   - **Endpoint Needed:** `GET /api/admin/settings`
-   - **Endpoint Needed:** `PUT /api/admin/settings`
-   - **Use Case:** Configure platform-wide settings (commission rates, policies, etc.)
-
-8. **Notifications/Announcements**
+7. **Notifications/Announcements**
    - **Endpoint Needed:** `GET /api/admin/announcements`
    - **Endpoint Needed:** `POST /api/admin/announcements`
    - **Use Case:** Send platform-wide announcements to users
 
+7. **System Settings** ⭐ HIGH PRIORITY
+   - **Endpoint Needed:** `GET /api/settings` - Get all settings (admin only)
+   - **Endpoint Needed:** `GET /api/settings/public` - Get public settings
+   - **Endpoint Needed:** `GET /api/settings/{key}` - Get specific setting
+   - **Endpoint Needed:** `PUT /api/settings/{key}` - Update setting
+   - **Endpoint Needed:** `POST /api/settings/bulk-update` - Update multiple settings
+   - **Use Case:** Configure platform-wide settings (auto-extend times, rating thresholds, commission rates, etc.)
+   - **See:** `SYSTEM_SETTINGS_PROPOSAL.md` for detailed design
+
 ### Low Priority
 
-9. **Bulk Operations**
+8. **Bulk Operations**
    - **Endpoint Needed:** `POST /api/admin/products/bulk-remove`
    - **Endpoint Needed:** `POST /api/admin/users/bulk-delete`
    - **Use Case:** Manage multiple items at once
 
-10. **Export Data**
+9. **Export Data**
     - **Endpoint Needed:** `GET /api/admin/export/users?format=csv`
     - **Endpoint Needed:** `GET /api/admin/export/products?format=csv`
     - **Use Case:** Export data for reporting/analysis
