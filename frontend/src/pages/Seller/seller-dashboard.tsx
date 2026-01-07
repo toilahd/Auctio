@@ -11,6 +11,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useState, useEffect } from "react";
 import {
   Gavel,
@@ -55,6 +64,11 @@ const SellerDashboardPage = () => {
   const [ratingType, setRatingType] = useState<1 | -1 | null>(null);
   const [ratingComment, setRatingComment] = useState("");
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [activePage, setActivePage] = useState(1);
+  const [endedPage, setEndedPage] = useState(1);
+  const [activeTotalPages, setActiveTotalPages] = useState(1);
+  const [endedTotalPages, setEndedTotalPages] = useState(1);
+  const itemsPerPage = 10;
   const [stats, setStats] = useState({
     activeAuctions: 0,
     totalSold: 0,
@@ -71,14 +85,14 @@ const SellerDashboardPage = () => {
 
         // Fetch active products
         const activeResponse = await fetch(
-          `${BACKEND_URL}/api/seller/products/active?page=1&limit=20`,
+          `${BACKEND_URL}/api/seller/products/active?page=${activePage}&limit=${itemsPerPage}`,
           { credentials: "include" }
         );
         const activeData = await activeResponse.json();
 
         // Fetch completed products
         const completedResponse = await fetch(
-          `${BACKEND_URL}/api/seller/products/completed?page=1&limit=20`,
+          `${BACKEND_URL}/api/seller/products/completed?page=${endedPage}&limit=${itemsPerPage}`,
           { credentials: "include" }
         );
         const completedData = await completedResponse.json();
@@ -97,6 +111,12 @@ const SellerDashboardPage = () => {
             watchers: p._count?.watchLists || 0,
           }));
           setActiveProducts(formattedActive);
+          setActiveTotalPages(
+            Math.ceil(
+              (activeData.data.total || activeData.data.products.length) /
+                itemsPerPage
+            )
+          );
         }
 
         if (completedData.success && completedData.data) {
@@ -118,26 +138,35 @@ const SellerDashboardPage = () => {
             })
           );
           setEndedProducts(formattedCompleted);
+          setEndedTotalPages(
+            Math.ceil(
+              (completedData.data.total || completedData.data.products.length) /
+                itemsPerPage
+            )
+          );
 
-          // Calculate stats
-          const totalSold = completedData.data.products.filter(
-            (p: any) => p.currentWinnerId
-          ).length;
-          const totalRevenue = completedData.data.products
-            .filter((p: any) => p.currentWinnerId)
-            .reduce((sum: number, p: any) => sum + p.currentPrice, 0);
+          // Calculate stats (only once when on first page)
+          if (endedPage === 1 && activePage === 1) {
+            const totalSold = completedData.data.products.filter(
+              (p: any) => p.currentWinnerId
+            ).length;
+            const totalRevenue = completedData.data.products
+              .filter((p: any) => p.currentWinnerId)
+              .reduce((sum: number, p: any) => sum + p.currentPrice, 0);
 
-          setStats({
-            activeAuctions: activeData.data.products.length,
-            totalSold,
-            totalRevenue,
-            averageRating: 0, // Not calculated yet
-            totalViews: 0, // Not available in backend
-            totalWatchers: activeData.data.products.reduce(
-              (sum: number, p: any) => sum + (p._count?.watchLists || 0),
-              0
-            ),
-          });
+            setStats({
+              activeAuctions:
+                activeData.data.total || activeData.data.products.length,
+              totalSold,
+              totalRevenue,
+              averageRating: 0, // Not calculated yet
+              totalViews: 0, // Not available in backend
+              totalWatchers: activeData.data.products.reduce(
+                (sum: number, p: any) => sum + (p._count?.watchLists || 0),
+                0
+              ),
+            });
+          }
         }
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -147,7 +176,7 @@ const SellerDashboardPage = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [activePage, endedPage]);
 
   const handleOpenRatingModal = (product: Product) => {
     setSelectedProduct(product);
@@ -280,7 +309,8 @@ const SellerDashboardPage = () => {
       },
       ENDED: {
         text: "Chờ thanh toán",
-        color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400",
+        color:
+          "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400",
       },
       PAYED: {
         text: "Đã thanh toán",
@@ -297,6 +327,15 @@ const SellerDashboardPage = () => {
 
   const currentProducts =
     activeTab === "active" ? activeProducts : endedProducts;
+  const currentPage = activeTab === "active" ? activePage : endedPage;
+  const totalPages =
+    activeTab === "active" ? activeTotalPages : endedTotalPages;
+  const setCurrentPage = activeTab === "active" ? setActivePage : setEndedPage;
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   if (isLoading) {
     return (
@@ -590,8 +629,10 @@ const SellerDashboardPage = () => {
                                     Q&A
                                   </Button>
                                 </>
-                              ) : product.status === "ENDED" || product.status === "PAYED" || 
-                                 product.status === "SHIPPING" || product.status === "DELIVERED" ? (
+                              ) : product.status === "ENDED" ||
+                                product.status === "PAYED" ||
+                                product.status === "SHIPPING" ||
+                                product.status === "DELIVERED" ? (
                                 <div className="flex items-center gap-2">
                                   <Button
                                     variant="default"
@@ -602,18 +643,19 @@ const SellerDashboardPage = () => {
                                   >
                                     Quản lý đơn hàng
                                   </Button>
-                                  {!product.hasRated && product.status === "ENDED" && (
-                                    <Button
-                                      variant="destructive"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleOpenCancelModal(product)
-                                      }
-                                    >
-                                      <XCircle className="w-4 h-4 mr-1" />
-                                      Hủy
-                                    </Button>
-                                  )}
+                                  {!product.hasRated &&
+                                    product.status === "ENDED" && (
+                                      <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleOpenCancelModal(product)
+                                        }
+                                      >
+                                        <XCircle className="w-4 h-4 mr-1" />
+                                        Hủy
+                                      </Button>
+                                    )}
                                 </div>
                               ) : (
                                 <Button
@@ -635,6 +677,113 @@ const SellerDashboardPage = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage > 1) handlePageChange(currentPage - 1);
+                          }}
+                          className={
+                            currentPage === 1
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        />
+                      </PaginationItem>
+
+                      {/* First page */}
+                      {currentPage > 2 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(1);
+                              }}
+                            >
+                              1
+                            </PaginationLink>
+                          </PaginationItem>
+                          {currentPage > 3 && (
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )}
+                        </>
+                      )}
+
+                      {/* Current page and neighbors */}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(
+                          (page) =>
+                            page === currentPage ||
+                            page === currentPage - 1 ||
+                            page === currentPage + 1
+                        )
+                        .map((page) => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(page);
+                              }}
+                              isActive={page === currentPage}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+
+                      {/* Last page */}
+                      {currentPage < totalPages - 1 && (
+                        <>
+                          {currentPage < totalPages - 2 && (
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )}
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(totalPages);
+                              }}
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage < totalPages)
+                              handlePageChange(currentPage + 1);
+                          }}
+                          className={
+                            currentPage === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
