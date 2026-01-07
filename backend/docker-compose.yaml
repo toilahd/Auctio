@@ -1,3 +1,4 @@
+name: Auctio
 services:
   postgres:
     image: postgres:15
