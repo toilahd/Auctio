@@ -440,10 +440,7 @@ const ProductDetailPage = () => {
             </Card>
 
             {/* Bid History */}
-            <BidHistoryList
-              productId={product.id}
-              productStatus={product.status}
-            />
+            <BidHistoryList productId={product.id} productStatus={product.status} />
           </div>
 
           {/* Right: Product Info & Actions */}
@@ -519,10 +516,7 @@ const ProductDetailPage = () => {
               </div>
 
               {/* Current Winner - Real-time */}
-              <CurrentWinnerDisplay
-                productId={product.id}
-                productStatus={product.status}
-              />
+              <CurrentWinnerDisplay productId={product.id} productStatus={product.status} />
 
               {/* Seller Info */}
               {product.seller && (
@@ -640,7 +634,7 @@ const ProductDetailPage = () => {
                       }}
                     />
 
-                    {product.buyNowPrice && user && (
+                    {product.buyNowPrice && (
                       <Button variant="secondary" className="w-full" size="lg">
                         <Tag className="w-4 h-4 mr-2" />
                         Mua ngay -{" "}
@@ -648,22 +642,20 @@ const ProductDetailPage = () => {
                       </Button>
                     )}
 
-                    {user && (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        size="lg"
-                        onClick={handleWatchlistToggle}
-                        disabled={isTogglingWatchlist}
-                      >
-                        <Heart
-                          className={`w-4 h-4 mr-2 ${
-                            isInWatchlist ? "fill-red-500 text-red-500" : ""
-                          }`}
-                        />
-                        {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                      onClick={handleWatchlistToggle}
+                      disabled={isTogglingWatchlist}
+                    >
+                      <Heart
+                        className={`w-4 h-4 mr-2 ${
+                          isInWatchlist ? "fill-red-500 text-red-500" : ""
+                        }`}
+                      />
+                      {isInWatchlist ? "Đã theo dõi" : "Theo dõi sản phẩm"}
+                    </Button>
                   </div>
                 )}
 

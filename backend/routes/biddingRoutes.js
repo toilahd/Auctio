@@ -8,14 +8,14 @@ import { authenticateToken } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 // All routes require authentication
-// router.use(authenticateToken);
+router.use(authenticateToken);
 
 /**
  * @route   POST /api/bids
  * @desc    Place a bid on a product
  * @access  Private (Bidder)
  */
-router.post('/', authenticateToken, biddingController.placeBid.bind(biddingController));
+router.post('/', biddingController.placeBid.bind(biddingController));
 
 /**
  * @route   GET /api/bids/product/:productId
@@ -36,7 +36,7 @@ router.get('/product/:productId/winner', biddingController.getCurrentWinner.bind
  * @desc    Check if user can bid on product
  * @access  Private
  */
-router.get('/product/:productId/can-bid', authenticateToken, biddingController.canUserBid.bind(biddingController));
+router.get('/product/:productId/can-bid', biddingController.canUserBid.bind(biddingController));
 
 export default router;
 

@@ -11,11 +11,11 @@ export async function fetchAPI(url: string, options: RequestInit = {}) {
   });
 
   // Handle 401 Unauthorized - session expired
-  // if (response.status === 401) {
-  //   // Redirect to login page
-  //   window.location.href = '/log-in';
-  //   throw new Error('Session expired. Please login again.');
-  // }
+  if (response.status === 401) {
+    // Redirect to login page
+    window.location.href = '/log-in';
+    throw new Error('Session expired. Please login again.');
+  }
 
   return response;
 }
