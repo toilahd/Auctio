@@ -142,30 +142,7 @@ class ProductController {
       });
     }
   }
-  async getProductsByParentCategory(req, res) {
-    try {
-      const { parentCategoryId } = req.params;
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 20;
 
-      const result = await productService.getProductsByParentCategory(
-          parentCategoryId, // Don't parse this - keep it as string
-          page,
-          limit
-      );
-
-      res.json({
-        success: true,
-        data: result
-      });
-    } catch (error) {
-      logger.error('Error in getProductsByParentCategory controller:', error);
-      res.status(500).json({
-        success: false,
-        message: error.message || 'Failed to get products by parent category'
-      });
-    }
-  }
 
 }
 

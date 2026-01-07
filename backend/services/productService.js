@@ -327,15 +327,30 @@ class ProductService {
 
   /**
    * Get products by category with pagination
+   * Works for both parent and child categories
    */
   async getProductsByCategory(categoryId, page = 1, limit = 20) {
     try {
       const skip = (page - 1) * limit;
 
+      // Check if this category has subcategories (is a parent)
+      const subcategories = await prisma.category.findMany({
+        where: {
+          parentId: categoryId
+        },
+        select: { id: true }
+      });
+
+      // If it has subcategories, search in parent + all subcategories
+      // If it doesn't, just search in this category
+      const categoryIds = subcategories.length > 0
+          ? [categoryId, ...subcategories.map(cat => cat.id)]
+          : [categoryId];
+
       const [products, total] = await Promise.all([
         prisma.product.findMany({
           where: {
-            categoryId,
+            categoryId: { in: categoryIds },
             status: 'ACTIVE'
           },
           skip,
@@ -363,7 +378,7 @@ class ProductService {
         }),
         prisma.product.count({
           where: {
-            categoryId,
+            categoryId: { in: categoryIds },
             status: 'ACTIVE'
           }
         })
@@ -383,77 +398,8 @@ class ProductService {
       logger.error('Error getting products by category:', error);
       throw error;
     }
-  }async getProductsByParentCategory(parentCategoryId, page = 1, limit = 20) {
-    try {
-      const skip = (page - 1) * limit;
-
-      // First, get all subcategories under the parent category
-      const subcategories = await prisma.category.findMany({
-        where: {
-          parentId: parentCategoryId
-        },
-        select: { id: true }
-      });
-
-      // Include both parent category and all subcategories
-      const categoryIds = [
-        parentCategoryId,
-        ...subcategories.map(cat => cat.id)
-      ];
-
-      // Get products from parent category AND all subcategories
-      const [products, total] = await Promise.all([
-        prisma.product.findMany({
-          where: {
-            categoryId: { in: categoryIds },
-            status: 'ACTIVE'
-          },
-          skip,
-          take: limit,
-          orderBy: { endTime: 'asc' },
-          include: {
-            category: {
-              select: {
-                id: true,
-                name: true
-              }
-            },
-            currentWinner: {
-              select: {
-                id: true,
-                fullName: true
-              }
-            },
-            _count: {
-              select: {
-                bids: true
-              }
-            }
-          }
-        }),
-        prisma.product.count({
-          where: {
-            categoryId: { in: categoryIds },
-            status: 'ACTIVE'
-          }
-        })
-      ]);
-
-      return {
-        products: products.map(p => ({ ...p, bidCount: p._count.bids })),
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-          hasMore: skip + products.length < total
-        }
-      };
-    } catch (error) {
-      logger.error("Error in getProductsByParentCategory service:", error);
-      throw error;
-    }
   }
+
 
 }
 

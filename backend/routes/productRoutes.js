@@ -32,12 +32,7 @@ router.get('/top/:criteria', productController.getTopProducts);
  */
 router.get('/category/:categoryId', productController.getProductsByCategory);
 
-/**
- * GET /api/products/parent-category/:parentCategoryId
- * Get products by parent category (includes all subcategories)
- * Query params: page, limit
- */
-router.get('/parent-category/:parentCategoryId', productController.getProductsByParentCategory);
+
 
 /**
  * GET /api/products/:id
