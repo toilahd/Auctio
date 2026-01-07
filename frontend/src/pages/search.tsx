@@ -424,7 +424,7 @@ export default function SearchPage() {
                         <SelectItem
                           key={cat.value}
                           value={cat.value}
-                          disabled={cat.isParent}
+                          // disabled={cat.isParent}
                         >
                           <span
                             style={{
