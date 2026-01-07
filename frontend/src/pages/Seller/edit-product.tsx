@@ -178,7 +178,7 @@ const EditProductPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div
-                    className="prose dark:prose-invert max-w-none"
+                    className="des prose dark:prose-invert max-w-none"
                     dangerouslySetInnerHTML={{
                       __html: product.description,
                     }}

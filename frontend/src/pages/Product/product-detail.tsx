@@ -431,7 +431,7 @@ const ProductDetailPage = () => {
               </h2>
               {product.description ? (
                 <div
-                  className="prose prose-sm dark:prose-invert max-w-none"
+                  className="des prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
               ) : (
