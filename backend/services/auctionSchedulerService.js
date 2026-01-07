@@ -1,6 +1,7 @@
 // services/auctionSchedulerService.js
 import prisma from '../config/prisma.js';
 import { getLogger } from '../config/logger.js';
+import emailNotificationService from './emailNotificationService.js';
 
 const logger = getLogger('AuctionScheduler');
 
@@ -21,12 +22,21 @@ class AuctionSchedulerService {
             lt: now
           }
         },
-        select: {
-          id: true,
-          title: true,
-          endTime: true,
-          currentWinnerId: true,
-          currentPrice: true
+        include: {
+          seller: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true
+            }
+          },
+          currentWinner: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true
+            }
+          }
         }
       });
 
@@ -51,9 +61,26 @@ class AuctionSchedulerService {
 
       logger.info(`Closed ${result.count} expired auctions`);
 
-      // Log each closed auction
+      // Log each closed auction and send email notifications
       for (const product of expiredProducts) {
         logger.info(`Closed auction: ${product.id} - "${product.title}" (Winner: ${product.currentWinnerId || 'none'})`);
+
+        // Send email notifications asynchronously
+        setImmediate(() => {
+          if (product.currentWinnerId && product.currentWinner) {
+            // Auction ended with a winner
+            emailNotificationService.notifyAuctionEndedWithWinner({
+              product,
+              winner: product.currentWinner,
+              finalPrice: product.currentPrice
+            });
+          } else {
+            // Auction ended without any bidders
+            emailNotificationService.notifyAuctionEndedNoBidders({
+              product
+            });
+          }
+        });
       }
 
       return {

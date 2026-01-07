@@ -32,8 +32,6 @@ router.get('/top/:criteria', productController.getTopProducts);
  */
 router.get('/category/:categoryId', productController.getProductsByCategory);
 
-
-
 /**
  * GET /api/products/:id
  * Get product by ID

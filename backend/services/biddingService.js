@@ -2,6 +2,7 @@
 import prisma from '../config/prisma.js';
 import { getLogger } from '../config/logger.js';
 import AuctionSettingsService from './auctionSettingsService.js';
+import emailNotificationService from './emailNotificationService.js';
 
 const logger = getLogger('BiddingService');
 
@@ -168,6 +169,30 @@ class BiddingService {
           }
         });
 
+        // Fetch complete data for email notification
+        const productWithDetails = await tx.product.findUnique({
+          where: { id: productId },
+          include: {
+            seller: {
+              select: { id: true, fullName: true, email: true }
+            }
+          }
+        });
+
+        const winnerDetails = await tx.user.findUnique({
+          where: { id: bidderId },
+          select: { id: true, fullName: true, email: true }
+        });
+
+        // Send auction ended email notifications asynchronously
+        setImmediate(() => {
+          emailNotificationService.notifyAuctionEndedWithWinner({
+            product: productWithDetails,
+            winner: winnerDetails,
+            finalPrice: buyNowPrice
+          });
+        });
+
         return {
           success: true,
           winnerId: bidderId,
@@ -195,6 +220,31 @@ class BiddingService {
             currentWinnerId: bidderId,
             bidCount: { increment: 1 }
           }
+        });
+
+        // Fetch complete data for email notification (after transaction)
+        const productWithDetails = await tx.product.findUnique({
+          where: { id: productId },
+          include: {
+            seller: {
+              select: { id: true, fullName: true, email: true }
+            }
+          }
+        });
+
+        const newBidderDetails = await tx.user.findUnique({
+          where: { id: bidderId },
+          select: { id: true, fullName: true, email: true }
+        });
+
+        // Send email notifications asynchronously (after transaction commits)
+        setImmediate(() => {
+          emailNotificationService.notifyBidPlaced({
+            product: productWithDetails,
+            newBidder: newBidderDetails,
+            newPrice: product.startPrice,
+            previousWinner: null
+          });
         });
 
         return {
@@ -245,6 +295,36 @@ class BiddingService {
 
         logger.info(`Auto-extended product ${productId} by ${settings.autoExtendDuration} minutes`);
       }
+
+      // Fetch complete data for email notification
+      const productWithDetails = await tx.product.findUnique({
+        where: { id: productId },
+        include: {
+          seller: {
+            select: { id: true, fullName: true, email: true }
+          }
+        }
+      });
+
+      const newBidderDetails = await tx.user.findUnique({
+        where: { id: bidderId },
+        select: { id: true, fullName: true, email: true }
+      });
+
+      const previousWinnerDetails = product.currentWinnerId ? await tx.user.findUnique({
+        where: { id: product.currentWinnerId },
+        select: { id: true, fullName: true, email: true }
+      }) : null;
+
+      // Send email notifications asynchronously (after transaction commits)
+      setImmediate(() => {
+        emailNotificationService.notifyBidPlaced({
+          product: productWithDetails,
+          newBidder: newBidderDetails,
+          newPrice: resolved.finalPrice,
+          previousWinner: previousWinnerDetails
+        });
+      });
 
       return {
         success: true,
