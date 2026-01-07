@@ -83,7 +83,10 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>{error}</AlertDescription>
+        <AlertDescription>
+          {/* {error} */}
+          Đã có lỗi xảy ra khi tải lịch sử đấu giá. Vui lòng thử lại sau.
+          </AlertDescription>
       </Alert>
     );
   }
