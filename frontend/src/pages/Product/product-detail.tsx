@@ -108,6 +108,7 @@ const ProductDetailPage = () => {
     null
   );
   const [countdown, setCountdown] = useState<string>("");
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -119,6 +120,10 @@ const ProductDetailPage = () => {
         const data = await response.json();
         if (data.success) {
           setProduct(data.data);
+          // Fetch related products from same category
+          if (data.data.category?.id) {
+            fetchRelatedProducts(data.data.category.id);
+          }
         } else {
           setError("Không thể tải sản phẩm");
         }
@@ -145,6 +150,22 @@ const ProductDetailPage = () => {
       }
     } catch (error) {
       console.error("Error fetching questions:", error);
+    }
+  };
+
+  const fetchRelatedProducts = async (parentCategoryId: string) => {
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/category/${parentCategoryId}?page=1&limit=5`
+      );
+      const data = await response.json();
+      if (data.success && data.data.products) {
+        // Filter out the current product
+        const filtered = data.data.products.filter((p: any) => p.id !== id);
+        setRelatedProducts(filtered.slice(0, 4)); // Take max 4 related products
+      }
+    } catch (error) {
+      console.error("Error fetching related products:", error);
     }
   };
 
@@ -923,6 +944,59 @@ const ProductDetailPage = () => {
             </div>
           </Card>
         </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              Sản phẩm liên quan
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map((relatedProduct) => (
+                <Card
+                  key={relatedProduct.id}
+                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/product/${relatedProduct.id}`)}
+                >
+                  <div className="aspect-square bg-muted overflow-hidden">
+                    <img
+                      src={
+                        relatedProduct.images?.[0] ||
+                        "https://via.placeholder.com/300"
+                      }
+                      alt={relatedProduct.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-foreground line-clamp-2 mb-2 min-h-[3rem]">
+                      {relatedProduct.title}
+                    </h3>
+                    <div className="text-lg font-bold text-primary mb-2">
+                      {formatPrice(parseFloat(relatedProduct.currentPrice))}
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Hammer className="w-3.5 h-3.5" />
+                        <span>{relatedProduct._count?.bids || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {(() => {
+                          const timeLeft = getRelativeTime(
+                            relatedProduct.endTime
+                          );
+                          if (timeLeft === "Đã kết thúc") return "Đã kết thúc";
+                          return timeLeft.replace(" nữa", "");
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />
