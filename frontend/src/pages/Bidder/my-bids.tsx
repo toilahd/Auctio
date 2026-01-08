@@ -2,110 +2,102 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom"
-import { useState } from "react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
-interface Bid {
+interface Product {
   id: string;
-  productId: string;
-  productTitle: string;
-  productImage: string;
-  myMaxBid: number;
-  currentPrice: number;
-  totalBids: number;
+  title: string;
+  images: string[];
+  currentPrice: string;
+  status: string;
   endTime: string;
+  category: {
+    id: string;
+    name: string;
+  };
+  currentWinner: {
+    id: string;
+    fullName: string;
+  } | null;
+  _count: {
+    bids: number;
+  };
   isWinning: boolean;
-  isOutbid: boolean;
-  seller: string;
-  buyNowPrice?: number;
+  buyNowPrice?: string;
 }
 
 const MyBidsPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"active" | "won" | "lost">("active");
+  const [activeTab, setActiveTab] = useState<"active" | "won" | "lost">(
+    "active"
+  );
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+    hasMore: false,
+  });
 
-  // Mock data - TODO: Fetch from backend
-  const activeBids: Bid[] = [
-    {
-      id: "b1",
-      productId: "1",
-      productTitle: "iPhone 15 Pro Max 256GB - Nguyên seal, chưa kích hoạt",
-      productImage: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500",
-      myMaxBid: 25000000,
-      currentPrice: 25000000,
-      totalBids: 45,
-      endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-      isWinning: true,
-      isOutbid: false,
-      seller: "TechStore VN",
-      buyNowPrice: 30000000,
-    },
-    {
-      id: "b2",
-      productId: "7",
-      productTitle: "Rolex Submariner Date 126610LN - Fullbox 2023",
-      productImage: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=500",
-      myMaxBid: 248000000,
-      currentPrice: 250000000,
-      totalBids: 98,
-      endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-      isWinning: false,
-      isOutbid: true,
-      seller: "Luxury Watches",
-    },
-    {
-      id: "b3",
-      productId: "8",
-      productTitle: "PlayStation 5 Slim + 2 tay cầm + 5 game AAA",
-      productImage: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=500",
-      myMaxBid: 15000000,
-      currentPrice: 15000000,
-      totalBids: 86,
-      endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      isWinning: true,
-      isOutbid: false,
-      seller: "GameHub",
-      buyNowPrice: 18000000,
-    },
-  ];
+  const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  const wonBids: Bid[] = [
-    {
-      id: "w1",
-      productId: "101",
-      productTitle: "MacBook Air M2 2023 - 256GB Space Gray",
-      productImage: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500",
-      myMaxBid: 20000000,
-      currentPrice: 20000000,
-      totalBids: 52,
-      endTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      isWinning: true,
-      isOutbid: false,
-      seller: "Apple Store HN",
-    },
-  ];
+  useEffect(() => {
+    fetchBiddingProducts();
+  }, [pagination.page]);
 
-  const lostBids: Bid[] = [
-    {
-      id: "l1",
-      productId: "201",
-      productTitle: "Samsung Galaxy S24 Ultra 512GB - Bản Hàn",
-      productImage: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=500",
-      myMaxBid: 21000000,
-      currentPrice: 22500000,
-      totalBids: 67,
-      endTime: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      isWinning: false,
-      isOutbid: true,
-      seller: "Samsung Official",
-    },
-  ];
+  const fetchBiddingProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/users/bidding-products?page=${pagination.page}&limit=${pagination.limit}`,
+        {
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setProducts(data.data.products);
+        setPagination(data.data.pagination);
+      }
+    } catch (error) {
+      console.error("Error fetching bidding products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const formatPrice = (price: number) => {
+  // Filter products based on active tab
+  const filteredProducts = products.filter((product) => {
+    if (activeTab === "active") {
+      return product.status === "ACTIVE";
+    } else if (activeTab === "won") {
+      return product.status !== "ACTIVE" && product.isWinning;
+    } else {
+      // lost
+      return product.status !== "ACTIVE" && !product.isWinning;
+    }
+  });
+
+  const formatPrice = (price: string | number) => {
+    const numPrice = typeof price === "string" ? parseFloat(price) : price;
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
-    }).format(price);
+    }).format(numPrice);
   };
 
   const getTimeRemaining = (endTime: string) => {
@@ -124,24 +116,30 @@ const MyBidsPage = () => {
     return `${minutes} phút`;
   };
 
-  const getBidStatus = (bid: Bid) => {
+  const getBidStatus = (product: Product) => {
     if (activeTab === "won") {
-      return { text: "Thắng đấu giá", color: "text-green-600 bg-green-50 dark:bg-green-950/20" };
+      return {
+        text: "Thắng đấu giá",
+        color: "text-green-600 bg-green-50 dark:bg-green-950/20",
+      };
     }
     if (activeTab === "lost") {
-      return { text: "Thua đấu giá", color: "text-red-600 bg-red-50 dark:bg-red-950/20" };
+      return {
+        text: "Thua đấu giá",
+        color: "text-red-600 bg-red-50 dark:bg-red-950/20",
+      };
     }
-    if (bid.isWinning) {
-      return { text: "Đang dẫn đầu", color: "text-green-600 bg-green-50 dark:bg-green-950/20" };
+    if (product.isWinning) {
+      return {
+        text: "Đang dẫn đầu",
+        color: "text-green-600 bg-green-50 dark:bg-green-950/20",
+      };
     }
-    if (bid.isOutbid) {
-      return { text: "Bị vượt giá", color: "text-red-600 bg-red-50 dark:bg-red-950/20" };
-    }
-    return { text: "Đang tham gia", color: "text-blue-600 bg-blue-50 dark:bg-blue-950/20" };
+    return {
+      text: "Đang tham gia",
+      color: "text-blue-600 bg-blue-50 dark:bg-blue-950/20",
+    };
   };
-
-  const currentBids =
-    activeTab === "active" ? activeBids : activeTab === "won" ? wonBids : lostBids;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950">
@@ -172,7 +170,7 @@ const MyBidsPage = () => {
               >
                 Đang đấu giá
                 <span className="ml-2 px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                  {activeBids.length}
+                  {products.filter((p) => p.status === "ACTIVE").length}
                 </span>
               </button>
               <button
@@ -185,7 +183,10 @@ const MyBidsPage = () => {
               >
                 Đã thắng
                 <span className="ml-2 px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-950/20 text-green-600">
-                  {wonBids.length}
+                  {
+                    products.filter((p) => p.status !== "ACTIVE" && p.isWinning)
+                      .length
+                  }
                 </span>
               </button>
               <button
@@ -198,27 +199,38 @@ const MyBidsPage = () => {
               >
                 Đã thua
                 <span className="ml-2 px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600">
-                  {lostBids.length}
+                  {
+                    products.filter(
+                      (p) => p.status !== "ACTIVE" && !p.isWinning
+                    ).length
+                  }
                 </span>
               </button>
             </div>
           </div>
 
           {/* Bids List */}
-          {currentBids.length > 0 ? (
+          {loading ? (
+            <div className="flex justify-center items-center py-16">
+              <Loader2 className="w-12 h-12 animate-spin text-primary" />
+            </div>
+          ) : filteredProducts.length > 0 ? (
             <div className="space-y-4">
-              {currentBids.map((bid) => {
-                const status = getBidStatus(bid);
+              {filteredProducts.map((product) => {
+                const status = getBidStatus(product);
                 return (
-                  <Card key={bid.id}>
+                  <Card key={product.id}>
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row gap-6">
                         {/* Product Image */}
                         <div className="flex-shrink-0">
-                          <a href={`/product/${bid.productId}`}>
+                          <a href={`/product/${product.id}`}>
                             <img
-                              src={bid.productImage}
-                              alt={bid.productTitle}
+                              src={
+                                product.images[0] ||
+                                "https://via.placeholder.com/300"
+                              }
+                              alt={product.title}
                               className="w-full md:w-48 h-48 object-cover rounded-lg hover:opacity-90 transition"
                             />
                           </a>
@@ -228,33 +240,25 @@ const MyBidsPage = () => {
                         <div className="flex-1 space-y-4">
                           <div>
                             <a
-                              href={`/product/${bid.productId}`}
+                              href={`/product/${product.id}`}
                               className="text-xl font-bold text-gray-900 dark:text-white hover:text-primary transition"
                             >
-                              {bid.productTitle}
+                              {product.title}
                             </a>
                             <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                              <span>Người bán: {bid.seller}</span>
+                              <span>Danh mục: {product.category.name}</span>
                               <span>•</span>
-                              <span>{bid.totalBids} lượt đấu giá</span>
+                              <span>{product._count.bids} lượt đấu giá</span>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                Giá đấu của bạn
-                              </div>
-                              <div className="text-lg font-bold text-gray-900 dark:text-white">
-                                {formatPrice(bid.myMaxBid)}
-                              </div>
-                            </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                                 Giá hiện tại
                               </div>
                               <div className="text-lg font-bold text-primary">
-                                {formatPrice(bid.currentPrice)}
+                                {formatPrice(product.currentPrice)}
                               </div>
                             </div>
                             <div>
@@ -262,7 +266,7 @@ const MyBidsPage = () => {
                                 Thời gian còn lại
                               </div>
                               <div className="text-lg font-bold text-gray-900 dark:text-white">
-                                {getTimeRemaining(bid.endTime)}
+                                {getTimeRemaining(product.endTime)}
                               </div>
                             </div>
                           </div>
@@ -277,24 +281,25 @@ const MyBidsPage = () => {
                             <div className="flex gap-2">
                               {activeTab === "active" && (
                                 <>
-                                  {bid.isOutbid && (
+                                  {!product.isWinning && (
                                     <Button
                                       onClick={() =>
-                                        navigate(`/product/${bid.productId}`)
+                                        navigate(`/product/${product.id}`)
                                       }
                                     >
                                       Đấu giá lại
                                     </Button>
                                   )}
-                                  {bid.buyNowPrice && (
+                                  {/* {product.buyNowPrice && (
                                     <Button variant="outline">
-                                      Mua ngay {formatPrice(bid.buyNowPrice)}
+                                      Mua ngay{" "}
+                                      {formatPrice(product.buyNowPrice)}
                                     </Button>
-                                  )}
+                                  )} */}
                                   <Button
                                     variant="outline"
                                     onClick={() =>
-                                      navigate(`/product/${bid.productId}`)
+                                      navigate(`/product/${product.id}`)
                                     }
                                   >
                                     Xem chi tiết
@@ -303,17 +308,28 @@ const MyBidsPage = () => {
                               )}
                               {activeTab === "won" && (
                                 <>
-                                  <Button onClick={() => navigate(`/order/${bid.productId}`)}>
+                                  <Button
+                                    onClick={() =>
+                                      navigate(`/order/${product.id}`)
+                                    }
+                                  >
                                     Hoàn tất đơn hàng
                                   </Button>
-                                  <Button variant="outline">Liên hệ người bán</Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                      navigate(`/product/${product.id}`)
+                                    }
+                                  >
+                                    Xem chi tiết
+                                  </Button>
                                 </>
                               )}
                               {activeTab === "lost" && (
                                 <Button
                                   variant="outline"
                                   onClick={() =>
-                                    navigate(`/product/${bid.productId}`)
+                                    navigate(`/product/${product.id}`)
                                   }
                                 >
                                   Xem sản phẩm
@@ -360,6 +376,147 @@ const MyBidsPage = () => {
               </Button>
             </div>
           )}
+
+          {/* Pagination */}
+          {!loading &&
+            filteredProducts.length > 0 &&
+            pagination.totalPages > 1 && (
+              <div className="mt-8 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (pagination.page > 1) {
+                            setPagination({
+                              ...pagination,
+                              page: pagination.page - 1,
+                            });
+                          }
+                        }}
+                        className={
+                          pagination.page === 1
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+
+                    {/* First page */}
+                    {pagination.page > 2 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setPagination({ ...pagination, page: 1 });
+                            }}
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                        {pagination.page > 3 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                      </>
+                    )}
+
+                    {/* Previous page */}
+                    {pagination.page > 1 && (
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPagination({
+                              ...pagination,
+                              page: pagination.page - 1,
+                            });
+                          }}
+                        >
+                          {pagination.page - 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+
+                    {/* Current page */}
+                    <PaginationItem>
+                      <PaginationLink href="#" isActive>
+                        {pagination.page}
+                      </PaginationLink>
+                    </PaginationItem>
+
+                    {/* Next page */}
+                    {pagination.page < pagination.totalPages && (
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPagination({
+                              ...pagination,
+                              page: pagination.page + 1,
+                            });
+                          }}
+                        >
+                          {pagination.page + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+
+                    {/* Last page */}
+                    {pagination.page < pagination.totalPages - 1 && (
+                      <>
+                        {pagination.page < pagination.totalPages - 2 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                        <PaginationItem>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setPagination({
+                                ...pagination,
+                                page: pagination.totalPages,
+                              });
+                            }}
+                          >
+                            {pagination.totalPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (pagination.page < pagination.totalPages) {
+                            setPagination({
+                              ...pagination,
+                              page: pagination.page + 1,
+                            });
+                          }
+                        }}
+                        className={
+                          pagination.page === pagination.totalPages
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
         </div>
       </main>
 
