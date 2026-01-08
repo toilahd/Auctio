@@ -298,18 +298,26 @@ const ProductDetailPage = () => {
     }).format(new Date(dateString));
   };
 
-  const getRelativeTime = (endTime: string) => {
+  const getTimeComponents = (endTime: string) => {
     const end = new Date(endTime).getTime();
     const now = Date.now();
     const diff = end - now;
 
-    if (diff <= 0) return "Đã kết thúc";
+    if (diff <= 0) return null;
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
+    return { days, hours, minutes, seconds };
+  };
+
+  const getRelativeTime = (endTime: string) => {
+    const components = getTimeComponents(endTime);
+    if (!components) return "Đã kết thúc";
+
+    const { days, hours, minutes, seconds } = components;
     const parts = [];
     if (days > 0) parts.push(`${days} ngày`);
     if (hours > 0) parts.push(`${hours} giờ`);
@@ -507,15 +515,83 @@ const ProductDetailPage = () => {
                   <Clock className="w-3.5 h-3.5" />
                   Thời gian còn lại
                 </div>
-                <div className="text-2xl font-bold text-destructive">
-                  {countdown || getRelativeTime(product.endTime)}
-                </div>
-                {product.timeLeft?.isLessThan3Days &&
-                  product.status === "ACTIVE" && (
-                    <Badge variant="destructive" className="mt-2">
-                      Sắp kết thúc
-                    </Badge>
-                  )}
+                {(() => {
+                  const components = getTimeComponents(product.endTime);
+                  if (!components) {
+                    return (
+                      <div className="text-2xl font-bold text-muted-foreground">
+                        Đã kết thúc
+                      </div>
+                    );
+                  }
+
+                  const { days, hours, minutes, seconds } = components;
+                  const isLessThan3Days = days < 3;
+
+                  if (isLessThan3Days) {
+                    // Digital timer display for < 3 days
+                    const totalHours = days * 24 + hours;
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2 font-mono">
+                          <div className="flex flex-col items-center">
+                            <div className="text-4xl font-bold text-destructive tabular-nums">
+                              {String(totalHours).padStart(2, "0")}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              giờ
+                            </div>
+                          </div>
+                          <div className="text-3xl font-bold text-destructive pb-5">
+                            :
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <div className="text-4xl font-bold text-destructive tabular-nums">
+                              {String(minutes).padStart(2, "0")}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              phút
+                            </div>
+                          </div>
+                          <div className="text-3xl font-bold text-destructive pb-5">
+                            :
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <div className="text-4xl font-bold text-destructive tabular-nums">
+                              {String(seconds).padStart(2, "0")}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              giây
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground text-center">
+                          Kết thúc: {formatDate(product.endTime)}
+                        </div>
+                        {product.status === "ACTIVE" && (
+                          <Badge
+                            variant="destructive"
+                            className="w-full justify-center"
+                          >
+                            Sắp kết thúc
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  } else {
+                    // Show relative time + end date for >= 3 days
+                    return (
+                      <div className="space-y-2">
+                        <div className="text-2xl font-bold text-destructive">
+                          {getRelativeTime(product.endTime)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Kết thúc: {formatDate(product.endTime)}
+                        </div>
+                      </div>
+                    );
+                  }
+                })()}
               </div>
 
               {/* Current Winner - Real-time */}

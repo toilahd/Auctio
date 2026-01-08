@@ -166,7 +166,7 @@ const HomePage = () => {
                 Xem tất cả <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
               {endingSoon.length > 0 ? (
                 endingSoon.map((product) => (
                   <ProductCard
@@ -204,7 +204,7 @@ const HomePage = () => {
                 Xem tất cả <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
               {mostBid.length > 0 ? (
                 mostBid.map((product) => (
                   <ProductCard
@@ -242,7 +242,7 @@ const HomePage = () => {
                 Xem tất cả <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
               {highestPrice.length > 0 ? (
                 highestPrice.map((product) => (
                   <ProductCard

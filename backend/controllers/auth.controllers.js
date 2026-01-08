@@ -8,7 +8,7 @@ import { sendEmail } from "../config/email.js";
 
 const prisma = new PrismaClient();
 
-const ACCESS_TOKEN_AGE = "1h";  // Changed from 10min to 1 hour
+const ACCESS_TOKEN_AGE = "1h"; // Changed from 10min to 1 hour
 const REFRESH_TOKEN_AGE = "30d";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -203,16 +203,16 @@ export async function login(req, res) {
   // Cookie options for access token (1 hour)
   const accessCookieOptions = {
     httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
+    sameSite: "lax",
+    path: "/",
     maxAge: 60 * 60 * 1000, // 1 hour in milliseconds
   };
 
   // Cookie options for refresh token (30 days)
   const refreshCookieOptions = {
     httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
+    sameSite: "lax",
+    path: "/",
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
   };
 
@@ -283,6 +283,18 @@ export async function signup(req, res) {
     });
   }
 
+  const { email, password, fullName, address } = parseResult.data;
+
+  // Check if user already exists
+  const existingUser = await prisma.user.findFirst({
+    where: { email: email },
+  });
+
+  if (existingUser) {
+    console.log("Email already in use:", email);
+    return res.status(409).json({ message: "Email already in use" });
+  }
+
   // Verify reCAPTCHA
   try {
     const captchaResponse = parseResult.data.captcha;
@@ -307,18 +319,6 @@ export async function signup(req, res) {
   } catch (error) {
     console.log("reCAPTCHA verification failed:", error);
     return res.status(500).json({ message: "reCAPTCHA verification failed" });
-  }
-
-  const { email, password, fullName, address } = parseResult.data;
-
-  // Check if user already exists
-  const existingUser = await prisma.user.findFirst({
-    where: { email: email },
-  });
-
-  if (existingUser) {
-    console.log("Email already in use:", email);
-    return res.status(409).json({ message: "Email already in use" });
   }
 
   // Hash password
@@ -381,15 +381,15 @@ export async function signup(req, res) {
   // Cookie options (same as login)
   const accessCookieOptions = {
     httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
+    sameSite: "lax",
+    path: "/",
     maxAge: 10 * 60 * 1000, // 10 minutes
   };
 
   const refreshCookieOptions = {
     httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
+    sameSite: "lax",
+    path: "/",
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
 
@@ -655,15 +655,15 @@ export async function refreshToken(req, res) {
   // Cookie options
   const accessCookieOptions = {
     httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
+    sameSite: "lax",
+    path: "/",
     maxAge: 60 * 60 * 1000, // 1 hour
   };
 
   const refreshCookieOptions = {
     httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
+    sameSite: "lax",
+    path: "/",
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
 

@@ -44,12 +44,33 @@ export const BidForm: React.FC<BidFormProps> = ({
 
   const minBidAmount = currentPrice + stepPrice;
 
+  const formatNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const numericValue = value.replace(/\D/g, '');
+    if (!numericValue) return '';
+    
+    // Format with thousand separators
+    return parseInt(numericValue).toLocaleString('vi-VN');
+  };
+
+  const parseFormattedNumber = (value: string): number => {
+    // Remove all non-digit characters and parse
+    const numericValue = value.replace(/\D/g, '');
+    return parseInt(numericValue) || 0;
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const formatted = formatNumber(inputValue);
+    setMaxAmount(formatted);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccessMessage('');
     clearError();
 
-    const amount = parseFloat(maxAmount);
+    const amount = parseFormattedNumber(maxAmount);
 
     // Validation
     if (isNaN(amount) || amount <= 0) {
@@ -110,12 +131,10 @@ export const BidForm: React.FC<BidFormProps> = ({
             </label>
             <Input
               id="maxAmount"
-              type="number"
+              type="text"
               value={maxAmount}
-              onChange={(e) => setMaxAmount(e.target.value)}
-              placeholder={`Tối thiểu: ${minBidAmount.toLocaleString()}`}
-              min={minBidAmount}
-              step={stepPrice}
+              onChange={handleAmountChange}
+              placeholder={`Tối thiểu: ${minBidAmount.toLocaleString('vi-VN')}`}
               disabled={loading}
               required
             />

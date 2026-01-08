@@ -12,6 +12,7 @@ import GoogleIcon from "./google";
 import { useForm, Controller } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { useRef } from "react";
 
 const SignUp = () => {
   const navigate = useNavigate();
