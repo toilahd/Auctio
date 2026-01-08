@@ -509,7 +509,12 @@ export default function SearchPage() {
                     Đã xảy ra lỗi
                   </h3>
                   <p className="text-muted-foreground mb-6">{error}</p>
-                  <Button onClick={() => window.location.reload()}>
+                  <Button
+                    onClick={() => {
+                      navigate(0);
+                      // window.location.reload();
+                    }}
+                  >
                     Thử lại
                   </Button>
                 </div>
@@ -542,9 +547,7 @@ export default function SearchPage() {
                               if (page > 1) handlePageChange(page - 1);
                             }}
                             className={
-                              page === 1
-                                ? "pointer-events-none opacity-50"
-                                : ""
+                              page === 1 ? "pointer-events-none opacity-50" : ""
                             }
                           />
                         </PaginationItem>

@@ -10,6 +10,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   Mail,
@@ -24,6 +25,7 @@ import {
  * User enters email to receive password reset link
  */
 const ForgotPassword = () => {
+  const navigate = useNavigate();
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -118,7 +120,7 @@ const ForgotPassword = () => {
                 Gửi lại email
               </Button>
               <Button
-                onClick={() => (window.location.href = "/log-in")}
+                onClick={() => navigate("/log-in")}
                 variant="ghost"
                 className="w-full h-11"
               >

@@ -2,6 +2,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom"
 import { useState } from "react";
 
 interface Bid {
@@ -20,6 +21,7 @@ interface Bid {
 }
 
 const MyBidsPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"active" | "won" | "lost">("active");
 
   // Mock data - TODO: Fetch from backend
@@ -278,7 +280,7 @@ const MyBidsPage = () => {
                                   {bid.isOutbid && (
                                     <Button
                                       onClick={() =>
-                                        (window.location.href = `/product/${bid.productId}`)
+                                        navigate(`/product/${bid.productId}`)
                                       }
                                     >
                                       Đấu giá lại
@@ -292,7 +294,7 @@ const MyBidsPage = () => {
                                   <Button
                                     variant="outline"
                                     onClick={() =>
-                                      (window.location.href = `/product/${bid.productId}`)
+                                      navigate(`/product/${bid.productId}`)
                                     }
                                   >
                                     Xem chi tiết
@@ -301,7 +303,7 @@ const MyBidsPage = () => {
                               )}
                               {activeTab === "won" && (
                                 <>
-                                  <Button onClick={() => (window.location.href = `/order/${bid.productId}`)}>
+                                  <Button onClick={() => navigate(`/order/${bid.productId}`)}>
                                     Hoàn tất đơn hàng
                                   </Button>
                                   <Button variant="outline">Liên hệ người bán</Button>
@@ -311,7 +313,7 @@ const MyBidsPage = () => {
                                 <Button
                                   variant="outline"
                                   onClick={() =>
-                                    (window.location.href = `/product/${bid.productId}`)
+                                    navigate(`/product/${bid.productId}`)
                                   }
                                 >
                                   Xem sản phẩm
@@ -353,7 +355,7 @@ const MyBidsPage = () => {
                 {activeTab === "won" && "Bạn chưa thắng đấu giá nào."}
                 {activeTab === "lost" && "Bạn chưa thua đấu giá nào."}
               </p>
-              <Button onClick={() => (window.location.href = "/products")} size="lg">
+              <Button onClick={() => navigate("/products")} size="lg">
                 Khám phá sản phẩm
               </Button>
             </div>

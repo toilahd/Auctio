@@ -21,6 +21,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Gavel,
   Package,
@@ -51,6 +52,7 @@ interface Product {
 }
 
 const SellerDashboardPage = () => {
+  const navigate = useNavigate();
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -369,7 +371,7 @@ const SellerDashboardPage = () => {
               </p>
             </div>
             <Button
-              onClick={() => (window.location.href = "/seller/create-product")}
+              onClick={() => navigate("/seller/create-product")}
               size="lg"
             >
               + Đăng sản phẩm mới
@@ -613,7 +615,9 @@ const SellerDashboardPage = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() =>
-                                      (window.location.href = `/seller/edit-product/${product.id}`)
+                                      navigate(
+                                        `/seller/edit-product/${product.id}`
+                                      )
                                     }
                                   >
                                     Sửa
@@ -622,8 +626,7 @@ const SellerDashboardPage = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() =>
-                                      (window.location.href =
-                                        "/seller/qa-management")
+                                      navigate("/seller/qa-management")
                                     }
                                   >
                                     Q&A
@@ -638,7 +641,7 @@ const SellerDashboardPage = () => {
                                     variant="default"
                                     size="sm"
                                     onClick={() =>
-                                      (window.location.href = `/order/${product.id}`)
+                                      navigate(`/order/${product.id}`)
                                     }
                                   >
                                     Quản lý đơn hàng
@@ -662,8 +665,7 @@ const SellerDashboardPage = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
-                                    (window.location.href =
-                                      "/seller/create-product")
+                                    navigate("/seller/create-product")
                                   }
                                 >
                                   Đăng lại
@@ -688,7 +690,8 @@ const SellerDashboardPage = () => {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            if (currentPage > 1) handlePageChange(currentPage - 1);
+                            if (currentPage > 1)
+                              handlePageChange(currentPage - 1);
                           }}
                           className={
                             currentPage === 1

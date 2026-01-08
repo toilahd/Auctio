@@ -1,3 +1,4 @@
+import {useNavigate} from "react-router-dom"
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -24,6 +25,7 @@ const AuctionCard = ({
   seller,
   isEnding = false,
 }: AuctionCardProps) => {
+  const navigate = useNavigate();
   // Calculate time remaining
   const getTimeRemaining = (endTime: string) => {
     const end = new Date(endTime).getTime();
@@ -169,7 +171,8 @@ const AuctionCard = ({
               className="flex-1 h-9"
               onClick={(e) => {
                 e.preventDefault();
-                window.location.href = `/product/${id}`;
+                navigate(`/product/${id}`);
+                // window.location.href = `/product/${id}`;
               }}
             >
               Đấu giá
