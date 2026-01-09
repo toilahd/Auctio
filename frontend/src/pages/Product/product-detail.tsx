@@ -107,8 +107,8 @@ const ProductDetailPage = () => {
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState<string | null>(
     null
   );
-  const [countdown, setCountdown] = useState<string>("");
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [imageTransition, setImageTransition] = useState(false);
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -127,7 +127,7 @@ const ProductDetailPage = () => {
         } else {
           setError("Không thể tải sản phẩm");
         }
-      } catch (err) {
+      } catch {
         setError("Đã xảy ra lỗi");
       } finally {
         setLoading(false);
@@ -137,6 +137,7 @@ const ProductDetailPage = () => {
       fetchProduct();
       fetchQuestions();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchQuestions = async () => {
@@ -171,24 +172,8 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     if (id) checkWatchlistStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  // Update countdown every second
-  useEffect(() => {
-    if (!product?.endTime) return;
-
-    const updateCountdown = () => {
-      setCountdown(getRelativeTime(product.endTime));
-    };
-
-    // Initial update
-    updateCountdown();
-
-    // Update every second
-    const interval = setInterval(updateCountdown, 1000);
-
-    return () => clearInterval(interval);
-  }, [product?.endTime]);
 
   const checkWatchlistStatus = async () => {
     try {
@@ -359,6 +344,15 @@ const ProductDetailPage = () => {
     return Math.round((positive / total) * 100);
   };
 
+  const handleImageChange = (index: number) => {
+    if (index === selectedImage) return;
+    setImageTransition(true);
+    setTimeout(() => {
+      setSelectedImage(index);
+      setImageTransition(false);
+    }, 150);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -411,7 +405,7 @@ const ProductDetailPage = () => {
           <div className="lg:col-span-2 space-y-4">
             {/* Main Image */}
             <Card className="overflow-hidden">
-              <div className="aspect-4/3 bg-muted flex items-center justify-center">
+              <div className="h-[500px] bg-muted flex items-center justify-center relative">
                 {product.images && product.images.length > 0 ? (
                   <img
                     src={
@@ -419,7 +413,9 @@ const ProductDetailPage = () => {
                       "https://via.placeholder.com/800x600?text=No+Image"
                     }
                     alt={product.title}
-                    className="max-h-full max-w-full object-contain"
+                    className={`w-full h-full object-contain transition-opacity duration-300 ${
+                      imageTransition ? "opacity-0" : "opacity-100"
+                    }`}
                   />
                 ) : (
                   <div className="text-muted-foreground text-center">
@@ -432,24 +428,30 @@ const ProductDetailPage = () => {
 
             {/* Thumbnail Gallery */}
             {product.images && product.images.length > 0 && (
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImage === index
-                        ? "border-primary ring-2 ring-primary/20"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${product.title} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
+              <div className="overflow-x-auto pb-2">
+                <div className="flex gap-3 min-w-max">
+                  {product.images.map((image, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleImageChange(index);
+                      }}
+                      className={`w-20 h-20 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImage === index
+                          ? "border-primary ring-2 ring-primary/20"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${product.title} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
