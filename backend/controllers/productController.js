@@ -12,7 +12,11 @@ class ProductController {
      #swagger.summary = 'Search products with filters'
      #swagger.description = 'Search products with filters (Vietnamese no-accent supported)'
      #swagger.parameters['q'] = { in: 'query', description: 'Search query', type: 'string' }
-     #swagger.parameters['categoryId'] = { in: 'query', description: 'Filter by category ID', type: 'integer' }
+     #swagger.parameters['categoryId'] = { in: 'query', description: 'Filter by category ID', type: 'string' }
+     #swagger.parameters['minPrice'] = { in: 'query', description: 'Minimum price filter', type: 'number' }
+     #swagger.parameters['maxPrice'] = { in: 'query', description: 'Maximum price filter', type: 'number' }
+     #swagger.parameters['hasBuyNow'] = { in: 'query', description: 'Filter products with Buy Now option', type: 'boolean' }
+     #swagger.parameters['endingSoon'] = { in: 'query', description: 'Filter products ending in X hours', type: 'number' }
      #swagger.parameters['page'] = { in: 'query', description: 'Page number', type: 'integer', default: 1 }
      #swagger.parameters['limit'] = { in: 'query', description: 'Items per page', type: 'integer', default: 20 }
      #swagger.parameters['sortBy'] = { in: 'query', description: 'Sort by field', type: 'string', enum: ['endTime', 'price', 'newest', 'bidCount'], default: 'endTime' }
@@ -23,6 +27,10 @@ class ProductController {
       const {
         q,
         categoryId,
+        minPrice,
+        maxPrice,
+        hasBuyNow,
+        endingSoon,
         page = 1,
         limit = 20,
         sortBy = "endTime",
@@ -33,6 +41,10 @@ class ProductController {
       const result = await productService.searchProducts({
         searchQuery: q,
         categoryId,
+        minPrice: minPrice ? parseFloat(minPrice) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+        hasBuyNow: hasBuyNow === 'true',
+        endingSoon: endingSoon ? parseInt(endingSoon) : undefined,
         page: parseInt(page),
         limit: parseInt(limit),
         sortBy,

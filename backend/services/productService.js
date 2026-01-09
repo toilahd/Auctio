@@ -11,6 +11,10 @@ class ProductService {
   async searchProducts({
                          searchQuery,
                          categoryId,
+                         minPrice,
+                         maxPrice,
+                         hasBuyNow,
+                         endingSoon,
                          page = 1,
                          limit = 20,
                          sortBy = 'endTime',
@@ -58,6 +62,34 @@ class ProductService {
             : [categoryId];
 
         where.categoryId = { in: categoryIds };
+      }
+
+      // Price range filter
+      if (minPrice !== undefined || maxPrice !== undefined) {
+        where.currentPrice = {};
+        if (minPrice !== undefined) {
+          where.currentPrice.gte = minPrice;
+        }
+        if (maxPrice !== undefined) {
+          where.currentPrice.lte = maxPrice;
+        }
+      }
+
+      // Has Buy Now filter
+      if (hasBuyNow) {
+        where.buyNowPrice = {
+          not: null
+        };
+      }
+
+      // Ending soon filter (in hours)
+      if (endingSoon !== undefined) {
+        const endingSoonDate = new Date();
+        endingSoonDate.setHours(endingSoonDate.getHours() + endingSoon);
+        where.endTime = {
+          lte: endingSoonDate,
+          gte: new Date() // Still active
+        };
       }
 
       // Build orderBy
@@ -141,6 +173,10 @@ class ProductService {
         filters: {
           searchQuery,
           categoryId,
+          minPrice,
+          maxPrice,
+          hasBuyNow,
+          endingSoon,
           sortBy,
           order
         }
