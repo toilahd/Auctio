@@ -108,7 +108,7 @@ async function main() {
       dateOfBirth: new Date('1987-07-25'),
       role: 'BIDDER',
       positiveRatings: 28,
-      negativeRatings: 1,
+      negativeRatings: 20,
       isVerified: true,
     },
   });

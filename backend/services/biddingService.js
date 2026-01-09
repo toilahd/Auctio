@@ -470,6 +470,33 @@ class BiddingService {
         return { canBid: false, reason: 'Bạn bị chặn đặt giá cho sản phẩm này' };
       }
 
+      // Check bidder rating (must have >= 80% positive rating)
+      // Note: New users with 0 ratings are allowed to bid
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          positiveRatings: true,
+          negativeRatings: true
+        }
+      });
+
+      if (user) {
+        const totalRatings = user.positiveRatings + user.negativeRatings;
+
+        // Only check rating if user has been rated before
+        // Users with no ratings yet are allowed to bid
+        if (totalRatings > 0) {
+          const positivePercentage = (user.positiveRatings / totalRatings) * 100;
+          if (positivePercentage < 80) {
+            return {
+              canBid: false,
+              reason: `Bạn cần có tỷ lệ đánh giá tích cực ≥ 80% để đấu giá. Tỷ lệ hiện tại của bạn: ${positivePercentage.toFixed(1)}% (${user.positiveRatings} tích cực / ${totalRatings} tổng)`
+            };
+          }
+        }
+        // If totalRatings === 0, user is new and can bid
+      }
+
       return { canBid: true };
     } catch (error) {
       logger.error('Error checking bid permission:', error);
