@@ -89,7 +89,7 @@ const Header = () => {
                 </button>
 
                 {/* Notifications */}
-                <button
+                {/* <button
                   className="text-gray-700 dark:text-gray-300 hover:text-primary relative"
                   title="Thông báo"
                 >
@@ -107,7 +107,7 @@ const Header = () => {
                     />
                   </svg>
                   <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
+                </button> */}
 
                 {/* User menu */}
                 <div className="relative group">

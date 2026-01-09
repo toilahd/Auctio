@@ -383,3 +383,8 @@ button:focus-visible {
     @apply border-t border-border my-6;
   }
 }
+
+.halo-glow {
+  box-shadow: 0 0 10px 2px hsl(240 100% 70% / 0.7),
+    0 0 20px 4px hsl(240 100% 70% / 0.5), 0 0 30px 6px hsl(240 100% 70% / 0.3);
+}

@@ -246,37 +246,6 @@ const EditProfile = () => {
 
               <div className="space-y-2">
                 <label
-                  htmlFor="email"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Email
-                </label>
-                <Input
-                  {...register("email", {
-                    required: "Vui lòng nhập email",
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Email không hợp lệ",
-                    },
-                  })}
-                  type="email"
-                  id="email"
-                  name="email"
-                  placeholder="example@email.com"
-                  className="h-11"
-                />
-                {errors.email && (
-                  <p className="text-sm text-red-600">
-                    {errors.email.message as string}
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Lưu ý: Thay đổi email sẽ yêu cầu xác minh lại
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label
                   htmlFor="address"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >

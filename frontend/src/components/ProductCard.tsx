@@ -214,8 +214,9 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
   return (
     <Card
       className={`group overflow-hidden cursor-pointer gap-1 pt-0 pb-1 transition-all duration-300 hover:shadow-xl ${
-        product.isNew ? "ring-2 ring-primary/50" : ""
-      }`}
+        isProductNew() ? "halo-glow" : ""
+      }
+      `}
       onClick={() => onClick(product.id)}
     >
       {/* Image Section */}
@@ -264,7 +265,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 
         {/* New Badge */}
         {isProductNew() && (
-          <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground shadow-lg">
+          <Badge className="absolute top-[3.25rem] right-3 bg-primary text-primary-foreground shadow-lg">
             MỚI
           </Badge>
         )}
