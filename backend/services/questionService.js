@@ -2,6 +2,7 @@
 import prisma from '../config/prisma.js';
 import { getLogger } from '../config/logger.js';
 import { sendEmail } from '../config/email.js';
+import emailNotificationService from './emailNotificationService.js';
 
 const logger = getLogger('QuestionService');
 
@@ -48,23 +49,15 @@ class QuestionService {
 
       // Send email notification to seller
       try {
-        const productUrl = `${process.env.FRONTEND_URL}/products/${productId}`;
-        await sendEmail(
-          product.seller.email,
-          `New question about your product: ${product.title}`,
-          `Someone asked a question about your product ${product.title}: ${content}`,
-          `
-            <h2>New Question from Buyer</h2>
-            <p>Hello ${product.seller.fullName},</p>
-            <p>Someone asked a question about your product <strong>${product.title}</strong>:</p>
-            <blockquote style="border-left: 3px solid #ccc; padding-left: 15px; margin: 20px 0;">
-              ${content}
-            </blockquote>
-            <p>Asked by: <strong>${question.asker.fullName}</strong></p>
-            <p><a href="${productUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Product and Answer</a></p>
-            <p>Best regards,<br>Auctio Team</p>
-          `
-        );
+        emailNotificationService.notifyQuestionAsked({
+          product: {
+            id: product.id,
+            title: product.title,
+            seller: product.seller
+          },
+          asker: question.asker,
+          question: content
+        });
       } catch (emailError) {
         logger.error('Failed to send email notification:', emailError);
         // Don't fail the request if email fails
@@ -133,29 +126,84 @@ class QuestionService {
         }
       });
 
-      // Send email notification to asker
+      // Send email notifications to asker, all bidders, and all users who asked questions
       try {
-        const productUrl = `${process.env.FRONTEND_URL}/products/${question.product.id}`;
-        await sendEmail(
-          question.asker.email,
-          `Your question about "${question.product.title}" has been answered`,
-          `The seller has answered your question about ${question.product.title}`,
-          `
-            <h2>Your Question Has Been Answered</h2>
-            <p>Hello ${question.asker.fullName},</p>
-            <p>The seller has answered your question about <strong>${question.product.title}</strong>:</p>
-            <blockquote style="border-left: 3px solid #ccc; padding-left: 15px; margin: 20px 0; background: #f9f9f9; padding: 10px 15px;">
-              <strong>Your question:</strong><br>
-              ${question.content}
-            </blockquote>
-            <blockquote style="border-left: 3px solid #4CAF50; padding-left: 15px; margin: 20px 0; background: #f0f8f0; padding: 10px 15px;">
-              <strong>Answer:</strong><br>
-              ${content}
-            </blockquote>
-            <p><a href="${productUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Product</a></p>
-            <p>Best regards,<br>Auctio Team</p>
-          `
-        );
+        // Get product details
+        const product = await prisma.product.findUnique({
+          where: { id: question.product.id },
+          select: {
+            id: true,
+            title: true
+          }
+        });
+
+        // Get all bidders for this product (unique)
+        const bidders = await prisma.bid.findMany({
+          where: { productId: question.product.id },
+          select: {
+            bidder: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true
+              }
+            }
+          },
+          distinct: ['bidderId']
+        });
+
+        // Get all users who asked questions (unique)
+        const questioners = await prisma.question.findMany({
+          where: { productId: question.product.id },
+          select: {
+            asker: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true
+              }
+            }
+          },
+          distinct: ['askerId']
+        });
+
+        // Combine all recipients (deduplicate by id)
+        const recipientMap = new Map();
+
+        // Add the asker (always included)
+        recipientMap.set(question.asker.id, {
+          id: question.asker.id,
+          fullName: question.asker.fullName,
+          email: question.asker.email
+        });
+
+        // Add all bidders
+        bidders.forEach(b => {
+          if (b.bidder.email) {
+            recipientMap.set(b.bidder.id, b.bidder);
+          }
+        });
+
+        // Add all questioners
+        questioners.forEach(q => {
+          if (q.asker.email) {
+            recipientMap.set(q.asker.id, q.asker);
+          }
+        });
+
+        const recipients = Array.from(recipientMap.values());
+
+        emailNotificationService.notifyQuestionAnswered({
+          product,
+          question: {
+            askerId: question.askerId,
+            content: question.content
+          },
+          answer: {
+            content
+          },
+          recipients
+        });
       } catch (emailError) {
         logger.error('Failed to send email notification:', emailError);
       }

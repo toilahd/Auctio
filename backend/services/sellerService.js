@@ -1,6 +1,7 @@
 import prisma from '../config/prisma.js';
 import { getLogger } from '../config/logger.js';
 import AuctionSettingsService from './auctionSettingsService.js';
+import emailNotificationService from './emailNotificationService.js';
 
 const logger = getLogger('SellerService');
 
@@ -203,6 +204,25 @@ class SellerService {
           });
         }
       }
+    });
+
+    // Send email notification to denied bidder
+    const bidderDetails = await prisma.user.findUnique({
+      where: { id: bidderId },
+      select: { id: true, fullName: true, email: true }
+    });
+
+    const productDetails = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, title: true }
+    });
+
+    setImmediate(() => {
+      emailNotificationService.notifyBidderRejected({
+        product: productDetails,
+        bidder: bidderDetails,
+        reason
+      });
     });
 
     logger.info(`Bidder ${bidderId} denied from product ${productId}`);
