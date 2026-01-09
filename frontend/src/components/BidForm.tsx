@@ -4,6 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface BidFormProps {
   productId: string;
@@ -27,6 +37,8 @@ export const BidForm: React.FC<BidFormProps> = ({
   const [canBid, setCanBid] = useState<boolean>(false);
   const [bidCheckReason, setBidCheckReason] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [pendingBidAmount, setPendingBidAmount] = useState<number>(0);
 
   // Check if user can bid when component mounts
   useEffect(() => {
@@ -82,8 +94,16 @@ export const BidForm: React.FC<BidFormProps> = ({
       return;
     }
 
+    // Show confirmation dialog instead of placing bid immediately
+    setPendingBidAmount(amount);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmBid = async () => {
+    setShowConfirmDialog(false);
+
     // Place bid
-    const result = await placeBid(productId, amount);
+    const result = await placeBid(productId, pendingBidAmount);
 
     if (result) {
       if (result.buyNowTriggered) {
@@ -102,6 +122,11 @@ export const BidForm: React.FC<BidFormProps> = ({
         onBidPlaced();
       }
     }
+  };
+
+  const handleCancelBid = () => {
+    setShowConfirmDialog(false);
+    setPendingBidAmount(0);
   };
 
   if (!canBid) {
@@ -161,6 +186,45 @@ export const BidForm: React.FC<BidFormProps> = ({
           </Button>
         </form>
       </CardContent>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác Nhận Đặt Giá</AlertDialogTitle>
+            <AlertDialogDescription>
+              <div className="space-y-2 mt-2">
+                <p>
+                  Bạn có chắc chắn muốn đặt giá đấu tối đa là{' '}
+                  <span className="font-bold text-foreground">
+                    {pendingBidAmount.toLocaleString()} VND
+                  </span>
+                  ?
+                </p>
+                <div className="bg-muted p-3 rounded-md text-sm">
+                  <p className="text-muted-foreground">
+                    • Giá hiện tại: {currentPrice.toLocaleString()} VND
+                  </p>
+                  <p className="text-muted-foreground">
+                    • Hệ thống sẽ tự động đấu giá cho bạn đến giá tối đa này
+                  </p>
+                  <p className="text-muted-foreground">
+                    • Bạn không thể hủy sau khi đã đặt giá
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelBid}>
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmBid}>
+              Xác Nhận Đặt Giá
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
