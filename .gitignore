@@ -19,3 +19,4 @@ logs/
 # VSCode
 .vscode/
 /generated/prisma
+frontend/package-lock.json
