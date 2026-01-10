@@ -344,6 +344,12 @@ const ProductDetailPage = () => {
     return Math.round((positive / total) * 100);
   };
 
+  const maskName = (fullName: string) => {
+    const nameParts = fullName.trim().split(" ");
+    const lastName = nameParts[nameParts.length - 1];
+    return `....${lastName}`;
+  };
+
   const handleImageChange = (index: number) => {
     if (index === selectedImage) return;
     setImageTransition(true);
@@ -404,7 +410,7 @@ const ProductDetailPage = () => {
           {/* Left: Images */}
           <div className="lg:col-span-2 space-y-4">
             {/* Main Image */}
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden py-0">
               <div className="h-[500px] bg-muted flex items-center justify-center relative">
                 {product.images && product.images.length > 0 ? (
                   <img
@@ -625,7 +631,11 @@ const ProductDetailPage = () => {
 
               {/* Seller Info */}
               {product.seller && (
-                <div className="mb-4 p-4 bg-muted/50 rounded-lg">
+                <div
+                  className="mb-4 p-4 bg-muted/50 rounded-lg hover:bg-muted/70 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/profile/${product.seller?.id}`)}
+                  title="Xem trang người bán"
+                >
                   <div className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1">
                     <User className="w-4 h-4" />
                     Người bán
@@ -686,9 +696,18 @@ const ProductDetailPage = () => {
                       <span className="text-sm text-muted-foreground">
                         Tên:
                       </span>
-                      <span className="font-medium text-foreground">
-                        {product.currentWinner.fullName}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">
+                          {user?.id === product.currentWinner.id
+                            ? product.currentWinner.fullName
+                            : maskName(product.currentWinner.fullName)}
+                        </span>
+                        {user?.id === product.currentWinner.id && (
+                          <Badge variant="default" className="text-xs">
+                            Bạn
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
@@ -735,7 +754,7 @@ const ProductDetailPage = () => {
                       stepPrice={parseFloat(product.stepPrice)}
                       onBidPlaced={() => {
                         // Refresh product data after successful bid
-                        navigate(0);
+                        // navigate(0);
                       }}
                     />
 
@@ -957,7 +976,7 @@ const ProductDetailPage = () => {
               {relatedProducts.map((relatedProduct) => (
                 <Card
                   key={relatedProduct.id}
-                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  className="overflow-hidden py-0 hover:shadow-lg transition-shadow cursor-pointer"
                   onClick={() => navigate(`/product/${relatedProduct.id}`)}
                 >
                   <div className="aspect-square bg-muted overflow-hidden">

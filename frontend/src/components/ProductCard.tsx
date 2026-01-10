@@ -172,6 +172,12 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
     }).format(date);
   };
 
+  const maskName = (fullName: string) => {
+    const nameParts = fullName.trim().split(" ");
+    const lastName = nameParts[nameParts.length - 1];
+    return `****${lastName}`;
+  };
+
   const getTimeRemaining = (endTime: string) => {
     const end = new Date(endTime).getTime();
     const diff = end - now;
@@ -324,8 +330,8 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Đấu giá cao nhất</span>
             {product.currentWinner ? (
-              <span className="font-medium text-foreground">
-                {product.currentWinner.fullName}
+              <span className="font-medium text-foreground text-xs">
+                {maskName(product.currentWinner.fullName)}
               </span>
             ) : (
               <code className="px-2 py-0.5 bg-muted rounded text-muted-foreground font-mono">
