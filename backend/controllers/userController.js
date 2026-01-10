@@ -210,8 +210,8 @@ class UserController {
     /*
      * GET /api/users/bidding-products
      * #swagger.tags = ['Users']
-     * #swagger.summary = 'Get products user is bidding on'
-     * #swagger.description = 'Get products user is bidding on'
+     * #swagger.summary = 'Get products user is bidding on (active and ended)'
+     * #swagger.description = 'Get products user has placed bids on, including both active auctions and ended auctions. Results include flags: isWinning (for active), hasWon, hasLost (for ended)'
      * #swagger.security = [{ "bearerAuth": [] }]
      * #swagger.parameters['page'] = { in: 'query', description: 'Page number', type: 'integer', default: 1 }
      * #swagger.parameters['limit'] = { in: 'query', description: 'Items per page', type: 'integer', default: 20 }
