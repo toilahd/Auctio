@@ -344,6 +344,12 @@ const ProductDetailPage = () => {
     return Math.round((positive / total) * 100);
   };
 
+  const maskName = (fullName: string) => {
+    const nameParts = fullName.trim().split(" ");
+    const lastName = nameParts[nameParts.length - 1];
+    return `....${lastName}`;
+  };
+
   const handleImageChange = (index: number) => {
     if (index === selectedImage) return;
     setImageTransition(true);
@@ -690,9 +696,18 @@ const ProductDetailPage = () => {
                       <span className="text-sm text-muted-foreground">
                         Tên:
                       </span>
-                      <span className="font-medium text-foreground">
-                        {product.currentWinner.fullName}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">
+                          {user?.id === product.currentWinner.id
+                            ? product.currentWinner.fullName
+                            : maskName(product.currentWinner.fullName)}
+                        </span>
+                        {user?.id === product.currentWinner.id && (
+                          <Badge variant="default" className="text-xs">
+                            Bạn
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
