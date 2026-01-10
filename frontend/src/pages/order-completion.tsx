@@ -386,7 +386,8 @@ const OrderCompletionPage = () => {
       const data = await response.json();
 
       if (data.success && data.data.order_url) {
-        window.location.href = data.data.order_url;
+        navigate(data.data.order_url);
+        // window.location.href = data.data.order_url;
       } else {
         alert(data.message || "Không thể tạo đơn thanh toán");
         setIsSubmitting(false);

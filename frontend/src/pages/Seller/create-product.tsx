@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, ImagePlus, AlertCircle, Loader2 } from "lucide-react";
 import Quill from "quill";
 import QuillEditor from "@/components/QuillEditor";
@@ -39,6 +40,7 @@ interface FormData {
 }
 
 const CreateProductPage = () => {
+  const navigate = useNavigate();
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -207,7 +209,7 @@ const CreateProductPage = () => {
       }
 
       alert("Sản phẩm đã được tạo thành công!");
-      window.location.href = "/seller";
+      navigate("/seller");
     } catch (error: any) {
       console.error("Error creating product:", error);
       alert(error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
@@ -636,7 +638,7 @@ const CreateProductPage = () => {
                 type="button"
                 variant="outline"
                 size="lg"
-                onClick={() => (window.location.href = "/seller")}
+                onClick={() => navigate("/seller")}
                 disabled={isSubmitting}
               >
                 Hủy

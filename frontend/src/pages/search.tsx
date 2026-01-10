@@ -10,6 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -424,7 +433,7 @@ export default function SearchPage() {
                         <SelectItem
                           key={cat.value}
                           value={cat.value}
-                          disabled={cat.isParent}
+                          // disabled={cat.isParent}
                         >
                           <span
                             style={{
@@ -500,7 +509,12 @@ export default function SearchPage() {
                     Đã xảy ra lỗi
                   </h3>
                   <p className="text-muted-foreground mb-6">{error}</p>
-                  <Button onClick={() => window.location.reload()}>
+                  <Button
+                    onClick={() => {
+                      navigate(0);
+                      // window.location.reload();
+                    }}
+                  >
                     Thử lại
                   </Button>
                 </div>
@@ -522,49 +536,105 @@ export default function SearchPage() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="mt-8 flex justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => handlePageChange(Math.max(1, page - 1))}
-                      disabled={page === 1}
-                    >
-                      Trước
-                    </Button>
-                    <div className="flex items-center gap-2">
-                      {Array.from(
-                        { length: Math.min(5, totalPages) },
-                        (_, i) => {
-                          let pageNum;
-                          if (totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (page <= 3) {
-                            pageNum = i + 1;
-                          } else if (page >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                          } else {
-                            pageNum = page - 2 + i;
-                          }
-                          return (
-                            <Button
-                              key={pageNum}
-                              variant={page === pageNum ? "default" : "outline"}
-                              onClick={() => handlePageChange(pageNum)}
-                            >
-                              {pageNum}
-                            </Button>
-                          );
-                        }
-                      )}
-                    </div>
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        handlePageChange(Math.min(totalPages, page + 1))
-                      }
-                      disabled={page === totalPages}
-                    >
-                      Sau
-                    </Button>
+                  <div className="mt-8">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (page > 1) handlePageChange(page - 1);
+                            }}
+                            className={
+                              page === 1 ? "pointer-events-none opacity-50" : ""
+                            }
+                          />
+                        </PaginationItem>
+
+                        {/* First page */}
+                        {page > 2 && (
+                          <>
+                            <PaginationItem>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(1);
+                                }}
+                              >
+                                1
+                              </PaginationLink>
+                            </PaginationItem>
+                            {page > 3 && (
+                              <PaginationItem>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            )}
+                          </>
+                        )}
+
+                        {/* Current page and neighbors */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(
+                            (pageNum) =>
+                              pageNum === page ||
+                              pageNum === page - 1 ||
+                              pageNum === page + 1
+                          )
+                          .map((pageNum) => (
+                            <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(pageNum);
+                                }}
+                                isActive={pageNum === page}
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+
+                        {/* Last page */}
+                        {page < totalPages - 1 && (
+                          <>
+                            {page < totalPages - 2 && (
+                              <PaginationItem>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            )}
+                            <PaginationItem>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(totalPages);
+                                }}
+                              >
+                                {totalPages}
+                              </PaginationLink>
+                            </PaginationItem>
+                          </>
+                        )}
+
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (page < totalPages) handlePageChange(page + 1);
+                            }}
+                            className={
+                              page === totalPages
+                                ? "pointer-events-none opacity-50"
+                                : ""
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   </div>
                 )}
               </>

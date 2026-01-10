@@ -99,7 +99,7 @@ export const CurrentWinnerDisplay: React.FC<CurrentWinnerDisplayProps> = ({
         <div>
           <div className="text-sm text-muted-foreground mb-1">Giá Hiện Tại</div>
           <div className="text-3xl font-bold text-primary">
-            {winnerData.currentPrice.toLocaleString()} VND
+            {parseFloat(winnerData.currentPrice.toString()).toLocaleString('vi-VN')} VND
           </div>
         </div>
 

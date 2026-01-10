@@ -5,10 +5,7 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CategoryCard from "@/components/CategoryCard";
-import {
-  Loader2,
-  AlertCircle,
-} from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 interface Subcategory {
   id: string;
@@ -32,7 +29,9 @@ export default function CategoriesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/categories/menu");
+        const response = await fetch(
+          "http://localhost:3000/api/categories/menu"
+        );
         const data = await response.json();
         if (data.success) {
           setCategories(data.data);
@@ -81,9 +80,18 @@ export default function CategoriesPage() {
           <Card className="p-12">
             <div className="text-center">
               <AlertCircle className="w-16 h-16 text-destructive mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">Đã xảy ra lỗi</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                Đã xảy ra lỗi
+              </h3>
               <p className="text-muted-foreground mb-6">{error}</p>
-              <Button onClick={() => window.location.reload()}>Thử lại</Button>
+              <Button
+                onClick={() => {
+                  navigate(0);
+                  // window.location.reload();
+                }}
+              >
+                Thử lại
+              </Button>
             </div>
           </Card>
         </div>
@@ -136,7 +144,9 @@ export default function CategoriesPage() {
                     onClick={() => handleSubcategoryClick(popular.id)}
                     className="p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all text-center"
                   >
-                    <div className="font-medium text-gray-900">{popular.name}</div>
+                    <div className="font-medium text-gray-900">
+                      {popular.name}
+                    </div>
                     <div className="text-sm text-gray-500 mt-1">
                       {popular.productCount} sản phẩm
                     </div>

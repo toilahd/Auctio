@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { AlertCircle, Clock, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Quill from "quill";
 import QuillEditor from "@/components/QuillEditor";
 
@@ -16,6 +17,7 @@ interface DescriptionHistory {
 }
 
 const EditProductPage = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [newDescription, setNewDescription] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -100,6 +102,7 @@ const EditProductPage = () => {
       }
 
       alert("Mô tả đã được cập nhật thành công!");
+      navigate("/seller");
       setNewDescription("");
       setErrors({});
 
@@ -178,7 +181,7 @@ const EditProductPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div
-                    className="prose dark:prose-invert max-w-none"
+                    className="des prose dark:prose-invert max-w-none"
                     dangerouslySetInnerHTML={{
                       __html: product.description,
                     }}
@@ -266,7 +269,9 @@ const EditProductPage = () => {
                         type="button"
                         variant="outline"
                         size="lg"
-                        onClick={() => (window.location.href = "/seller")}
+                        onClick={() => {
+                          navigate("/seller");
+                        }}
                       >
                         Quay lại
                       </Button>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Trophy, Info } from "lucide-react";
 
 interface BidHistoryListProps {
   productId: string;
@@ -80,13 +81,21 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
     });
   };
 
+  const formatPrice = (price: string | number) => {
+    const numPrice = typeof price === "string" ? parseFloat(price) : price;
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(numPrice);
+  };
+
   if (error) {
     return (
       <Alert variant="destructive">
         <AlertDescription>
           {/* {error} */}
           Đã có lỗi xảy ra khi tải lịch sử đấu giá. Vui lòng thử lại sau.
-          </AlertDescription>
+        </AlertDescription>
       </Alert>
     );
   }
@@ -125,9 +134,7 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
             {/* Explanation Banner */}
             <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="flex items-start gap-2">
-                <div className="text-blue-600 dark:text-blue-400 mt-0.5">
-                  ℹ️
-                </div>
+                <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
                 <div className="text-sm text-blue-900 dark:text-blue-100">
                   <strong>Đấu giá tự động:</strong> Bạn chỉ cần đặt giá tối đa
                   một lần. Hệ thống sẽ tự động tăng giá{" "}
@@ -178,8 +185,12 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
                               {bid.bidder.fullName}
                             </span>
                             {isWinning && (
-                              <Badge variant="default" className="text-xs">
-                                🏆 Đang Dẫn Đầu
+                              <Badge
+                                variant="default"
+                                className="text-xs flex items-center gap-1"
+                              >
+                                <Trophy className="w-3 h-3" />
+                                Đang Dẫn Đầu
                               </Badge>
                             )}
                           </div>
@@ -195,7 +206,7 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
                                   : "text-sm"
                               }`}
                             >
-                              {bid.amount.toLocaleString()} VND
+                              {formatPrice(bid.amount)}
                             </span>
                           </div>
                         </td>

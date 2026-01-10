@@ -107,7 +107,8 @@ const ProductDetailPage = () => {
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState<string | null>(
     null
   );
-  const [countdown, setCountdown] = useState<string>("");
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [imageTransition, setImageTransition] = useState(false);
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -119,10 +120,14 @@ const ProductDetailPage = () => {
         const data = await response.json();
         if (data.success) {
           setProduct(data.data);
+          // Fetch related products from same category
+          if (data.data.category?.id) {
+            fetchRelatedProducts(data.data.category.id);
+          }
         } else {
           setError("Không thể tải sản phẩm");
         }
-      } catch (err) {
+      } catch {
         setError("Đã xảy ra lỗi");
       } finally {
         setLoading(false);
@@ -132,6 +137,7 @@ const ProductDetailPage = () => {
       fetchProduct();
       fetchQuestions();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchQuestions = async () => {
@@ -148,26 +154,26 @@ const ProductDetailPage = () => {
     }
   };
 
+  const fetchRelatedProducts = async (parentCategoryId: string) => {
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/products/category/${parentCategoryId}?page=1&limit=5`
+      );
+      const data = await response.json();
+      if (data.success && data.data.products) {
+        // Filter out the current product
+        const filtered = data.data.products.filter((p: any) => p.id !== id);
+        setRelatedProducts(filtered.slice(0, 4)); // Take max 4 related products
+      }
+    } catch (error) {
+      console.error("Error fetching related products:", error);
+    }
+  };
+
   useEffect(() => {
     if (id) checkWatchlistStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  // Update countdown every second
-  useEffect(() => {
-    if (!product?.endTime) return;
-
-    const updateCountdown = () => {
-      setCountdown(getRelativeTime(product.endTime));
-    };
-
-    // Initial update
-    updateCountdown();
-
-    // Update every second
-    const interval = setInterval(updateCountdown, 1000);
-
-    return () => clearInterval(interval);
-  }, [product?.endTime]);
 
   const checkWatchlistStatus = async () => {
     try {
@@ -298,18 +304,26 @@ const ProductDetailPage = () => {
     }).format(new Date(dateString));
   };
 
-  const getRelativeTime = (endTime: string) => {
+  const getTimeComponents = (endTime: string) => {
     const end = new Date(endTime).getTime();
     const now = Date.now();
     const diff = end - now;
 
-    if (diff <= 0) return "Đã kết thúc";
+    if (diff <= 0) return null;
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
+    return { days, hours, minutes, seconds };
+  };
+
+  const getRelativeTime = (endTime: string) => {
+    const components = getTimeComponents(endTime);
+    if (!components) return "Đã kết thúc";
+
+    const { days, hours, minutes, seconds } = components;
     const parts = [];
     if (days > 0) parts.push(`${days} ngày`);
     if (hours > 0) parts.push(`${hours} giờ`);
@@ -328,6 +342,15 @@ const ProductDetailPage = () => {
     const total = positive + negative;
     if (total === 0) return 0;
     return Math.round((positive / total) * 100);
+  };
+
+  const handleImageChange = (index: number) => {
+    if (index === selectedImage) return;
+    setImageTransition(true);
+    setTimeout(() => {
+      setSelectedImage(index);
+      setImageTransition(false);
+    }, 150);
   };
 
   if (loading) {
@@ -382,7 +405,7 @@ const ProductDetailPage = () => {
           <div className="lg:col-span-2 space-y-4">
             {/* Main Image */}
             <Card className="overflow-hidden">
-              <div className="aspect-4/3 bg-muted flex items-center justify-center">
+              <div className="h-[500px] bg-muted flex items-center justify-center relative">
                 {product.images && product.images.length > 0 ? (
                   <img
                     src={
@@ -390,7 +413,9 @@ const ProductDetailPage = () => {
                       "https://via.placeholder.com/800x600?text=No+Image"
                     }
                     alt={product.title}
-                    className="max-h-full max-w-full object-contain"
+                    className={`w-full h-full object-contain transition-opacity duration-300 ${
+                      imageTransition ? "opacity-0" : "opacity-100"
+                    }`}
                   />
                 ) : (
                   <div className="text-muted-foreground text-center">
@@ -403,24 +428,30 @@ const ProductDetailPage = () => {
 
             {/* Thumbnail Gallery */}
             {product.images && product.images.length > 0 && (
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImage === index
-                        ? "border-primary ring-2 ring-primary/20"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${product.title} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
+              <div className="overflow-x-auto pb-2">
+                <div className="flex gap-3 min-w-max">
+                  {product.images.map((image, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleImageChange(index);
+                      }}
+                      className={`w-20 h-20 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImage === index
+                          ? "border-primary ring-2 ring-primary/20"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${product.title} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -431,7 +462,7 @@ const ProductDetailPage = () => {
               </h2>
               {product.description ? (
                 <div
-                  className="prose prose-sm dark:prose-invert max-w-none"
+                  className="des prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
               ) : (
@@ -507,15 +538,83 @@ const ProductDetailPage = () => {
                   <Clock className="w-3.5 h-3.5" />
                   Thời gian còn lại
                 </div>
-                <div className="text-2xl font-bold text-destructive">
-                  {countdown || getRelativeTime(product.endTime)}
-                </div>
-                {product.timeLeft?.isLessThan3Days &&
-                  product.status === "ACTIVE" && (
-                    <Badge variant="destructive" className="mt-2">
-                      Sắp kết thúc
-                    </Badge>
-                  )}
+                {(() => {
+                  const components = getTimeComponents(product.endTime);
+                  if (!components) {
+                    return (
+                      <div className="text-2xl font-bold text-muted-foreground">
+                        Đã kết thúc
+                      </div>
+                    );
+                  }
+
+                  const { days, hours, minutes, seconds } = components;
+                  const isLessThan3Days = days < 3;
+
+                  if (isLessThan3Days) {
+                    // Digital timer display for < 3 days
+                    const totalHours = days * 24 + hours;
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2 font-mono">
+                          <div className="flex flex-col items-center">
+                            <div className="text-4xl font-bold text-destructive tabular-nums">
+                              {String(totalHours).padStart(2, "0")}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              giờ
+                            </div>
+                          </div>
+                          <div className="text-3xl font-bold text-destructive pb-5">
+                            :
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <div className="text-4xl font-bold text-destructive tabular-nums">
+                              {String(minutes).padStart(2, "0")}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              phút
+                            </div>
+                          </div>
+                          <div className="text-3xl font-bold text-destructive pb-5">
+                            :
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <div className="text-4xl font-bold text-destructive tabular-nums">
+                              {String(seconds).padStart(2, "0")}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              giây
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground text-center">
+                          Kết thúc: {formatDate(product.endTime)}
+                        </div>
+                        {product.status === "ACTIVE" && (
+                          <Badge
+                            variant="destructive"
+                            className="w-full justify-center"
+                          >
+                            Sắp kết thúc
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  } else {
+                    // Show relative time + end date for >= 3 days
+                    return (
+                      <div className="space-y-2">
+                        <div className="text-2xl font-bold text-destructive">
+                          {getRelativeTime(product.endTime)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Kết thúc: {formatDate(product.endTime)}
+                        </div>
+                      </div>
+                    );
+                  }
+                })()}
               </div>
 
               {/* Current Winner - Real-time */}
@@ -847,6 +946,59 @@ const ProductDetailPage = () => {
             </div>
           </Card>
         </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              Sản phẩm liên quan
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map((relatedProduct) => (
+                <Card
+                  key={relatedProduct.id}
+                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/product/${relatedProduct.id}`)}
+                >
+                  <div className="aspect-square bg-muted overflow-hidden">
+                    <img
+                      src={
+                        relatedProduct.images?.[0] ||
+                        "https://via.placeholder.com/300"
+                      }
+                      alt={relatedProduct.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-foreground line-clamp-2 mb-2 min-h-[3rem]">
+                      {relatedProduct.title}
+                    </h3>
+                    <div className="text-lg font-bold text-primary mb-2">
+                      {formatPrice(parseFloat(relatedProduct.currentPrice))}
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Hammer className="w-3.5 h-3.5" />
+                        <span>{relatedProduct._count?.bids || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {(() => {
+                          const timeLeft = getRelativeTime(
+                            relatedProduct.endTime
+                          );
+                          if (timeLeft === "Đã kết thúc") return "Đã kết thúc";
+                          return timeLeft.replace(" nữa", "");
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />

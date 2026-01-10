@@ -99,13 +99,13 @@ const ResetPassword = () => {
           <CardContent className="space-y-4">
             <div className="text-center space-y-4">
               <Button
-                onClick={() => window.location.href = "/forgot-password"}
+                onClick={() => navigate("/forgot-password")}
                 className="w-full h-11"
               >
                 Yêu cầu link mới
               </Button>
               <Button
-                onClick={() => window.location.href = "/log-in"}
+                onClick={() => navigate("/log-in")}
                 variant="ghost"
                 className="w-full h-11"
               >

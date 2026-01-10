@@ -12,6 +12,7 @@ import GoogleIcon from "./google";
 import { useForm, Controller } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { useRef } from "react";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const SignUp = () => {
   const RE_SITE_KEY = import.meta.env.VITE_RE_SITE_KEY;
 
   const googleLogin = async () => {
-    window.location.href = `${BACKEND_URL}/login/federated/google`;
+    navigate(`${BACKEND_URL}/login/federated/google`);
   };
 
   const {
@@ -28,6 +29,7 @@ const SignUp = () => {
     setValue,
     trigger,
     control,
+    setError,
     formState: { errors },
   } = useForm<{
     username: string;
@@ -60,11 +62,56 @@ const SignUp = () => {
         }),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        // Reset captcha on any error
+        setValue("captcha", "", { shouldValidate: false });
+
+        // Handle specific error cases with Vietnamese messages
+        if (response.status === 409) {
+          // Email already in use
+          setError("email", {
+            type: "manual",
+            message: "Email đã được sử dụng. Vui lòng sử dụng email khác.",
+          });
+        } else if (response.status === 400) {
+          // Check if it's a captcha error or validation error
+          if (responseData.message?.includes("reCAPTCHA")) {
+            setError("captcha", {
+              type: "manual",
+              message: "Xác thực reCAPTCHA không thành công. Vui lòng thử lại.",
+            });
+          } else if (responseData.errors) {
+            // Handle validation errors
+            setError("email", {
+              type: "manual",
+              message:
+                "Thông tin nhập vào không hợp lệ. Vui lòng kiểm tra lại.",
+            });
+          } else {
+            setError("email", {
+              type: "manual",
+              message:
+                responseData.message || "Đã xảy ra lỗi. Vui lòng thử lại.",
+            });
+          }
+        } else if (response.status === 500) {
+          // Server error
+          setError("captcha", {
+            type: "manual",
+            message: "Lỗi hệ thống. Vui lòng thử lại sau.",
+          });
+        } else {
+          // Generic error
+          setError("email", {
+            type: "manual",
+            message: "Đăng ký thất bại. Vui lòng thử lại.",
+          });
+        }
+        return;
       }
 
-      const responseData = await response.json();
       console.log("Signup successful:", responseData);
       // Redirect to email verification page after successful signup
       navigate("/verify-email");

@@ -122,10 +122,10 @@ const CategoryCard = ({
             </p>
           </div>
         </div>
-        {/* <Button variant="outline" onClick={() => onCategoryClick(category.id)}>
+        <Button variant="outline" onClick={() => onCategoryClick(category.id)}>
           Xem tất cả
           <ChevronRight className="w-4 h-4 ml-2" />
-        </Button> */}
+        </Button>
       </div>
 
       {/* Subcategories Grid */}
