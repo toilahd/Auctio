@@ -150,6 +150,16 @@ class UserService {
                 id: true,
                 fullName: true
               }
+            },
+            order: {
+              include: {
+                product: {
+                  select: {
+                    id: true,
+                    title: true
+                  }
+                }
+              }
             }
           }
         }),
@@ -169,6 +179,20 @@ class UserService {
         ? (user.positiveRatings / totalRatings) * 100
         : 0;
 
+      // Attach productId to each rating when available (via order -> product)
+      const ratingsWithProduct = ratings.map(r => {
+        // Some ratings may include order relation in other models; if not present, we try to fetch productId from order
+        let productId = null;
+        if (r.order && r.order.product) {
+          productId = r.order.product.id;
+        }
+        // return a shallow copy including productId for UI convenience
+        return {
+          ...r,
+          productId
+        };
+      });
+
       return {
         summary: {
           positive: user.positiveRatings,
@@ -176,7 +200,7 @@ class UserService {
           total: totalRatings,
           percentage: Math.round(ratingPercentage * 10) / 10
         },
-        ratings,
+        ratings: ratingsWithProduct,
         pagination: {
           total,
           page,
@@ -477,4 +501,3 @@ class UserService {
 }
 
 export default new UserService();
-
