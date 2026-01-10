@@ -197,6 +197,7 @@ class BiddingService {
           success: true,
           winnerId: bidderId,
           currentPrice: buyNowPrice,
+          bidCount: product.bidCount + 1,
           buyNowTriggered: true,
           message: 'Phiên đấu giá đã kết thúc - Đã đạt giá mua ngay!'
         };
@@ -250,7 +251,8 @@ class BiddingService {
         return {
           success: true,
           winnerId: bidderId,
-          currentPrice: product.startPrice
+          currentPrice: product.startPrice,
+          bidCount: product.bidCount + 1
         };
       }
 
@@ -329,7 +331,8 @@ class BiddingService {
       return {
         success: true,
         winnerId: resolved.winnerId,
-        currentPrice: resolved.finalPrice
+        currentPrice: resolved.finalPrice,
+        bidCount: product.bidCount + resolved.bids.length
       };
     });
   }

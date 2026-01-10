@@ -46,9 +46,10 @@ class BiddingController {
         io.to(`product:${productId}`).emit('bid:placed', {
           productId,
           currentPrice: result.currentPrice,
-          currentWinnerId: result.currentWinnerId,
+          currentWinnerId: result.winnerId, // Use winnerId from result
           bidCount: result.bidCount,
           autoBidTriggered: result.autoBidTriggered,
+          buyNowTriggered: result.buyNowTriggered,
           timestamp: new Date()
         });
       }

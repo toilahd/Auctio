@@ -44,18 +44,27 @@ export const CurrentWinnerDisplay: React.FC<CurrentWinnerDisplayProps> = ({
     joinProduct(productId);
 
     // Listen for bid updates
-    const handleBidPlaced = (data: any) => {
+    const handleBidPlaced = async (data: any) => {
       console.log('🔔 Bid placed event received:', data);
       if (data.productId === productId) {
-        // Update winner data in real-time
-        setWinnerData((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            currentPrice: data.currentPrice,
-            bidCount: data.bidCount,
-          };
-        });
+        // If currentWinnerId changed, refetch full winner data
+        if (data.currentWinnerId && data.currentWinnerId !== winnerData?.currentWinner?.id) {
+          console.log('🔄 Current winner changed, refetching data...');
+          const result = await getCurrentWinner(productId);
+          if (result) {
+            setWinnerData(result);
+          }
+        } else {
+          // Just update price and bid count if winner hasn't changed
+          setWinnerData((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              currentPrice: data.currentPrice,
+              bidCount: data.bidCount,
+            };
+          });
+        }
       }
     };
 
@@ -66,7 +75,7 @@ export const CurrentWinnerDisplay: React.FC<CurrentWinnerDisplayProps> = ({
       socket.off('bid:placed', handleBidPlaced);
       leaveProduct(productId);
     };
-  }, [socket, isConnected, productId, joinProduct, leaveProduct]);
+  }, [socket, isConnected, productId, joinProduct, leaveProduct, getCurrentWinner, winnerData?.currentWinner?.id]);
 
   if (loading) {
     return (
