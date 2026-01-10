@@ -625,7 +625,11 @@ const ProductDetailPage = () => {
 
               {/* Seller Info */}
               {product.seller && (
-                <div className="mb-4 p-4 bg-muted/50 rounded-lg">
+                <div
+                  className="mb-4 p-4 bg-muted/50 rounded-lg hover:bg-muted/70 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/profile/${product.seller?.id}`)}
+                  title="Xem trang người bán"
+                >
                   <div className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1">
                     <User className="w-4 h-4" />
                     Người bán
@@ -735,7 +739,7 @@ const ProductDetailPage = () => {
                       stepPrice={parseFloat(product.stepPrice)}
                       onBidPlaced={() => {
                         // Refresh product data after successful bid
-                        navigate(0);
+                        // navigate(0);
                       }}
                     />
 

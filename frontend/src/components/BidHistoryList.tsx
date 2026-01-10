@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useBidHistory } from "@/hooks/useBidding";
 import { useSocket } from "@/contexts/SocketContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
   productId,
   productStatus,
 }) => {
+  const navigate = useNavigate();
   const {
     bidHistory,
     loading,
@@ -181,7 +183,14 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
                         {/* Người Đấu Giá */}
                         <td className="py-3 px-2">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">
+                            <span
+                              className="font-medium text-sm hover:text-primary cursor-pointer transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/profile/${bid.bidder.id}`);
+                              }}
+                              title="Xem trang người đấu giá"
+                            >
                               {bid.bidder.fullName}
                             </span>
                             {isWinning && (
