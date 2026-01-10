@@ -404,7 +404,7 @@ const ProductDetailPage = () => {
           {/* Left: Images */}
           <div className="lg:col-span-2 space-y-4">
             {/* Main Image */}
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden py-0">
               <div className="h-[500px] bg-muted flex items-center justify-center relative">
                 {product.images && product.images.length > 0 ? (
                   <img
@@ -961,7 +961,7 @@ const ProductDetailPage = () => {
               {relatedProducts.map((relatedProduct) => (
                 <Card
                   key={relatedProduct.id}
-                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  className="overflow-hidden py-0 hover:shadow-lg transition-shadow cursor-pointer"
                   onClick={() => navigate(`/product/${relatedProduct.id}`)}
                 >
                   <div className="aspect-square bg-muted overflow-hidden">
