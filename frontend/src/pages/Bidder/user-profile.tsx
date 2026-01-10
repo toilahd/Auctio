@@ -3,6 +3,15 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -61,6 +70,7 @@ interface Review {
   comment: string;
   fromUserId: string;
   toUserId: string;
+  productId: string | null;
   orderId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -83,6 +93,13 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [reviewsPagination, setReviewsPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 2,
+    totalPages: 0,
+    hasMore: false,
+  });
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [otpMessage, setOtpMessage] = useState<{
     type: "success" | "error";
@@ -140,22 +157,7 @@ export default function UserProfilePage() {
           });
         }
 
-        // Fetch ratings/reviews - use ID if viewing another user
-        setIsLoadingReviews(true);
-        const ratingsUrl = id
-          ? `${BACKEND_URL}/api/users/${id}/ratings?page=1&limit=20`
-          : `${BACKEND_URL}/api/users/ratings?page=1&limit=20`;
-
-        const ratingsResponse = await fetch(ratingsUrl, {
-          credentials: "include",
-        });
-
-        if (ratingsResponse.ok) {
-          const ratingsData = await ratingsResponse.json();
-          if (ratingsData.success && ratingsData.data) {
-            setReviews(ratingsData.data.ratings || []);
-          }
-        }
+        // Ratings will be fetched separately
         setIsLoadingReviews(false);
       } catch (err: any) {
         console.error("Error fetching profile:", err);
@@ -167,6 +169,40 @@ export default function UserProfilePage() {
 
     fetchUserProfile();
   }, [id, BACKEND_URL]);
+
+  // Fetch reviews with pagination
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!userProfile) return;
+
+      setIsLoadingReviews(true);
+      try {
+        const ratingsUrl = id
+          ? `${BACKEND_URL}/api/users/${id}/ratings?page=${reviewsPagination.page}&limit=${reviewsPagination.limit}`
+          : `${BACKEND_URL}/api/users/ratings?page=${reviewsPagination.page}&limit=${reviewsPagination.limit}`;
+
+        const ratingsResponse = await fetch(ratingsUrl, {
+          credentials: "include",
+        });
+
+        if (ratingsResponse.ok) {
+          const ratingsData = await ratingsResponse.json();
+          if (ratingsData.success && ratingsData.data) {
+            setReviews(ratingsData.data.ratings || []);
+            if (ratingsData.data.pagination) {
+              setReviewsPagination(ratingsData.data.pagination);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    };
+
+    fetchReviews();
+  }, [userProfile, reviewsPagination.page, id, BACKEND_URL]);
 
   // Check for upgrade success parameter
   useEffect(() => {
@@ -404,8 +440,8 @@ export default function UserProfilePage() {
                               isUrgent ? "text-amber-800" : "text-blue-800"
                             }`}
                           >
-                              <strong>Seller còn:</strong> {timeRemaining.days}d{" "}
-                              {timeRemaining.hours}h {timeRemaining.minutes}m
+                            <strong>Seller còn:</strong> {timeRemaining.days}d{" "}
+                            {timeRemaining.hours}h {timeRemaining.minutes}m
                           </AlertDescription>
                         </Alert>
                       );
@@ -721,10 +757,16 @@ export default function UserProfilePage() {
 
                     <p className="text-gray-700 mb-3">{review.comment}</p>
 
-                    {review.orderId && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                    {review.productId && (
+                      <div
+                        className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer hover:text-primary transition-colors"
+                        onClick={() => navigate(`/order/${review.productId}`)}
+                        title="Xem đơn hàng"
+                      >
                         <Package className="w-4 h-4" />
-                        <span>Đơn hàng: {review.orderId}</span>
+                        <span className="hover:underline">
+                          Đơn hàng: {review.productId}
+                        </span>
                       </div>
                     )}
                   </Card>
@@ -742,6 +784,157 @@ export default function UserProfilePage() {
                   </div>
                 </Card>
               )}
+
+              {/* Reviews Pagination */}
+              {!isLoadingReviews &&
+                reviews.length > 0 &&
+                reviewsPagination.totalPages > 1 && (
+                  <div className="mt-8 flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (reviewsPagination.page > 1) {
+                                setReviewsPagination({
+                                  ...reviewsPagination,
+                                  page: reviewsPagination.page - 1,
+                                });
+                              }
+                            }}
+                            className={
+                              reviewsPagination.page === 1
+                                ? "pointer-events-none opacity-50"
+                                : ""
+                            }
+                          />
+                        </PaginationItem>
+
+                        {/* First page */}
+                        {reviewsPagination.page > 2 && (
+                          <>
+                            <PaginationItem>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setReviewsPagination({
+                                    ...reviewsPagination,
+                                    page: 1,
+                                  });
+                                }}
+                              >
+                                1
+                              </PaginationLink>
+                            </PaginationItem>
+                            {reviewsPagination.page > 3 && (
+                              <PaginationItem>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            )}
+                          </>
+                        )}
+
+                        {/* Previous page */}
+                        {reviewsPagination.page > 1 && (
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setReviewsPagination({
+                                  ...reviewsPagination,
+                                  page: reviewsPagination.page - 1,
+                                });
+                              }}
+                            >
+                              {reviewsPagination.page - 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )}
+
+                        {/* Current page */}
+                        <PaginationItem>
+                          <PaginationLink href="#" isActive>
+                            {reviewsPagination.page}
+                          </PaginationLink>
+                        </PaginationItem>
+
+                        {/* Next page */}
+                        {reviewsPagination.page <
+                          reviewsPagination.totalPages && (
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setReviewsPagination({
+                                  ...reviewsPagination,
+                                  page: reviewsPagination.page + 1,
+                                });
+                              }}
+                            >
+                              {reviewsPagination.page + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )}
+
+                        {/* Last page */}
+                        {reviewsPagination.page <
+                          reviewsPagination.totalPages - 1 && (
+                          <>
+                            {reviewsPagination.page <
+                              reviewsPagination.totalPages - 2 && (
+                              <PaginationItem>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            )}
+                            <PaginationItem>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setReviewsPagination({
+                                    ...reviewsPagination,
+                                    page: reviewsPagination.totalPages,
+                                  });
+                                }}
+                              >
+                                {reviewsPagination.totalPages}
+                              </PaginationLink>
+                            </PaginationItem>
+                          </>
+                        )}
+
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (
+                                reviewsPagination.page <
+                                reviewsPagination.totalPages
+                              ) {
+                                setReviewsPagination({
+                                  ...reviewsPagination,
+                                  page: reviewsPagination.page + 1,
+                                });
+                              }
+                            }}
+                            className={
+                              reviewsPagination.page ===
+                              reviewsPagination.totalPages
+                                ? "pointer-events-none opacity-50"
+                                : ""
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
             </div>
           </div>
         </div>

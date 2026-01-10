@@ -290,7 +290,7 @@ class SellerService {
       prisma.product.findMany({
         where: {
           sellerId,
-          status: 'ENDED',
+          status: { not:'ACTIVE'},
           currentWinnerId: { not: null }
         },
         skip,

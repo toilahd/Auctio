@@ -51,13 +51,28 @@ const MyBidsPage = () => {
     totalPages: 0,
     hasMore: false,
   });
+  const [counts, setCounts] = useState({
+    active: 0,
+    won: 0,
+    lost: 0,
+  });
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   useEffect(() => {
-    fetchBiddingProducts();
-  }, [pagination.page]);
+    fetchCounts();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "won") {
+      fetchWonProducts();
+    } else if (activeTab === "lost") {
+      fetchLostProducts();
+    } else {
+      fetchBiddingProducts();
+    }
+  }, [pagination.page, activeTab]);
 
   const fetchBiddingProducts = async () => {
     setLoading(true);
@@ -80,16 +95,97 @@ const MyBidsPage = () => {
     }
   };
 
+  const fetchWonProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/users/won-products?page=${pagination.page}&limit=${pagination.limit}`,
+        {
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        // Mark all won products with isWinning flag for consistency
+        const wonProducts = data.data.products.map((p: Product) => ({
+          ...p,
+          isWinning: true,
+        }));
+        setProducts(wonProducts);
+        setPagination(data.data.pagination);
+      }
+    } catch (error) {
+      console.error("Error fetching won products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLostProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/users/lost-products?page=${pagination.page}&limit=${pagination.limit}`,
+        {
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        // Mark all lost products with isWinning false for consistency
+        const lostProducts = data.data.products.map((p: Product) => ({
+          ...p,
+          isWinning: false,
+        }));
+        setProducts(lostProducts);
+        setPagination(data.data.pagination);
+      }
+    } catch (error) {
+      console.error("Error fetching lost products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCounts = async () => {
+    try {
+      const [biddingRes, wonRes, lostRes] = await Promise.all([
+        fetch(`${BACKEND_URL}/api/users/bidding-products?page=1&limit=1`, {
+          credentials: "include",
+        }),
+        fetch(`${BACKEND_URL}/api/users/won-products?page=1&limit=1`, {
+          credentials: "include",
+        }),
+        fetch(`${BACKEND_URL}/api/users/lost-products?page=1&limit=1`, {
+          credentials: "include",
+        }),
+      ]);
+
+      const [biddingData, wonData, lostData] = await Promise.all([
+        biddingRes.json(),
+        wonRes.json(),
+        lostRes.json(),
+      ]);
+
+      setCounts({
+        active: biddingData.success ? biddingData.data.pagination.total : 0,
+        won: wonData.success ? wonData.data.pagination.total : 0,
+        lost: lostData.success ? lostData.data.pagination.total : 0,
+      });
+    } catch (error) {
+      console.error("Error fetching counts:", error);
+    }
+  };
+
   // Filter products based on active tab
   const filteredProducts = products.filter((product) => {
-    if (activeTab === "active") {
+    if (activeTab === "won" || activeTab === "lost") {
+      // Won and lost products come from dedicated endpoints, no filtering needed
+      return true;
+    } else if (activeTab === "active") {
       return product.status === "ACTIVE";
-    } else if (activeTab === "won") {
-      return product.status !== "ACTIVE" && product.isWinning;
-    } else {
-      // lost
-      return product.status !== "ACTIVE" && !product.isWinning;
     }
+    return true;
   });
 
   const formatPrice = (price: string | number) => {
@@ -161,7 +257,10 @@ const MyBidsPage = () => {
           <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex gap-8">
               <button
-                onClick={() => setActiveTab("active")}
+                onClick={() => {
+                  setActiveTab("active");
+                  setPagination({ ...pagination, page: 1 });
+                }}
                 className={`pb-4 px-2 border-b-2 font-semibold transition ${
                   activeTab === "active"
                     ? "border-primary text-primary"
@@ -170,11 +269,14 @@ const MyBidsPage = () => {
               >
                 Đang đấu giá
                 <span className="ml-2 px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                  {products.filter((p) => p.status === "ACTIVE").length}
+                  {counts.active}
                 </span>
               </button>
               <button
-                onClick={() => setActiveTab("won")}
+                onClick={() => {
+                  setActiveTab("won");
+                  setPagination({ ...pagination, page: 1 });
+                }}
                 className={`pb-4 px-2 border-b-2 font-semibold transition ${
                   activeTab === "won"
                     ? "border-primary text-primary"
@@ -183,14 +285,14 @@ const MyBidsPage = () => {
               >
                 Đã thắng
                 <span className="ml-2 px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-950/20 text-green-600">
-                  {
-                    products.filter((p) => p.status !== "ACTIVE" && p.isWinning)
-                      .length
-                  }
+                  {counts.won}
                 </span>
               </button>
               <button
-                onClick={() => setActiveTab("lost")}
+                onClick={() => {
+                  setActiveTab("lost");
+                  setPagination({ ...pagination, page: 1 });
+                }}
                 className={`pb-4 px-2 border-b-2 font-semibold transition ${
                   activeTab === "lost"
                     ? "border-primary text-primary"
@@ -199,11 +301,7 @@ const MyBidsPage = () => {
               >
                 Đã thua
                 <span className="ml-2 px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600">
-                  {
-                    products.filter(
-                      (p) => p.status !== "ACTIVE" && !p.isWinning
-                    ).length
-                  }
+                  {counts.lost}
                 </span>
               </button>
             </div>

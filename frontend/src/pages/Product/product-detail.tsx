@@ -121,6 +121,7 @@ const ProductDetailPage = () => {
   );
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [imageTransition, setImageTransition] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -186,6 +187,35 @@ const ProductDetailPage = () => {
     if (id) checkWatchlistStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Update countdown every second when auction is ending soon
+  useEffect(() => {
+    if (!product?.endTime) return;
+
+    // Check if auction is less than 3 days away
+    const checkIsEndingSoon = () => {
+      const end = new Date(product.endTime).getTime();
+      const diff = end - Date.now();
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      return days < 3 && diff > 0;
+    };
+
+    if (checkIsEndingSoon()) {
+      // Update every second
+      const interval = setInterval(() => {
+        setNow(Date.now());
+      }, 1000);
+
+      return () => clearInterval(interval);
+    } else {
+      // Update every minute for auctions > 3 days
+      const interval = setInterval(() => {
+        setNow(Date.now());
+      }, 60000);
+
+      return () => clearInterval(interval);
+    }
+  }, [product?.endTime]);
 
   const checkWatchlistStatus = async () => {
     try {
@@ -368,7 +398,6 @@ const ProductDetailPage = () => {
 
   const getTimeComponents = (endTime: string) => {
     const end = new Date(endTime).getTime();
-    const now = Date.now();
     const diff = end - now;
 
     if (diff <= 0) return null;
