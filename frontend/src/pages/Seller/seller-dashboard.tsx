@@ -43,7 +43,14 @@ interface Product {
   startingPrice: number;
   totalBids: number;
   endTime: string;
-  status: "ACTIVE" | "ENDED" | "CANCELED" | "PAYED";
+  status:
+    | "ACTIVE"
+    | "ENDED"
+    | "PAYED"
+    | "SHIPPING"
+    | "DELIVERED"
+    | "COMPLETED"
+    | "CANCELED";
   views: number;
   watchers: number;
   currentWinnerId?: string;
@@ -318,6 +325,21 @@ const SellerDashboardPage = () => {
         text: "Đã thanh toán",
         color:
           "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400",
+      },
+      SHIPPING: {
+        text: "Đang giao hàng",
+        color:
+          "bg-purple-100 text-purple-800 dark:bg-purple-950/20 dark:text-purple-400",
+      },
+      DELIVERED: {
+        text: "Đã giao hàng",
+        color:
+          "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/20 dark:text-indigo-400",
+      },
+      COMPLETED: {
+        text: "Hoàn tất",
+        color:
+          "bg-teal-100 text-teal-800 dark:bg-teal-950/20 dark:text-teal-400",
       },
       CANCELED: {
         text: "Không có người thắng",
@@ -635,7 +657,9 @@ const SellerDashboardPage = () => {
                               ) : product.status === "ENDED" ||
                                 product.status === "PAYED" ||
                                 product.status === "SHIPPING" ||
-                                product.status === "DELIVERED" ? (
+                                product.status === "DELIVERED" ||
+                                product.status === "COMPLETED" ||
+                                product.status === "CANCELED" ? (
                                 <div className="flex items-center gap-2">
                                   <Button
                                     variant="default"
