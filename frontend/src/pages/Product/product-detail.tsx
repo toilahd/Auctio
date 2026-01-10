@@ -3,6 +3,16 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -99,6 +109,8 @@ const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [showBuyNowDialog, setShowBuyNowDialog] = useState(false);
+  const [buyNowLoading, setBuyNowLoading] = useState(false);
   const [isTogglingWatchlist, setIsTogglingWatchlist] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
@@ -221,6 +233,56 @@ const ProductDetailPage = () => {
     } finally {
       setIsTogglingWatchlist(false);
     }
+  };
+
+  const handleBuyNowClick = () => {
+    setShowBuyNowDialog(true);
+  };
+
+  const handleBuyNowConfirm = async () => {
+    if (!product?.buyNowPrice) return;
+
+    setBuyNowLoading(true);
+    setShowBuyNowDialog(false);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/bids`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          productId: id,
+          maxAmount: parseFloat(product.buyNowPrice),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        if (data.data.buyNowTriggered) {
+          alert(
+            `🎉 Chúc mừng! Bạn đã mua thành công sản phẩm với giá ${parseFloat(
+              product.buyNowPrice
+            ).toLocaleString()} VND. Phiên đấu giá đã kết thúc.`
+          );
+          // Refresh page to show ended status
+          navigate(0);
+        }
+      } else {
+        alert(data.message || "Không thể mua sản phẩm");
+      }
+    } catch (error) {
+      console.error("Error buying now:", error);
+      alert("Đã xảy ra lỗi khi mua sản phẩm");
+    } finally {
+      setBuyNowLoading(false);
+    }
+  };
+
+  const handleBuyNowCancel = () => {
+    setShowBuyNowDialog(false);
   };
 
   const handleAskQuestion = async () => {
@@ -759,10 +821,25 @@ const ProductDetailPage = () => {
                     />
 
                     {product.buyNowPrice && user && (
-                      <Button variant="secondary" className="w-full" size="lg">
-                        <Tag className="w-4 h-4 mr-2" />
-                        Mua ngay -{" "}
-                        {formatPrice(parseFloat(product.buyNowPrice))}
+                      <Button
+                        variant="secondary"
+                        className="w-full"
+                        size="lg"
+                        onClick={handleBuyNowClick}
+                        disabled={buyNowLoading}
+                      >
+                        {buyNowLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Đang xử lý...
+                          </>
+                        ) : (
+                          <>
+                            <Tag className="w-4 h-4 mr-2" />
+                            Mua ngay -{" "}
+                            {formatPrice(parseFloat(product.buyNowPrice))}
+                          </>
+                        )}
                       </Button>
                     )}
 
@@ -1021,6 +1098,52 @@ const ProductDetailPage = () => {
       </main>
 
       <Footer />
+
+      {/* Buy Now Confirmation Dialog */}
+      <AlertDialog open={showBuyNowDialog} onOpenChange={setShowBuyNowDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác Nhận Mua Ngay</AlertDialogTitle>
+            <AlertDialogDescription>
+              <div className="space-y-3 mt-2">
+                <p className="text-foreground">
+                  Bạn có chắc chắn muốn mua sản phẩm này với giá mua ngay?
+                </p>
+                <div className="bg-muted p-4 rounded-md space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Sản phẩm:</span>
+                    <span className="font-medium text-foreground">{product?.title}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Giá mua ngay:</span>
+                    <span className="text-lg font-bold text-primary">
+                      {product?.buyNowPrice && formatPrice(parseFloat(product.buyNowPrice))}
+                    </span>
+                  </div>
+                </div>
+                <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded-md">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    <strong>⚠️ Lưu ý:</strong>
+                  </p>
+                  <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-1 space-y-1 ml-4 list-disc">
+                    <li>Phiên đấu giá sẽ kết thúc ngay lập tức</li>
+                    <li>Bạn không thể hủy sau khi xác nhận</li>
+                    <li>Bạn cần thanh toán trong thời gian quy định</li>
+                  </ul>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleBuyNowCancel}>
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleBuyNowConfirm}>
+              Xác Nhận Mua Ngay
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

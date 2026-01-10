@@ -9,7 +9,11 @@ const router = express.Router();
  * Search products with filters
  * Query params:
  *  - q: search query (Vietnamese no-accent supported)
- *  - categoryId: filter by category
+ *  - categoryId: filter by category (supports parent and child categories)
+ *  - minPrice: minimum price filter
+ *  - maxPrice: maximum price filter
+ *  - hasBuyNow: filter products with Buy Now option (true/false)
+ *  - endingSoon: filter products ending in X hours
  *  - page: page number (default 1)
  *  - limit: items per page (default 20)
  *  - sortBy: endTime|price|newest|bidCount (default endTime)

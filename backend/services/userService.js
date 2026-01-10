@@ -211,11 +211,16 @@ class UserService {
         prisma.product.findMany({
           where: {
             id: { in: productIds },
-            status: 'ACTIVE'
+            status: {
+              in: ['ACTIVE', 'ENDED'] // Include both active and ended products
+            }
           },
           skip,
           take: limit,
-          orderBy: { endTime: 'asc' },
+          orderBy: [
+            { status: 'asc' }, // ACTIVE first, then ENDED
+            { endTime: 'asc' }  // Within each group, sort by end time
+          ],
           include: {
             category: {
               select: {
@@ -224,6 +229,12 @@ class UserService {
               }
             },
             currentWinner: {
+              select: {
+                id: true,
+                fullName: true
+              }
+            },
+            seller: {
               select: {
                 id: true,
                 fullName: true
@@ -239,7 +250,9 @@ class UserService {
         prisma.product.count({
           where: {
             id: { in: productIds },
-            status: 'ACTIVE'
+            status: {
+              in: ['ACTIVE', 'ENDED']
+            }
           }
         })
       ]);
@@ -247,7 +260,9 @@ class UserService {
       const productsWithStatus = products.map(p => ({
         ...p,
         bidCount: p._count.bids,
-        isWinning: p.currentWinnerId === userId
+        isWinning: p.currentWinnerId === userId,
+        hasWon: p.status === 'ENDED' && p.currentWinnerId === userId,
+        hasLost: p.status === 'ENDED' && p.currentWinnerId !== userId
       }));
 
       return {

@@ -82,6 +82,10 @@ export default function SearchPage() {
   const initialSortBy = searchParams.get("sortBy") || "endTime";
   const initialOrder = searchParams.get("order") || "asc";
   const initialPage = parseInt(searchParams.get("page") || "1");
+  const initialMinPrice = searchParams.get("minPrice") || "";
+  const initialMaxPrice = searchParams.get("maxPrice") || "";
+  const initialHasBuyNow = searchParams.get("hasBuyNow") === "true";
+  const initialEndingSoon = searchParams.get("endingSoon") || "all";
 
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] =
@@ -90,7 +94,11 @@ export default function SearchPage() {
   const [order, setOrder] = useState<string>(initialOrder);
   const [page, setPage] = useState(initialPage);
   const [limit] = useState(12);
-  const [highlightMinutes, setHighlightMinutes] = useState(30);
+  const [highlightMinutes] = useState(30);
+  const [minPrice, setMinPrice] = useState<string>(initialMinPrice);
+  const [maxPrice, setMaxPrice] = useState<string>(initialMaxPrice);
+  const [hasBuyNow, setHasBuyNow] = useState<boolean>(initialHasBuyNow);
+  const [endingSoon, setEndingSoon] = useState<string>(initialEndingSoon);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -197,6 +205,10 @@ export default function SearchPage() {
         if (searchQuery) params.append("q", searchQuery);
         if (selectedCategory && selectedCategory !== "all")
           params.append("categoryId", selectedCategory);
+        if (minPrice) params.append("minPrice", minPrice);
+        if (maxPrice) params.append("maxPrice", maxPrice);
+        if (hasBuyNow) params.append("hasBuyNow", "true");
+        if (endingSoon && endingSoon !== "all") params.append("endingSoon", endingSoon);
         params.append("page", page.toString());
         params.append("limit", limit.toString());
         params.append("sortBy", sortBy);
@@ -227,6 +239,10 @@ export default function SearchPage() {
   }, [
     searchQuery,
     selectedCategory,
+    minPrice,
+    maxPrice,
+    hasBuyNow,
+    endingSoon,
     page,
     limit,
     sortBy,
@@ -235,25 +251,16 @@ export default function SearchPage() {
     categoryChildrenMap,
   ]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    // Update URL params
-    const params = new URLSearchParams();
-    if (searchQuery) params.set("q", searchQuery);
-    if (selectedCategory && selectedCategory !== "all")
-      params.set("categoryId", selectedCategory);
-    params.set("sortBy", sortBy);
-    params.set("order", order);
-    params.set("page", "1");
-    setSearchParams(params);
-  };
 
   const handleClearFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
     setSortBy("endTime");
     setOrder("asc");
+    setMinPrice("");
+    setMaxPrice("");
+    setHasBuyNow(false);
+    setEndingSoon("all");
     setPage(1);
     setSearchParams({});
   };
@@ -346,12 +353,20 @@ export default function SearchPage() {
                   Bộ lọc
                   {(selectedCategory !== "all" ||
                     sortBy !== "endTime" ||
-                    order !== "asc") && (
+                    order !== "asc" ||
+                    minPrice ||
+                    maxPrice ||
+                    hasBuyNow ||
+                    endingSoon !== "all") && (
                     <span className="ml-2 px-2 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
                       {
                         [
                           selectedCategory !== "all",
                           sortBy !== "endTime" || order !== "asc",
+                          minPrice !== "",
+                          maxPrice !== "",
+                          hasBuyNow,
+                          endingSoon !== "all",
                         ].filter(Boolean).length
                       }
                     </span>
@@ -366,7 +381,11 @@ export default function SearchPage() {
                     selectedCategory === "all" &&
                     sortBy === "endTime" &&
                     order === "asc" &&
-                    !searchQuery
+                    !searchQuery &&
+                    !minPrice &&
+                    !maxPrice &&
+                    !hasBuyNow &&
+                    endingSoon === "all"
                   }
                 >
                   <X className="w-4 h-4 mr-1" />
@@ -475,6 +494,80 @@ export default function SearchPage() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Price Range Filter */}
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Khoảng giá
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Tối thiểu"
+                      value={minPrice}
+                      onChange={(e) => {
+                        setMinPrice(e.target.value);
+                        setPage(1);
+                      }}
+                      className="text-sm"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Tối đa"
+                      value={maxPrice}
+                      onChange={(e) => {
+                        setMaxPrice(e.target.value);
+                        setPage(1);
+                      }}
+                      className="text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Ending Soon Filter */}
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Thời gian kết thúc
+                  </label>
+                  <Select
+                    value={endingSoon}
+                    onValueChange={(value) => {
+                      setEndingSoon(value);
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tất cả" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="1">Kết thúc trong 1 giờ</SelectItem>
+                      <SelectItem value="6">Kết thúc trong 6 giờ</SelectItem>
+                      <SelectItem value="24">Kết thúc trong 24 giờ</SelectItem>
+                      <SelectItem value="72">Kết thúc trong 3 ngày</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Has Buy Now Filter */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="hasBuyNow"
+                    checked={hasBuyNow}
+                    onChange={(e) => {
+                      setHasBuyNow(e.target.checked);
+                      setPage(1);
+                    }}
+                    className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+                  />
+                  <label
+                    htmlFor="hasBuyNow"
+                    className="text-sm font-medium text-foreground cursor-pointer"
+                  >
+                    Có giá mua ngay
+                  </label>
                 </div>
               </div>
             </Card>
