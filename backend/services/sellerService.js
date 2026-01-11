@@ -89,7 +89,16 @@ class SellerService {
   async appendDescription(sellerId, productId, newDescription) {
     // Verify ownership
     const product = await prisma.product.findUnique({
-      where: { id: productId }
+      where: { id: productId },
+      include: {
+        seller: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true
+          }
+        }
+      }
     });
 
     if (!product) {
@@ -122,7 +131,67 @@ class SellerService {
       })
     ]);
 
-    logger.info(`Description appended to product ${productId}`);
+    // Get all interested users (bidders + watchers) to notify
+    const [bidders, watchers] = await Promise.all([
+      prisma.bid.findMany({
+        where: { productId },
+        distinct: ['bidderId'],
+        select: {
+          bidder: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true
+            }
+          }
+        }
+      }),
+      prisma.watchList.findMany({
+        where: { productId },
+        select: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true
+            }
+          }
+        }
+      })
+    ]);
+
+    // Combine and deduplicate recipients
+    const recipientMap = new Map();
+
+    bidders.forEach(b => {
+      if (b.bidder) {
+        recipientMap.set(b.bidder.id, b.bidder);
+      }
+    });
+
+    watchers.forEach(w => {
+      if (w.user) {
+        recipientMap.set(w.user.id, w.user);
+      }
+    });
+
+    const recipients = Array.from(recipientMap.values());
+
+    // Send email notifications asynchronously
+    if (recipients.length > 0) {
+      setImmediate(() => {
+        emailNotificationService.notifyProductDescriptionUpdated({
+          product: {
+            id: product.id,
+            title: product.title
+          },
+          seller: product.seller,
+          bidders: recipients
+        });
+      });
+    }
+
+    logger.info(`Description appended to product ${productId}, notifying ${recipients.length} users`);
     return updatedProduct;
   }
 

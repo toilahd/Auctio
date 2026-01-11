@@ -253,15 +253,16 @@ class BiddingService {
           select: { id: true, fullName: true, email: true }
         });
 
-        // Send email notifications asynchronously (after transaction commits)
-        setImmediate(() => {
-          emailNotificationService.notifyBidPlaced({
-            product: productWithDetails,
-            newBidder: newBidderDetails,
-            newPrice: product.startPrice,
-            previousWinner: null
-          });
+      // Send email notifications asynchronously (after transaction commits)
+      setImmediate(() => {
+        emailNotificationService.notifyBidPlaced({
+          product: productWithDetails,
+          newBidder: newBidderDetails,
+          newPrice: product.startPrice,
+          previousWinner: null,
+          currentWinnerId: bidderId
         });
+      });
 
         return {
           success: true,
@@ -339,7 +340,8 @@ class BiddingService {
           product: productWithDetails,
           newBidder: newBidderDetails,
           newPrice: resolved.finalPrice,
-          previousWinner: previousWinnerDetails
+          previousWinner: previousWinnerDetails,
+          currentWinnerId: resolved.winnerId
         });
       });
 
