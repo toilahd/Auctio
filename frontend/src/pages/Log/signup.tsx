@@ -184,7 +184,7 @@ const SignUp = () => {
                     message: "Địa chỉ email không hợp lệ",
                   },
                 })}
-                type="email"
+                // type="email"
                 placeholder="nguyena@example.com"
                 id="email"
                 name="email"
