@@ -1073,10 +1073,69 @@ async function main() {
 
   console.log(`Created ${await prisma.product.count()} products\n`);
 
+  // ========================================
+  // TẠO LỊCH SỬ ĐẤU GIÁ (Mỗi sản phẩm ít nhất 5 bids)
+  // ========================================
+  console.log('Creating bid history (minimum 5 bids per product)...');
+
+  const allProducts = await prisma.product.findMany({
+    where: { status: 'ACTIVE' },
+  });
+
+  const bidders = [bidder1.id, bidder2.id];
+  let totalBidsCreated = 0;
+
+  for (const product of allProducts) {
+    const startPrice = Number(product.startPrice);
+    const stepPrice = Number(product.stepPrice);
+    const numBids = 5 + Math.floor(Math.random() * 3); // 5-7 bids per product
+
+    let currentPrice = startPrice;
+    let currentWinnerId = null;
+
+    for (let i = 0; i < numBids; i++) {
+      const bidderId = bidders[i % bidders.length];
+
+      // Calculate amount and maxAmount
+      const amount = currentPrice;
+      const maxAmount = currentPrice + stepPrice * (Math.floor(Math.random() * 2) + 1);
+
+      await prisma.bid.create({
+        data: {
+          productId: product.id,
+          bidderId: bidderId,
+          amount: amount,
+          maxAmount: maxAmount,
+          isAutoBid: i > 0,
+          createdAt: new Date(Date.now() - (numBids - i) * 3600000), // Stagger by hours
+        },
+      });
+
+      currentPrice = amount + stepPrice;
+      currentWinnerId = bidderId;
+      totalBidsCreated++;
+    }
+
+    // Update product with final state
+    await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        currentPrice: currentPrice - stepPrice, // Last bid price
+        currentWinnerId: currentWinnerId,
+        bidCount: numBids,
+      },
+    });
+
+    console.log(`  ✓ Created ${numBids} bids for: ${product.title.substring(0, 50)}...`);
+  }
+
+  console.log(`\nCreated ${totalBidsCreated} total bids\n`);
+
   console.log('Database seeded successfully!');
-  console.log(`Total users: ${await prisma.user. count()}`);
-  console.log(`Total categories: ${await prisma.category. count()}`);
+  console.log(`Total users: ${await prisma.user.count()}`);
+  console.log(`Total categories: ${await prisma.category.count()}`);
   console.log(`Total products: ${await prisma.product.count()}`);
+  console.log(`Total bids: ${await prisma.bid.count()}`);
 }
 
 main()
