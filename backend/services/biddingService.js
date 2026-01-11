@@ -30,13 +30,13 @@ function resolveAutoBid({ currentMax, currentBidderId, newMax, newBidderId, step
   // Case 1: Bidder mới có max cao hơn
   if (newMax > currentMax) {
     winnerId = newBidderId;
-    // Giá chỉ tăng vừa đủ để thắng người cũ (max cũ + step)
+    // Giá vào sản phẩm = max bid của người thua + step
     // Nhưng không vượt quá max của người mới
     finalPrice = Math.min(currentMax + step, newMax);
 
     console.log('→ Case 1: New max > Current max');
     console.log('→ New bidder WINS!');
-    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND');
+    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND (= currentMax + step)');
 
     // Chỉ tạo 1 bid của người mới
     bids.push({
@@ -49,40 +49,56 @@ function resolveAutoBid({ currentMax, currentBidderId, newMax, newBidderId, step
   // Case 2: Bidder mới có max thấp hơn
   else if (newMax < currentMax) {
     winnerId = currentBidderId;
-    // Người giữ giá thắng mà KHÔNG CẦN tăng giá
-    // Giá hiện tại = giá của người thua (newMax)
+    // Người thua = newBidder (vào SAU)
+    // Giá hiện tại = max của người thua (KHÔNG cộng step vì vào sau)
     finalPrice = newMax;
 
     console.log('→ Case 2: New max < Current max');
-    console.log('→ Current bidder KEEPS winning WITHOUT price increase!');
-    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND (= losing bid)');
+    console.log('→ Current bidder KEEPS winning!');
+    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND (= newMax, no step because loser came AFTER)');
 
-    // CHỈ tạo bid của người mới (người thua)
-    // KHÔNG tạo auto-bid cho người giữ giá
+    // Tạo bid của người mới (người thua)
     bids.push({
       bidderId: newBidderId,
       amount: newMax,
       maxAmount: newMax,
       isAutoBid: false
     });
+
+    // Tạo auto-bid cho người giữ giá để lưu lại max bid của họ
+    // Điều này đảm bảo lần bid tiếp theo sẽ tính đúng từ currentMax
+    bids.push({
+      bidderId: currentBidderId,
+      amount: finalPrice,
+      maxAmount: currentMax,
+      isAutoBid: true
+    });
   }
   // Case 3: Hai max bằng nhau
   else {
     // Người vào trước được ưu tiên giữ giá
     winnerId = currentBidderId;
-    // Người sau phải bid toàn bộ max nhưng vẫn thua
+    // Giá vào sản phẩm = max bid chung (vì bằng nhau)
     finalPrice = newMax;
 
     console.log('→ Case 3: Max bids are EQUAL');
     console.log('→ Current bidder wins (first-come priority)');
-    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND');
+    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND (equal max bids)');
 
-    // Tạo bid của người mới (bid toàn bộ max nhưng vẫn thua)
+    // Tạo bid của người mới (bid toàn bộ max nhưng vẫn thua do vào sau)
     bids.push({
       bidderId: newBidderId,
       amount: newMax,
       maxAmount: newMax,
       isAutoBid: false
+    });
+
+    // Tạo auto-bid cho người giữ giá để lưu lại max bid của họ
+    bids.push({
+      bidderId: currentBidderId,
+      amount: finalPrice,
+      maxAmount: currentMax,
+      isAutoBid: true
     });
   }
 
@@ -343,8 +359,12 @@ class BiddingService {
    */
   async getBidHistory(productId, limit = 20, offset = 0) {
     try {
+      // Chỉ lấy bid thực tế (không lấy auto-bid)
       const bids = await prisma.bid.findMany({
-        where: { productId },
+        where: {
+          productId,
+          isAutoBid: false  // Lọc bỏ auto-bid
+        },
         orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset,
@@ -359,7 +379,12 @@ class BiddingService {
         }
       });
 
-      const total = await prisma.bid.count({ where: { productId } });
+      const total = await prisma.bid.count({
+        where: {
+          productId,
+          isAutoBid: false  // Đếm chỉ bid thực tế
+        }
+      });
 
       // Get all denied bidders for this product
       const deniedBidders = await prisma.deniedBidder.findMany({
