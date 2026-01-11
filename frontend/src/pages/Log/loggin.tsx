@@ -23,7 +23,7 @@ const Login = () => {
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
   const googleLogin = async () => {
-    window.location.href = `${BACKEND_URL}/login/federated/google`;
+    window.location.href = `${BACKEND_URL}/auth/login/federated/google`;
   };
 
   const {

@@ -49,32 +49,22 @@ function resolveAutoBid({ currentMax, currentBidderId, newMax, newBidderId, step
   // Case 2: Bidder mới có max thấp hơn
   else if (newMax < currentMax) {
     winnerId = currentBidderId;
-    // Giá tăng vừa đủ để thắng người mới (max mới + step)
-    // Nhưng không vượt quá max của người giữ giá
-    finalPrice = Math.min(newMax + step, currentMax);
+    // Người giữ giá thắng mà KHÔNG CẦN tăng giá
+    // Giá hiện tại = giá của người thua (newMax)
+    finalPrice = newMax;
 
     console.log('→ Case 2: New max < Current max');
-    console.log('→ Current bidder KEEPS winning!');
-    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND');
+    console.log('→ Current bidder KEEPS winning WITHOUT price increase!');
+    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND (= losing bid)');
 
-    // Tạo bid của người mới
+    // CHỈ tạo bid của người mới (người thua)
+    // KHÔNG tạo auto-bid cho người giữ giá
     bids.push({
       bidderId: newBidderId,
       amount: newMax,
       maxAmount: newMax,
       isAutoBid: false
     });
-
-    // Chỉ tạo auto-bid nếu giá thực sự tăng
-    if (finalPrice > newMax) {
-      console.log('→ Creating AUTO-BID for current bidder');
-      bids.push({
-        bidderId: currentBidderId,
-        amount: finalPrice,
-        maxAmount: currentMax,
-        isAutoBid: true
-      });
-    }
   }
   // Case 3: Hai max bằng nhau
   else {

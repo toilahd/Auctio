@@ -20,7 +20,7 @@ const SignUp = () => {
   const RE_SITE_KEY = import.meta.env.VITE_RE_SITE_KEY;
 
   const googleLogin = async () => {
-    navigate(`${BACKEND_URL}/login/federated/google`);
+    window.location.href = `${BACKEND_URL}/auth/login/federated/google`;
   };
 
   const {

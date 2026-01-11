@@ -117,7 +117,7 @@ export const biddingSchemas = {
   placeBid: {
     body: z.object({
       productId: z.string().min(1, 'Product ID is required'),
-      amount: z.number().positive('Amount must be positive')
+      maxAmount: z.coerce.number().positive('Amount must be positive')
     })
   },
 
@@ -229,7 +229,9 @@ export const sellerSchemas = {
       id: z.string().min(1, 'Product ID is required')
     }),
     body: z.object({
-      rating: z.enum([1, -1]).or(z.literal(1)).or(z.literal(-1)),
+      rating: z.coerce.number().refine(val => val === 1 || val === -1, {
+        message: 'Rating must be 1 or -1'
+      }),
       comment: z.string().optional()
     })
   },
@@ -272,7 +274,9 @@ export const userSchemas = {
     body: z.object({
       sellerId: z.string().min(1, 'Seller ID is required'),
       productId: z.string().min(1, 'Product ID is required'),
-      rating: z.enum([1, -1]).or(z.literal(1)).or(z.literal(-1)),
+      rating: z.coerce.number().refine(val => val === 1 || val === -1, {
+        message: 'Rating must be 1 or -1'
+      }),
       comment: z.string().optional()
     })
   },
@@ -356,8 +360,8 @@ export const adminSchemas = {
   updateAuctionSettings: {
     body: z.object({
       autoExtendEnabled: z.boolean().optional(),
-      autoExtendTriggerMinutes: z.number().int().positive().optional(),
-      autoExtendDurationMinutes: z.number().int().positive().optional()
+      autoExtendTriggerMinutes: z.coerce.number().int().positive().optional(),
+      autoExtendDurationMinutes: z.coerce.number().int().positive().optional()
     })
   }
 };
@@ -424,7 +428,9 @@ export const orderSchemas = {
       id: z.string().min(1, 'Order ID is required')
     }),
     body: z.object({
-      rating: z.enum([1, -1]).or(z.literal(1)).or(z.literal(-1)),
+      rating: z.coerce.number().refine(val => val === 1 || val === -1, {
+        message: 'Rating must be 1 or -1'
+      }),
       comment: z.string().optional()
     })
   },

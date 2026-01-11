@@ -571,6 +571,7 @@ const ProductDetailPage = () => {
             <BidHistoryList
               productId={product.id}
               productStatus={product.status}
+              currentWinnerId={product.currentWinner?.id || null}
             />
           </div>
 
