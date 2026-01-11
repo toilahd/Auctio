@@ -11,6 +11,7 @@ import { Trophy, Info } from "lucide-react";
 interface BidHistoryListProps {
   productId: string;
   productStatus?: string;
+  currentWinnerId?: string | null;
 }
 
 /**
@@ -20,6 +21,7 @@ interface BidHistoryListProps {
 export const BidHistoryList: React.FC<BidHistoryListProps> = ({
   productId,
   productStatus,
+  currentWinnerId,
 }) => {
   const navigate = useNavigate();
   const {
@@ -167,12 +169,18 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
                 </thead>
                 <tbody>
                   {bidHistory.bids.map((bid, index) => {
-                    const isWinning = index === 0;
+                    // Người thắng là người có bid.bidder.id === currentWinnerId
+                    const isWinning = currentWinnerId && bid.bidder.id === currentWinnerId;
+                    // Người thua vì có người khác có maxBid cao hơn (bid sau nhưng vẫn thua)
+                    const isOutbid = !isWinning && index === 0 && currentWinnerId && currentWinnerId !== bid.bidder.id;
+
                     return (
                       <tr
                         key={bid.id}
                         className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${
                           isWinning ? "bg-green-50 dark:bg-green-900/10" : ""
+                        } ${
+                          isOutbid ? "bg-orange-50 dark:bg-orange-900/10" : ""
                         }`}
                       >
                         {/* STT */}
@@ -200,6 +208,15 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
                               >
                                 <Trophy className="w-3 h-3" />
                                 Đang Dẫn Đầu
+                              </Badge>
+                            )}
+                            {isOutbid && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs flex items-center gap-1 text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-600"
+                              >
+                                <Info className="w-3 h-3" />
+                                Đã bị vượt (có người đặt giá trước bạn)
                               </Badge>
                             )}
                           </div>

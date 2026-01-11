@@ -1,6 +1,7 @@
 // routes/productRoutes.js
 import express from 'express';
 import productController from '../controllers/productController.js';
+import { validate, productSchemas } from '../middlewares/validationMiddleware.js';
 
 const router = express.Router();
 
@@ -20,26 +21,26 @@ const router = express.Router();
  *  - order: asc|desc (default desc)
  *  - highlightMinutes: minutes to highlight new products (default 30)
  */
-router.get('/search', productController.searchProducts);
+router.get('/search', validate(productSchemas.search), productController.searchProducts);
 
 /**
  * GET /api/products/top/:criteria
  * Get top 5 products for homepage
  * Params: criteria = ending_soon|most_bids|highest_price
  */
-router.get('/top/:criteria', productController.getTopProducts);
+router.get('/top/:criteria', validate(productSchemas.getTopProducts), productController.getTopProducts);
 
 /**
  * GET /api/products/category/:categoryId
  * Get products by category with pagination
  * Query params: page, limit
  */
-router.get('/category/:categoryId', productController.getProductsByCategory);
+router.get('/category/:categoryId', validate(productSchemas.getByCategory), productController.getProductsByCategory);
 
 /**
  * GET /api/products/:id
  * Get product by ID
  */
-router.get('/:id', productController.getProductById);
+router.get('/:id', validate(productSchemas.getById), productController.getProductById);
 
 export default router;

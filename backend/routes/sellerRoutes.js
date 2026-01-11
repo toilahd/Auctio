@@ -2,6 +2,7 @@ import express from 'express';
 import sellerController from '../controllers/sellerController.js';
 import { authenticate } from '../middlewares/authMiddleware.js';
 import getUserFromJwt from '../utils/getUserFromJwtMiddleware.js';
+import { validate, sellerSchemas, commonSchemas } from '../middlewares/validationMiddleware.js';
 
 const router = express.Router();
 
@@ -33,21 +34,21 @@ router.get('/config', sellerController.getSellerConfig);
  *  - autoExtend: boolean (optional, default false)
  *  - endTime: ISO date string (required)
  */
-router.post('/products', sellerController.createProduct);
+router.post('/products', validate(sellerSchemas.createProduct), sellerController.createProduct);
 
 /**
  * GET /api/seller/products/active
  * Get seller's active products
  * Query params: page, limit
  */
-router.get('/products/active', sellerController.getActiveProducts);
+router.get('/products/active', validate({ query: commonSchemas.pagination }), sellerController.getActiveProducts);
 
 /**
  * GET /api/seller/products/completed
  * Get seller's completed products with winners
  * Query params: page, limit
  */
-router.get('/products/completed', sellerController.getCompletedProducts);
+router.get('/products/completed', validate({ query: commonSchemas.pagination }), sellerController.getCompletedProducts);
 
 /**
  * PATCH /api/seller/products/:id/description
@@ -55,7 +56,7 @@ router.get('/products/completed', sellerController.getCompletedProducts);
  * Body:
  *  - description: string (required)
  */
-router.patch('/products/:id/description', sellerController.appendDescription);
+router.patch('/products/:id/description', validate(sellerSchemas.appendDescription), sellerController.appendDescription);
 
 /**
  * POST /api/seller/products/:id/deny-bidder
@@ -64,7 +65,7 @@ router.patch('/products/:id/description', sellerController.appendDescription);
  *  - bidderId: string (required)
  *  - reason: string (optional)
  */
-router.post('/products/:id/deny-bidder', sellerController.denyBidder);
+router.post('/products/:id/deny-bidder', validate(sellerSchemas.denyBidder), sellerController.denyBidder);
 
 /**
  * POST /api/seller/products/:id/rate-winner
@@ -73,13 +74,13 @@ router.post('/products/:id/deny-bidder', sellerController.denyBidder);
  *  - rating: number (+1 or -1)
  *  - comment: string (optional)
  */
-router.post('/products/:id/rate-winner', sellerController.rateWinner);
+router.post('/products/:id/rate-winner', validate(sellerSchemas.rateWinner), sellerController.rateWinner);
 
 /**
  * POST /api/seller/products/:id/cancel-transaction
  * Cancel transaction and auto-rate winner negatively
  */
-router.post('/products/:id/cancel-transaction', sellerController.cancelTransaction);
+router.post('/products/:id/cancel-transaction', validate(sellerSchemas.cancelTransaction), sellerController.cancelTransaction);
 
 // ==================== QUESTIONS ====================
 
@@ -89,7 +90,7 @@ router.post('/products/:id/cancel-transaction', sellerController.cancelTransacti
  * Body:
  *  - content: string (required)
  */
-router.post('/questions/:id/answer', sellerController.answerQuestion);
+router.post('/questions/:id/answer', validate(sellerSchemas.answerQuestion), sellerController.answerQuestion);
 
 export default router;
 

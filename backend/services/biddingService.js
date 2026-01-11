@@ -49,32 +49,22 @@ function resolveAutoBid({ currentMax, currentBidderId, newMax, newBidderId, step
   // Case 2: Bidder mới có max thấp hơn
   else if (newMax < currentMax) {
     winnerId = currentBidderId;
-    // Giá tăng vừa đủ để thắng người mới (max mới + step)
-    // Nhưng không vượt quá max của người giữ giá
-    finalPrice = Math.min(newMax + step, currentMax);
+    // Người giữ giá thắng mà KHÔNG CẦN tăng giá
+    // Giá hiện tại = giá của người thua (newMax)
+    finalPrice = newMax;
 
     console.log('→ Case 2: New max < Current max');
-    console.log('→ Current bidder KEEPS winning!');
-    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND');
+    console.log('→ Current bidder KEEPS winning WITHOUT price increase!');
+    console.log('→ Final Price:', finalPrice.toLocaleString(), 'VND (= losing bid)');
 
-    // Tạo bid của người mới
+    // CHỈ tạo bid của người mới (người thua)
+    // KHÔNG tạo auto-bid cho người giữ giá
     bids.push({
       bidderId: newBidderId,
       amount: newMax,
       maxAmount: newMax,
       isAutoBid: false
     });
-
-    // Chỉ tạo auto-bid nếu giá thực sự tăng
-    if (finalPrice > newMax) {
-      console.log('→ Creating AUTO-BID for current bidder');
-      bids.push({
-        bidderId: currentBidderId,
-        amount: finalPrice,
-        maxAmount: currentMax,
-        isAutoBid: true
-      });
-    }
   }
   // Case 3: Hai max bằng nhau
   else {
@@ -122,6 +112,15 @@ class BiddingService {
       if (product.status !== 'ACTIVE') throw new Error('Phiên đấu giá không còn hoạt động');
       if (new Date() > product.endTime) throw new Error('Phiên đấu giá đã kết thúc');
       if (product.sellerId === bidderId) throw new Error('Người bán không thể đấu giá sản phẩm của mình');
+
+      // Check if bidder is denied from this product
+      const isDenied = await tx.deniedBidder.findFirst({
+        where: { productId, bidderId }
+      });
+
+      if (isDenied) {
+        throw new Error('Bạn đã bị từ chối tham gia đấu giá sản phẩm này');
+      }
 
       // Check bidder rating
       const bidder = await tx.user.findUnique({
@@ -340,6 +339,7 @@ class BiddingService {
   /**
    * Get bid history for a product
    * Masks bidder names for privacy (e.g., "John Doe" -> "****Doe")
+   * Includes isDenied flag for each bidder
    */
   async getBidHistory(productId, limit = 20, offset = 0) {
     try {
@@ -360,6 +360,13 @@ class BiddingService {
       });
 
       const total = await prisma.bid.count({ where: { productId } });
+
+      // Get all denied bidders for this product
+      const deniedBidders = await prisma.deniedBidder.findMany({
+        where: { productId },
+        select: { bidderId: true }
+      });
+      const deniedBidderIds = new Set(deniedBidders.map(d => d.bidderId));
 
       // Mask bidder names for privacy
       const maskedBids = bids.map(bid => {
@@ -385,7 +392,8 @@ class BiddingService {
           bidder: {
             id: bid.bidder.id,
             fullName: maskedName,
-            email: null // Don't expose email
+            email: null, // Don't expose email
+            isDenied: deniedBidderIds.has(bid.bidder.id) // ← NEW: Check if bidder is denied
           }
         };
       });

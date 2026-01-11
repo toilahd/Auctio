@@ -3,6 +3,7 @@ import cookie from "cookie-parser";
 import { createServer } from "http";
 import cors from "cors";
 import dotenv from "dotenv";
+import passport from "passport";
 import { getLogger } from "./config/logger.js";
 import { initializeSocket } from "./config/socket.js";
 import { testDatabase } from "./config/prisma.js";
@@ -58,6 +59,9 @@ app.use(
     credentials: true,
   })
 );
+
+// Initialize Passport
+app.use(passport.initialize());
 
 // Initialize Socket.IO
 const io = initializeSocket(httpServer);
