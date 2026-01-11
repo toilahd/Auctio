@@ -3,10 +3,12 @@ import "./App.css";
 
 function App() {
   const [apiResult, setApiResult] = useState<string>("Nothing");
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
   useEffect(() => {
     const getUserInfo = async () => {
       try {
-        const response = await fetch("http://localhost:4000/whoami", {
+        const response = await fetch(`${BACKEND_URL}/whoami`, {
           credentials: "include",
         });
 

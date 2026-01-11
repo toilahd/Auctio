@@ -74,6 +74,8 @@ interface Product {
   };
 }
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
 export default function SearchPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -139,7 +141,7 @@ export default function SearchPage() {
     const fetchCategories = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/categories/menu"
+          `${backendUrl}/api/categories/menu`
         );
         const data = await response.json();
         if (data.success) {
@@ -216,7 +218,7 @@ export default function SearchPage() {
         params.append("highlightMinutes", highlightMinutes.toString());
 
         const response = await fetch(
-          `http://localhost:3000/api/products/search?${params.toString()}`
+          `${backendUrl}/api/products/search?${params.toString()}`
         );
         const data = await response.json();
 

@@ -60,13 +60,15 @@ const HomePage = () => {
   const [highestPrice, setHighestPrice] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const [endingSoonRes, mostBidRes, highestPriceRes] = await Promise.all([
-          fetch("http://localhost:3000/api/products/top/ending_soon"),
-          fetch("http://localhost:3000/api/products/top/most_bids"),
-          fetch("http://localhost:3000/api/products/top/highest_price"),
+          fetch(`${BACKEND_URL}/api/products/top/ending_soon`),
+          fetch(`${BACKEND_URL}/api/products/top/most_bids`),
+          fetch(`${BACKEND_URL}/api/products/top/highest_price`),
         ]);
 
         const [endingSoonData, mostBidData, highestPriceData] =

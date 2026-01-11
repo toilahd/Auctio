@@ -65,6 +65,7 @@ passport.use(
           email: userFromGoogle.email,
           password: randomHashedPassword,
           fullName: userFromGoogle.name,
+          isVerified: true,
           address: "",
           role: "BIDDER", // Default role
         });

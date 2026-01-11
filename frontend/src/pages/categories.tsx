@@ -21,6 +21,7 @@ interface Category {
 }
 
 export default function CategoriesPage() {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +31,7 @@ export default function CategoriesPage() {
     const fetchCategories = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/categories/menu"
+          `${backendUrl}/api/categories/menu`
         );
         const data = await response.json();
         if (data.success) {
