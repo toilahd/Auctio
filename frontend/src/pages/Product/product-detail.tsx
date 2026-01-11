@@ -35,6 +35,7 @@ import {
 import { BidForm } from "@/components/BidForm";
 import { BidHistoryList } from "@/components/BidHistoryList";
 import { CurrentWinnerDisplay } from "@/components/CurrentWinnerDisplay";
+import { useBidding } from "@/hooks/useBidding";
 
 interface Question {
   id: string;
@@ -123,6 +124,9 @@ const ProductDetailPage = () => {
   const [imageTransition, setImageTransition] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [isPausedSlideshow, setIsPausedSlideshow] = useState(false);
+  const [canBid, setCanBid] = useState<boolean>(true);
+
+  const { canUserBid } = useBidding();
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -188,6 +192,18 @@ const ProductDetailPage = () => {
     if (id) checkWatchlistStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Check if user can bid
+  useEffect(() => {
+    const checkBidPermission = async () => {
+      if (!id) return;
+      const result = await canUserBid(id);
+      if (result) {
+        setCanBid(result.canBid);
+      }
+    };
+    checkBidPermission();
+  }, [id, canUserBid]);
 
   // Update countdown every second when auction is ending soon
   useEffect(() => {
@@ -873,7 +889,7 @@ const ProductDetailPage = () => {
                       }}
                     />
 
-                    {product.buyNowPrice && user && (
+                    {product.buyNowPrice && user && canBid && (
                       <Button
                         variant="secondary"
                         className="w-full"

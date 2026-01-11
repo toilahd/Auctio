@@ -207,7 +207,7 @@ export const BidHistoryList: React.FC<BidHistoryListProps> = ({
                                 className="text-xs flex items-center gap-1"
                               >
                                 <Trophy className="w-3 h-3" />
-                                Đang Dẫn Đầu
+                                Dẫn Đầu
                               </Badge>
                             )}
                             {isOutbid && (
