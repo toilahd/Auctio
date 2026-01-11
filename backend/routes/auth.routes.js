@@ -16,26 +16,27 @@ import {
 } from "../controllers/auth.controllers.js";
 import getUserFromJwt from "../utils/getUserFromJwtMiddleware.js";
 import UserModel from "../models/User.js";
+import { validate, authSchemas } from "../middlewares/validationMiddleware.js";
 
 const router = Router();
 
 router.get("/whoami", getUserFromJwt, whoAmI);
 
-router.post("/login", login);
+router.post("/login", validate(authSchemas.login), login);
 
-router.post("/signup", signup);
+router.post("/signup", validate(authSchemas.signup), signup);
 
 router.post("/logout", getUserFromJwt, logout);
 
 router.post("/refresh-token", refreshToken);
 
-router.post("/verify-email", getUserFromJwt, verifyEmail);
+router.post("/verify-email", getUserFromJwt, validate(authSchemas.verifyEmail), verifyEmail);
 
 router.post("/new-otp", getUserFromJwt, createNewOtp);
 
-router.post("/forgot-password", forgotPassword);
+router.post("/forgot-password", validate(authSchemas.forgotPassword), forgotPassword);
 
-router.post("/reset-password", resetPassword);
+router.post("/reset-password", validate(authSchemas.resetPassword), resetPassword);
 
 passport.use(
   new GoogleStrategy.Strategy(

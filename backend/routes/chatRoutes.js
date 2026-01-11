@@ -2,6 +2,7 @@ import express from 'express';
 import chatController from '../controllers/chatController.js';
 import { authenticate } from '../middlewares/authMiddleware.js';
 import getUserFromJwt from '../utils/getUserFromJwtMiddleware.js';
+import { validate, chatSchemas, commonSchemas } from '../middlewares/validationMiddleware.js';
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.use(getUserFromJwt);
  * Get all chats for the current user
  * Query params: page, limit
  */
-router.get('/', chatController.getUserChats);
+router.get('/', validate({ query: commonSchemas.pagination }), chatController.getUserChats);
 
 /**
  * GET /api/chat/unread
@@ -27,20 +28,20 @@ router.get('/unread', chatController.getUnreadCount);
  * Get messages for a specific order chat
  * Query params: page, limit
  */
-router.get('/:orderId/messages', chatController.getMessages);
+router.get('/:orderId/messages', validate(chatSchemas.getMessages), chatController.getMessages);
 
 /**
  * POST /api/chat/:orderId/messages
  * Send a message in an order chat
  * Body: { content: string }
  */
-router.post('/:orderId/messages', chatController.sendMessage);
+router.post('/:orderId/messages', validate(chatSchemas.sendMessage), chatController.sendMessage);
 
 /**
  * POST /api/chat/:orderId/read
  * Mark all messages in a chat as read
  */
-router.post('/:orderId/read', chatController.markAsRead);
+router.post('/:orderId/read', validate(chatSchemas.markAsRead), chatController.markAsRead);
 
 export default router;
 
