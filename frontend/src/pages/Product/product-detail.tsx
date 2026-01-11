@@ -122,6 +122,7 @@ const ProductDetailPage = () => {
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [imageTransition, setImageTransition] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [isPausedSlideshow, setIsPausedSlideshow] = useState(false);
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -216,6 +217,19 @@ const ProductDetailPage = () => {
       return () => clearInterval(interval);
     }
   }, [product?.endTime]);
+
+  // Auto slideshow for image gallery
+  useEffect(() => {
+    if (!product?.images || product.images.length <= 1 || isPausedSlideshow) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setSelectedImage((prev) => (prev + 1) % product.images.length);
+    }, 3000); // Change image every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [product?.images, isPausedSlideshow]);
 
   const checkWatchlistStatus = async () => {
     try {
@@ -443,11 +457,16 @@ const ProductDetailPage = () => {
 
   const handleImageChange = (index: number) => {
     if (index === selectedImage) return;
+    setIsPausedSlideshow(true); // Pause slideshow when user manually selects
     setImageTransition(true);
     setTimeout(() => {
       setSelectedImage(index);
       setImageTransition(false);
     }, 150);
+    // Resume slideshow after 5 seconds of inactivity
+    setTimeout(() => {
+      setIsPausedSlideshow(false);
+    }, 5000);
   };
 
   if (loading) {
@@ -502,7 +521,11 @@ const ProductDetailPage = () => {
           <div className="lg:col-span-2 space-y-4">
             {/* Main Image */}
             <Card className="overflow-hidden py-0">
-              <div className="h-[500px] bg-muted flex items-center justify-center relative">
+              <div
+                className="h-[500px] bg-muted flex items-center justify-center relative"
+                onMouseEnter={() => setIsPausedSlideshow(true)}
+                onMouseLeave={() => setIsPausedSlideshow(false)}
+              >
                 {product.images && product.images.length > 0 ? (
                   <img
                     src={
@@ -1141,13 +1164,20 @@ const ProductDetailPage = () => {
                 </p>
                 <div className="bg-muted p-4 rounded-md space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Sản phẩm:</span>
-                    <span className="font-medium text-foreground">{product?.title}</span>
+                    <span className="text-sm text-muted-foreground">
+                      Sản phẩm:
+                    </span>
+                    <span className="font-medium text-foreground">
+                      {product?.title}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Giá mua ngay:</span>
+                    <span className="text-sm text-muted-foreground">
+                      Giá mua ngay:
+                    </span>
                     <span className="text-lg font-bold text-primary">
-                      {product?.buyNowPrice && formatPrice(parseFloat(product.buyNowPrice))}
+                      {product?.buyNowPrice &&
+                        formatPrice(parseFloat(product.buyNowPrice))}
                     </span>
                   </div>
                 </div>
