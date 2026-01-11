@@ -29,11 +29,15 @@
    ```bash
    npm install
    ```
-4. Seeding the database (optional):
+4. Install and run Stripe CLI to set up webhooks:
+   ```bash
+   stripe listen --forward-to localhost:3000/api/payment/stripe/webhook
+   ```
+5. Seeding the database:
    ```bash
    npx prisma db seed
    ```
-5. Start the backend server:
+6. Start the backend server:
    ```bash
    npm run dev
    ```
