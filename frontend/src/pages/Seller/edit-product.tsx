@@ -8,6 +8,8 @@ import { AlertCircle, Clock, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Quill from "quill";
 import QuillEditor from "@/components/QuillEditor";
+import { useForm, Controller } from "react-hook-form";
+import type { SubmitHandler } from "react-hook-form";
 
 interface DescriptionHistory {
   id: string;
@@ -16,17 +18,33 @@ interface DescriptionHistory {
   addedBy: string;
 }
 
+interface FormData {
+  description: string;
+}
+
 const EditProductPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [newDescription, setNewDescription] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    defaultValues: {
+      description: "",
+    },
+  });
   const [product, setProduct] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [descriptionHistory, setDescriptionHistory] = useState<
     DescriptionHistory[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [charCount, setCharCount] = useState(0);
   const quillRef = useRef<Quill | null>(null);
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -46,17 +64,18 @@ const EditProductPage = () => {
           console.log("Fetched product data:", data.data);
           setProduct(data.data);
         } else {
-          setErrors({ fetch: "Không thể tải thông tin sản phẩm" });
+          setFetchError("Không thể tải thông tin sản phẩm");
         }
       } catch (error) {
         console.error("Error fetching product:", error);
-        setErrors({ fetch: "Đã xảy ra lỗi khi tải sản phẩm" });
+        setFetchError("Đã xảy ra lỗi khi tải sản phẩm");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const formatDateTime = (dateString: string) => {
@@ -69,17 +88,10 @@ const EditProductPage = () => {
     }).format(new Date(dateString));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
     const textContent = quillRef.current?.getText().trim() || "";
-    if (!textContent) {
-      setErrors({ description: "Vui lòng nhập nội dung bổ sung" });
-      return;
-    }
-
     if (textContent.length < 20) {
-      setErrors({ description: "Nội dung bổ sung phải có ít nhất 20 ký tự" });
+      alert("Nội dung bổ sung phải có ít nhất 20 ký tự");
       return;
     }
 
@@ -91,20 +103,19 @@ const EditProductPage = () => {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ description: newDescription }),
+          body: JSON.stringify({ description: data.description }),
         }
       );
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Không thể cập nhật mô tả");
+        throw new Error(responseData.message || "Không thể cập nhật mô tả");
       }
 
       alert("Mô tả đã được cập nhật thành công!");
       navigate("/seller");
-      setNewDescription("");
-      setErrors({});
+      setValue("description", "");
 
       // Refetch product to get updated description
       const updatedResponse = await fetch(`${BACKEND_URL}/api/products/${id}`, {
@@ -116,9 +127,7 @@ const EditProductPage = () => {
       }
     } catch (error: any) {
       console.error("Error updating description:", error);
-      setErrors({
-        submit: error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.",
-      });
+      alert(error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
     } finally {
       setIsSubmitting(false);
     }
@@ -229,28 +238,48 @@ const EditProductPage = () => {
                   <CardTitle>Bổ sung thông tin mới</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Nội dung bổ sung <span className="text-red-500">*</span>
                       </label>
                       <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-gray-700 min-h-[200px] [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-gray-300 [&_.ql-toolbar]:dark:border-gray-700 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-base [&_.ql-editor.ql-blank::before]:text-gray-400 [&_.ql-editor.ql-blank::before]:dark:text-gray-500 [&_.ql-stroke]:stroke-gray-700 [&_.ql-stroke]:dark:stroke-gray-300 [&_.ql-fill]:fill-gray-700 [&_.ql-fill]:dark:fill-gray-300 [&_.ql-picker-label]:text-gray-700 [&_.ql-picker-label]:dark:text-gray-300 [&_.ql-editor]:text-gray-900 [&_.ql-editor]:dark:text-gray-100">
-                        <QuillEditor
-                          ref={quillRef}
-                          defaultValue={newDescription}
-                          onTextChange={(html) => setNewDescription(html)}
-                          placeholder="VD: Cập nhật: Sản phẩm đã được kiểm tra kỹ càng, đảm bảo 100% chính hãng..."
+                        <Controller
+                          name="description"
+                          control={control}
+                          rules={{
+                            required: "Vui lòng nhập nội dung bổ sung",
+                            validate: () => {
+                              const textContent =
+                                quillRef.current?.getText().trim() || "";
+                              if (textContent.length < 20) {
+                                return "Nội dung bổ sung phải có ít nhất 20 ký tự";
+                              }
+                              return true;
+                            },
+                          }}
+                          render={({ field }) => (
+                            <QuillEditor
+                              ref={quillRef}
+                              defaultValue={field.value}
+                              onTextChange={(html) => {
+                                field.onChange(html);
+                                const textContent =
+                                  quillRef.current?.getText().trim() || "";
+                                setCharCount(textContent.length);
+                              }}
+                              placeholder="VD: Cập nhật: Sản phẩm đã được kiểm tra kỹ càng, đảm bảo 100% chính hãng..."
+                            />
+                          )}
                         />
                       </div>
                       {errors.description && (
-                        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-4 h-4" />
-                          {errors.description}
+                        <p className="text-sm text-red-600 mt-1">
+                          {errors.description.message as string}
                         </p>
                       )}
                       <p className="text-gray-500 text-sm mt-1">
-                        {quillRef.current?.getText().trim().length || 0} ký tự
-                        (tối thiểu 20 ký tự)
+                        {charCount} ký tự (tối thiểu 20 ký tự)
                       </p>
                     </div>
 

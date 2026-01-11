@@ -15,6 +15,8 @@ import { useNavigate } from "react-router-dom";
 import { X, ImagePlus, AlertCircle, Loader2 } from "lucide-react";
 import Quill from "quill";
 import QuillEditor from "@/components/QuillEditor";
+import { useForm, Controller } from "react-hook-form";
+import type { SubmitHandler } from "react-hook-form";
 
 interface Category {
   id: string;
@@ -44,25 +46,40 @@ const CreateProductPage = () => {
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  const [formData, setFormData] = useState<FormData>({
-    title: "",
-    category: "",
-    subCategory: "",
-    condition: "",
-    startingPrice: "",
-    bidIncrement: "",
-    buyNowPrice: "",
-    duration: "7",
-    autoExtend: true,
-    description: "",
-    images: [],
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    setError,
+    clearErrors,
+    formState: { errors },
+  } = useForm<FormData>({
+    defaultValues: {
+      title: "",
+      category: "",
+      subCategory: "",
+      condition: "",
+      startingPrice: "",
+      bidIncrement: "",
+      buyNowPrice: "",
+      duration: "7",
+      autoExtend: true,
+      description: "",
+      images: [],
+    },
   });
 
+  const watchedCategory = watch("category");
+  const watchedImages = watch("images");
+  const watchedTitle = watch("title");
+
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [charCount, setCharCount] = useState(0);
   const quillRef = useRef<Quill | null>(null);
 
   // Fetch categories from backend
@@ -83,71 +100,72 @@ const CreateProductPage = () => {
         }
       } catch (error) {
         console.error("Error fetching categories:", error);
-        setErrors({ ...errors, categories: "Không thể tải danh mục" });
       } finally {
         setIsLoadingCategories(false);
       }
     };
 
     fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const selectedCategory = categories.find(
-    (cat) => cat.id === formData.category
-  );
+  const selectedCategory = categories.find((cat) => cat.id === watchedCategory);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const totalImages = formData.images.length + files.length;
+    const currentImages = watchedImages || [];
+    const totalImages = currentImages.length + files.length;
 
     if (totalImages > 10) {
-      setErrors({ ...errors, images: "Tối đa 10 ảnh" });
+      setError("images", { type: "manual", message: "Tối đa 10 ảnh" });
       return;
     }
 
     // Create previews
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setImagePreviews([...imagePreviews, ...newPreviews]);
-    setFormData({ ...formData, images: [...formData.images, ...files] });
-    setErrors({ ...errors, images: "" });
+    setValue("images", [...currentImages, ...files]);
+    clearErrors("images");
   };
 
   const removeImage = (index: number) => {
-    const newImages = formData.images.filter((_, i) => i !== index);
+    const currentImages = watchedImages || [];
+    const newImages = currentImages.filter((_, i) => i !== index);
     const newPreviews = imagePreviews.filter((_, i) => i !== index);
     URL.revokeObjectURL(imagePreviews[index]);
     setImagePreviews(newPreviews);
-    setFormData({ ...formData, images: newImages });
+    setValue("images", newImages);
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
+    // Validate images
+    if (data.images.length < 3) {
+      setError("images", {
+        type: "manual",
+        message: "Vui lòng tải lên ít nhất 3 ảnh",
+      });
+      return;
+    }
 
-    if (!formData.title.trim()) newErrors.title = "Vui lòng nhập tên sản phẩm";
-    if (!formData.category) newErrors.category = "Vui lòng chọn danh mục";
-    if (formData.images.length < 3)
-      newErrors.images = "Vui lòng tải lên ít nhất 3 ảnh";
-    if (!formData.startingPrice || parseFloat(formData.startingPrice) <= 0)
-      newErrors.startingPrice = "Giá khởi điểm phải lớn hơn 0";
-    if (!formData.bidIncrement || parseFloat(formData.bidIncrement) <= 0)
-      newErrors.bidIncrement = "Bước giá phải lớn hơn 0";
-    if (
-      formData.buyNowPrice &&
-      parseFloat(formData.buyNowPrice) <= parseFloat(formData.startingPrice)
-    )
-      newErrors.buyNowPrice = "Giá mua ngay phải lớn hơn giá khởi điểm";
+    // Validate description
     const textContent = quillRef.current?.getText().trim() || "";
-    if (!textContent || textContent.length < 50)
-      newErrors.description = "Mô tả phải có ít nhất 50 ký tự";
+    if (!textContent || textContent.length < 50) {
+      setError("description", {
+        type: "manual",
+        message: "Mô tả phải có ít nhất 50 ký tự",
+      });
+      return;
+    }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
+    // Validate buy now price
+    if (
+      data.buyNowPrice &&
+      parseFloat(data.buyNowPrice) <= parseFloat(data.startingPrice)
+    ) {
+      setError("buyNowPrice", {
+        type: "manual",
+        message: "Giá mua ngay phải lớn hơn giá khởi điểm",
+      });
       return;
     }
 
@@ -156,7 +174,7 @@ const CreateProductPage = () => {
     try {
       // Upload images first
       const imageFormData = new FormData();
-      formData.images.forEach((file) => {
+      data.images.forEach((file) => {
         imageFormData.append("images", file);
       });
 
@@ -176,20 +194,18 @@ const CreateProductPage = () => {
 
       // Calculate end time based on duration
       const endTime = new Date();
-      endTime.setDate(endTime.getDate() + parseInt(formData.duration));
+      endTime.setDate(endTime.getDate() + parseInt(data.duration));
 
       // Prepare data for backend
       const productData = {
-        title: formData.title,
-        description: formData.description,
+        title: data.title,
+        description: data.description,
         images: imageUrls,
-        startPrice: parseFloat(formData.startingPrice),
-        stepPrice: parseFloat(formData.bidIncrement),
-        buyNowPrice: formData.buyNowPrice
-          ? parseFloat(formData.buyNowPrice)
-          : null,
-        categoryId: formData.subCategory || formData.category, // Use subcategory if selected, otherwise category
-        autoExtend: formData.autoExtend,
+        startPrice: parseFloat(data.startingPrice),
+        stepPrice: parseFloat(data.bidIncrement),
+        buyNowPrice: data.buyNowPrice ? parseFloat(data.buyNowPrice) : null,
+        categoryId: data.subCategory || data.category, // Use subcategory if selected, otherwise category
+        autoExtend: data.autoExtend,
         endTime: endTime.toISOString(),
       };
 
@@ -202,10 +218,10 @@ const CreateProductPage = () => {
         body: JSON.stringify(productData),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Không thể tạo sản phẩm");
+        throw new Error(responseData.message || "Không thể tạo sản phẩm");
       }
 
       alert("Sản phẩm đã được tạo thành công!");
@@ -216,12 +232,6 @@ const CreateProductPage = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const formatPrice = (value: string) => {
-    const number = parseFloat(value.replace(/[^\d]/g, ""));
-    if (isNaN(number)) return "";
-    return number.toLocaleString("vi-VN");
   };
 
   return (
@@ -240,7 +250,7 @@ const CreateProductPage = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             {/* Basic Information */}
             <Card className="mb-6">
               <CardHeader>
@@ -252,21 +262,27 @@ const CreateProductPage = () => {
                     Tên sản phẩm <span className="text-red-500">*</span>
                   </label>
                   <Input
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
+                    {...register("title", {
+                      required: "Vui lòng nhập tên sản phẩm",
+                      minLength: {
+                        value: 10,
+                        message: "Tên sản phẩm phải có ít nhất 10 ký tự",
+                      },
+                      maxLength: {
+                        value: 200,
+                        message: "Tên sản phẩm không được vượt quá 200 ký tự",
+                      },
+                    })}
                     placeholder="VD: iPhone 15 Pro Max 256GB - Nguyên seal"
                     maxLength={200}
                   />
                   {errors.title && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.title}
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.title.message as string}
                     </p>
                   )}
                   <p className="text-gray-500 text-sm mt-1">
-                    {formData.title.length}/200 ký tự
+                    {watchedTitle?.length || 0}/200 ký tự
                   </p>
                 </div>
 
@@ -275,38 +291,41 @@ const CreateProductPage = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Danh mục <span className="text-red-500">*</span>
                     </label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) =>
-                        setFormData({
-                          ...formData,
-                          category: value,
-                          subCategory: "",
-                        })
-                      }
-                      disabled={isLoadingCategories}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            isLoadingCategories
-                              ? "Đang tải..."
-                              : "Chọn danh mục"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      name="category"
+                      control={control}
+                      rules={{ required: "Vui lòng chọn danh mục" }}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setValue("subCategory", "");
+                          }}
+                          disabled={isLoadingCategories}
+                        >
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={
+                                isLoadingCategories
+                                  ? "Đang tải..."
+                                  : "Chọn danh mục"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                     {errors.category && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.category}
+                      <p className="text-sm text-red-600 mt-1">
+                        {errors.category.message as string}
                       </p>
                     )}
                   </div>
@@ -315,26 +334,31 @@ const CreateProductPage = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Danh mục con
                     </label>
-                    <Select
-                      value={formData.subCategory}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, subCategory: value })
-                      }
-                      disabled={
-                        !formData.category || !selectedCategory?.children.length
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn danh mục con" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {selectedCategory?.children.map((subCat) => (
-                          <SelectItem key={subCat.id} value={subCat.id}>
-                            {subCat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      name="subCategory"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={
+                            !watchedCategory ||
+                            !selectedCategory?.children.length
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Chọn danh mục con" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {selectedCategory?.children.map((subCat) => (
+                              <SelectItem key={subCat.id} value={subCat.id}>
+                                {subCat.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </div>
                 </div>
 
@@ -342,26 +366,30 @@ const CreateProductPage = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Tình trạng
                   </label>
-                  <Select
-                    value={formData.condition}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, condition: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn tình trạng" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">Mới 100%</SelectItem>
-                      <SelectItem value="like-new">Như mới</SelectItem>
-                      <SelectItem value="used-good">
-                        Đã qua sử dụng - Tốt
-                      </SelectItem>
-                      <SelectItem value="used-fair">
-                        Đã qua sử dụng - Khá
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="condition"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn tình trạng" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">Mới 100%</SelectItem>
+                          <SelectItem value="like-new">Như mới</SelectItem>
+                          <SelectItem value="used-good">
+                            Đã qua sử dụng - Tốt
+                          </SelectItem>
+                          <SelectItem value="used-fair">
+                            Đã qua sử dụng - Khá
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -396,7 +424,7 @@ const CreateProductPage = () => {
                       </div>
                     ))}
 
-                    {formData.images.length < 10 && (
+                    {(watchedImages?.length || 0) < 10 && (
                       <label className="w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition">
                         <ImagePlus className="w-8 h-8 text-gray-400 mb-2" />
                         <span className="text-sm text-gray-500">Thêm ảnh</span>
@@ -412,9 +440,8 @@ const CreateProductPage = () => {
                   </div>
 
                   {errors.images && (
-                    <p className="text-red-500 text-sm flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.images}
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.images.message as string}
                     </p>
                   )}
 
@@ -447,24 +474,26 @@ const CreateProductPage = () => {
                     </label>
                     <div className="relative">
                       <Input
+                        {...register("startingPrice", {
+                          required: "Vui lòng nhập giá khởi điểm",
+                          validate: (value) =>
+                            parseFloat(value) > 0 ||
+                            "Giá khởi điểm phải lớn hơn 0",
+                        })}
                         type="text"
-                        value={formatPrice(formData.startingPrice)}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            startingPrice: e.target.value.replace(/[^\d]/g, ""),
-                          })
-                        }
                         placeholder="0"
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^\d]/g, "");
+                          setValue("startingPrice", value);
+                        }}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
                         VND
                       </span>
                     </div>
                     {errors.startingPrice && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.startingPrice}
+                      <p className="text-sm text-red-600 mt-1">
+                        {errors.startingPrice.message as string}
                       </p>
                     )}
                   </div>
@@ -475,24 +504,25 @@ const CreateProductPage = () => {
                     </label>
                     <div className="relative">
                       <Input
+                        {...register("bidIncrement", {
+                          required: "Vui lòng nhập bước giá",
+                          validate: (value) =>
+                            parseFloat(value) > 0 || "Bước giá phải lớn hơn 0",
+                        })}
                         type="text"
-                        value={formatPrice(formData.bidIncrement)}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            bidIncrement: e.target.value.replace(/[^\d]/g, ""),
-                          })
-                        }
                         placeholder="0"
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^\d]/g, "");
+                          setValue("bidIncrement", value);
+                        }}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
                         VND
                       </span>
                     </div>
                     {errors.bidIncrement && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.bidIncrement}
+                      <p className="text-sm text-red-600 mt-1">
+                        {errors.bidIncrement.message as string}
                       </p>
                     )}
                   </div>
@@ -504,24 +534,21 @@ const CreateProductPage = () => {
                   </label>
                   <div className="relative">
                     <Input
+                      {...register("buyNowPrice")}
                       type="text"
-                      value={formatPrice(formData.buyNowPrice)}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          buyNowPrice: e.target.value.replace(/[^\d]/g, ""),
-                        })
-                      }
                       placeholder="0"
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^\d]/g, "");
+                        setValue("buyNowPrice", value);
+                      }}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
                       VND
                     </span>
                   </div>
                   {errors.buyNowPrice && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.buyNowPrice}
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.buyNowPrice.message as string}
                     </p>
                   )}
                   <p className="text-gray-500 text-sm mt-1">
@@ -542,34 +569,42 @@ const CreateProductPage = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Thời gian đấu giá
                   </label>
-                  <Select
-                    value={formData.duration}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, duration: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3">3 ngày</SelectItem>
-                      <SelectItem value="5">5 ngày</SelectItem>
-                      <SelectItem value="7">7 ngày</SelectItem>
-                      <SelectItem value="10">10 ngày</SelectItem>
-                      <SelectItem value="14">14 ngày</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="duration"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3">3 ngày</SelectItem>
+                          <SelectItem value="5">5 ngày</SelectItem>
+                          <SelectItem value="7">7 ngày</SelectItem>
+                          <SelectItem value="10">10 ngày</SelectItem>
+                          <SelectItem value="14">14 ngày</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
 
                 <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-slate-800 rounded-lg">
-                  <input
-                    type="checkbox"
-                    id="autoExtend"
-                    checked={formData.autoExtend}
-                    onChange={(e) =>
-                      setFormData({ ...formData, autoExtend: e.target.checked })
-                    }
-                    className="mt-1"
+                  <Controller
+                    name="autoExtend"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        type="checkbox"
+                        id="autoExtend"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="mt-1"
+                      />
+                    )}
                   />
                   <label htmlFor="autoExtend" className="cursor-pointer flex-1">
                     <div className="font-medium text-gray-900 dark:text-white">
@@ -594,24 +629,32 @@ const CreateProductPage = () => {
               <CardContent>
                 <div className="space-y-2">
                   <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-gray-700 min-h-[300px] [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-gray-300 [&_.ql-toolbar]:dark:border-gray-700 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[250px] [&_.ql-editor]:text-base [&_.ql-editor.ql-blank::before]:text-gray-400 [&_.ql-editor.ql-blank::before]:dark:text-gray-500 [&_.ql-stroke]:stroke-gray-700 [&_.ql-stroke]:dark:stroke-gray-300 [&_.ql-fill]:fill-gray-700 [&_.ql-fill]:dark:fill-gray-300 [&_.ql-picker-label]:text-gray-700 [&_.ql-picker-label]:dark:text-gray-300 [&_.ql-editor]:text-gray-900 [&_.ql-editor]:dark:text-gray-100">
-                    <QuillEditor
-                      ref={quillRef}
-                      defaultValue={formData.description}
-                      onTextChange={(html) =>
-                        setFormData((prev) => ({ ...prev, description: html }))
-                      }
-                      placeholder="Mô tả chi tiết về sản phẩm: tình trạng, nguồn gốc, phụ kiện kèm theo, lý do bán..."
+                    <Controller
+                      name="description"
+                      control={control}
+                      rules={{ required: "Vui lòng nhập mô tả sản phẩm" }}
+                      render={({ field }) => (
+                        <QuillEditor
+                          ref={quillRef}
+                          defaultValue={field.value}
+                          onTextChange={(html) => {
+                            field.onChange(html);
+                            const textContent =
+                              quillRef.current?.getText().trim() || "";
+                            setCharCount(textContent.length);
+                          }}
+                          placeholder="Mô tả chi tiết về sản phẩm: tình trạng, nguồn gốc, phụ kiện kèm theo, lý do bán..."
+                        />
+                      )}
                     />
                   </div>
                   {errors.description && (
-                    <p className="text-red-500 text-sm flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.description}
+                    <p className="text-sm text-red-600">
+                      {errors.description.message as string}
                     </p>
                   )}
                   <p className="text-gray-500 text-sm">
-                    {quillRef.current?.getText().trim().length || 0} ký tự (tối
-                    thiểu 50 ký tự)
+                    {charCount} ký tự (tối thiểu 50 ký tự)
                   </p>
                 </div>
               </CardContent>
