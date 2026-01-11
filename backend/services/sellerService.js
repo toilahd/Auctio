@@ -170,13 +170,21 @@ class SellerService {
         }
       });
 
-      // If denied bidder is current winner, find second highest
+      // If denied bidder is current winner, find next highest (excluding ALL denied bidders)
       if (product.currentWinnerId === bidderId) {
-        // Get all bids excluding denied bidder, sorted by amount desc
+        // Get all denied bidders for this product (including the one we just denied)
+        const deniedBidders = await tx.deniedBidder.findMany({
+          where: { productId },
+          select: { bidderId: true }
+        });
+
+        const deniedBidderIds = deniedBidders.map(d => d.bidderId);
+
+        // Get all bids excluding ALL denied bidders, sorted by amount desc
         const remainingBids = await tx.bid.findMany({
           where: {
             productId,
-            bidderId: { not: bidderId }
+            bidderId: { notIn: deniedBidderIds }
           },
           orderBy: {
             amount: 'desc'
@@ -185,16 +193,18 @@ class SellerService {
         });
 
         if (remainingBids.length > 0) {
-          const secondHighest = remainingBids[0];
+          const nextHighest = remainingBids[0];
           await tx.product.update({
             where: { id: productId },
             data: {
-              currentWinnerId: secondHighest.bidderId,
-              currentPrice: secondHighest.amount
+              currentWinnerId: nextHighest.bidderId,
+              currentPrice: nextHighest.amount
             }
           });
+
+          logger.info(`Product ${productId}: Winner changed to ${nextHighest.bidderId} with price ${nextHighest.amount}`);
         } else {
-          // No other bidders, reset to start price
+          // No other valid bidders, reset to start price and no winner
           await tx.product.update({
             where: { id: productId },
             data: {
@@ -202,6 +212,8 @@ class SellerService {
               currentPrice: product.startPrice
             }
           });
+
+          logger.warn(`Product ${productId}: All bidders denied, reset to start price`);
         }
       }
     });
