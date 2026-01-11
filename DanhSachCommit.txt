@@ -1,0 +1,172 @@
+aa1a82f | mèo | trannguyenphuckhang12@gmail.com | 2026-01-11 | feat: update to use react hook form
+91bd68d | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2026-01-11 | Merge pull request #29 from toilahd/feat/revision-4
+cd13899 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-11 | feat: fix bidding service
+72bf9dc | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2026-01-11 | Merge pull request #28 from toilahd/feat/frontend-revision-2
+17c6ebf | mèo | trannguyenphuckhang12@gmail.com | 2026-01-11 | feat: add slide show effect
+d4f60f5 | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2026-01-11 | Merge pull request #27 from toilahd/feat/revision-4
+4c0723d | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-11 | refactor: refactor seed and delete unnecessary files
+84527ab | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-11 | feat: add 5 bids/product
+19185f4 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-11 | feat: fix bidding history, and deny bidder
+4e56c2a | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-11 | feat: update validation, bid history ui, fix bid logic
+9f2c75b | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-11 | fix: google oauth port
+f0d3b03 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-11 | feat: validation on all endpoints
+5ec8ef6 | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2026-01-10 | Merge pull request #26 from toilahd/feat/revision-4
+0889462 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-10 | add productid in get user ratings endpoint
+5f4bfa8 | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2026-01-10 | Merge pull request #25 from toilahd/feat/frontend-revision-2
+5b8003d | mèo | trannguyenphuckhang12@gmail.com | 2026-01-10 | feat: frontend and backend update
+c8e925f | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2026-01-10 | Merge pull request #23 from toilahd/feat/revision-3
+141f59d | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-10 | update: update get product user is bidding on include active and ended status
+cc9dae8 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-10 | feat:fix the current winner feature
+fcb661a | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-10 | feat: add buy now feature
+8f6383f | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-09 | chore: update gitignore to ignore package-lock.json
+b5a0813 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-09 | update: package.json
+484bdfc | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-09 | feat: confirmation before setting price
+5f09dc2 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-09 | feat: check rating before allowing set price
+6f2c43a | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-09 | feat: update search page
+4778bdb | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-09 | feat: update search feature (adding filter)
+8d5994d | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2026-01-10 | Merge pull request #22 from toilahd/feat/frontend-revision
+f30b4b9 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-10 | feat: name masking for current winner in product detail and you badge
+8f7c6fb | mèo | trannguyenphuckhang12@gmail.com | 2026-01-10 | feat: remove report md
+26317be | mèo | trannguyenphuckhang12@gmail.com | 2026-01-10 | fix: top and bottom white space around product thumbnail and mask current winner name
+43ea415 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-10 | feat: add navigation to profile from seller info and bidding history
+7ee70bc | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2026-01-10 | Merge pull request #21 from toilahd/feat/revision-2
+7559564 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-09 | feat: image transition, object fit main image and able to support many product images
+a5e7195 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-09 | feat: remove changing email option, remove notification icon and add glow effect to new product
+0ede145 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-08 | feat: related products
+53ee4e1 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-08 | feat: update /my-bids with actual data
+bf435c7 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-08 | feat: add error message when user use existing email for signup
+a3620e3 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-08 | feat: update coutn down timer, add price formating to winning bidder info, max price input, check if email exist before captcha validation
+8ea6ade | mèo | trannguyenphuckhang12@gmail.com | 2026-01-08 | feat: update navigation to react router
+a021e7f | mèo | trannguyenphuckhang12@gmail.com | 2026-01-07 | fix: pagination with shadcn components
+2c7fde8 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-07 | feat: add description styling
+c5cbcf4 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-07 | feat: allow filter by parent category on search page
+f6b16dc | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2026-01-09 | Merge pull request #20 from toilahd/feat/mailing-system
+bb14146 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-07 | feat: finish mailing system
+be9973a | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-07 | fix: update the search product by parent category id
+0237330 | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2026-01-07 | Merge pull request #19 from toilahd/feat/revision-1
+60e0905 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-07 | feat: hide buy now, watch list buttons when unauthenticated on product detail, new badge on product card, allow unauthenicated to see live bidding
+d608ce9 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-06 | feat: update swagger spec file
+cd68435 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-06 | fix: guest user cannot view product detail page
+213646f | mèo | trannguyenphuckhang12@gmail.com | 2026-01-06 | feat: add name to compose stack
+ca6ef33 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-07 | feat: update get product by category
+e655e3e | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-07 | feat: add enpoint list products by category  parentid
+e793ba7 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-07 | feat: update seed db script
+4d0a6ec | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2026-01-05 | Merge pull request #16 from toilahd/feat/test
+220a25f | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-05 | feat: update ui
+a8dd6bf | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-03 | feat: add auction time setting and scheduler product services
+3891f8a | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2026-01-02 | Merge pull request #15 from toilahd/feat/bidder-seller
+cd7baa9 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-02 | feat: after auction flow with stripe
+943a50c | mèo | trannguyenphuckhang12@gmail.com | 2026-01-02 | feat: update ui and navigation in product detail page after auction ended
+2925118 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-02 | feat: seller upgrade flow with stripe
+2905a62 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-02 | feat: stripe payment endpoints
+5a708f8 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-01 | feat: update to countdown on product detail page
+6dd46d3 | mèo | trannguyenphuckhang12@gmail.com | 2026-01-01 | feat: translate bidding error messages
+b0bc04b | mèo | trannguyenphuckhang12@gmail.com | 2026-01-01 | feat: implement order completion system with bidder rejection
+b8c6dae | mèo | trannguyenphuckhang12@gmail.com | 2026-01-01 | feat: completed products update to seller dashboard
+512d10b | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2026-01-01 | Merge pull request #14 from toilahd/feat/bid-flow
+4867ee8 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-01 | feat: enhance the bid history ui
+4d5f78d | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-01 | feat: fix the bid flow (using socket in frontend instead polling)
+5598b9b | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2026-01-01 | Merge pull request #13 from toilahd/feat/bidding-flow-fe
+cb76aef | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-01 | feat: add history bidding and current winner display
+4345cce | Nguyễn Quang Huy | qhuy180624@gmail.com | 2026-01-01 | feat: add bidding flow in frontend
+1ebc645 | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2025-12-31 | Merge pull request #12 from toilahd/feat/user-actions
+26c9fa7 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-31 | feat: remove recaptcha from loigin
+8ec1a70 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-31 | feat: update editor to both create product and edit product pages
+eb18833 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-31 | fix: zalopay backend issues
+202ac12 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-31 | feat: wysiwyg editor
+665eee1 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-31 | feat: zalopay integration
+defe209 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-31 | feat: update to filtering and displaying products
+794ef7c | mèo | trannguyenphuckhang12@gmail.com | 2025-12-31 | feat: mock seller upgrade flow
+54e2e89 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-30 | feat: ask and answer questions
+eb9eed9 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-30 | feat: integrate seller pages with backend APIs and add R2 image upload
+91282a1 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-30 | feat: working product creation for seller
+c27cc90 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-30 | feat: add swagger notation to chat, question and seller controller and update output swagger specs
+a3074ce | mèo | trannguyenphuckhang12@gmail.com | 2025-12-30 | feat: finish password reset flow and email verification flow
+40c5e1b | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2025-12-30 | Merge pull request #11 from toilahd/feat/role-based
+8e887ba | mèo | trannguyenphuckhang12@gmail.com | 2025-12-30 | feat: add verify status to auth context
+7d100f4 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-29 | feat: admin mangement operation to products, categories and users
+17560a3 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-29 | feat: update admin api's swagger notation and output swagger spec
+b1fc090 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-29 | feat: watchlist feature
+26e585a | mèo | trannguyenphuckhang12@gmail.com | 2025-12-29 | feat: otp email verification and password reset
+96cb072 | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2025-12-29 | Merge pull request #10 from toilahd/feat/chat-system
+020b71d | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-29 | feat: add chat message between winner and seller (using socket)
+0a4d6f7 | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2025-12-29 | Merge pull request #9 from toilahd/feat/seller
+99fcec9 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-29 | feat: seller endpoints
+5816bd6 | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2025-12-29 | Merge pull request #8 from toilahd/feat/frontend
+44890e2 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-29 | feat: create OTP token on sign up
+3c2547c | mèo | trannguyenphuckhang12@gmail.com | 2025-12-29 | feat: profile page support for other user
+9a95a58 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-29 | feat: update profile page and edit profile page with actual data
+0d4469e | mèo | trannguyenphuckhang12@gmail.com | 2025-12-28 | feat: update token handling
+878cbb3 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-28 | feat: add auth context
+2c1d749 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-28 | feat: update to category page and search by category
+83e04d9 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-28 | feat: update all pages with products
+388b6ef | mèo | trannguyenphuckhang12@gmail.com | 2025-12-28 | feat: update autogen notation and swagger document
+6b5933e | mèo | trannguyenphuckhang12@gmail.com | 2025-12-27 | feat: update zalopay test script and requirements
+3bb00dd | mèo | trannguyenphuckhang12@gmail.com | 2025-12-24 | feat: add search feature
+b9633da | mèo | trannguyenphuckhang12@gmail.com | 2025-12-24 | feat: update api doc
+ebfcc7f | mèo | trannguyenphuckhang12@gmail.com | 2025-12-24 | feat: zalopay test script
+cd03a25 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-19 | feat: add frontend for admin
+da6bd68 | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2025-12-29 | Merge pull request #7 from toilahd/feat/admin
+fe50727 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-29 | feat: dashboard feature
+780a812 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-29 | feat: admin user management
+15187d3 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-29 | feat: add admin product managemennt
+df582e5 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-29 | feat: admin category management feature
+d3c3bdd | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2025-12-22 | Merge pull request #6 from toilahd/feature/bidder
+1868956 | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2025-12-22 | Merge branch 'main' into feature/bidder
+7e2bc89 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-22 | refactor: update app setup and test scripts
+18fd39f | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-22 | feat: add user profile management APIs
+77fc058 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-22 | feat: add product question feature
+2f1c361 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-22 | feat: update product APIs and services
+4e637c3 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-22 | feat: add category controller and routes
+da3c96b | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-22 | feat: add watchlist feature
+067b9b2 | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2025-12-22 | Merge pull request #5 from toilahd/feature/guest
+16a2884 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-22 | feat: detail products and menu category feature
+b7740b1 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-20 | feat: show list categories
+475647c | mèo | trannguyenphuckhang12@gmail.com | 2025-12-19 | feat: update swagger doc generation script and output swagger spec
+97e972f | mèo | trannguyenphuckhang12@gmail.com | 2025-12-18 | refactor: remove duplicate CORS config and old Express server starting function
+304148b | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2025-12-18 | Merge pull request #4 from toilahd/feat/auth
+c5e5c09 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-18 | fix: add missing packages and env variable
+d77dbf9 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-18 | feat: frontend for account upgrade and order review pages
+c00d748 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-18 | feat: frontend for purchase history and profile pages
+bd94ec5 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-18 | feat: frontend for search and categories pages
+1da5a91 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-18 | feat: frontend for the rest of seller pages
+b2b5b13 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-18 | feat: frontend for watchlist and past bids
+bdb3186 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-16 | feat: frontend for product detail page
+55042be | mèo | trannguyenphuckhang12@gmail.com | 2025-12-16 | feat: frontend for products page
+74b658b | mèo | trannguyenphuckhang12@gmail.com | 2025-12-16 | feat: frontend for home/landing page
+9370180 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-16 | feat: frontend for sign up/log in
+86047e5 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-16 | feat: add captcha verification
+c011725 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-15 | feat: initial code for captcha
+e21a743 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-15 | feat: add basic account info page
+1e2a516 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-14 | feat: update language and log in/sign up form validation
+8079c16 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-14 | feat: add google auth
+d4bc370 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-14 | feat: add cors
+830ad3b | mèo | trannguyenphuckhang12@gmail.com | 2025-12-12 | feat: add google auth endpoints
+a1129bb | mèo | trannguyenphuckhang12@gmail.com | 2025-12-12 | feat: add log in and sign up pages
+464f3b2 | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2025-12-18 | Merge pull request #3 from toilahd/feat/bidding-flow
+a6c9b32 | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2025-12-18 | Merge branch 'main' into feat/bidding-flow
+b9694d4 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-14 | feat: bidding flow and full text search on product
+86a022d | mèo | trannguyenphuckhang12@gmail.com | 2025-12-11 | feat: add docs and example file structure
+e8ee4e5 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-11 | fix: prisma client generation
+0882ef8 | Phúc Khang | 84757707+PhKhang@users.noreply.github.com | 2025-12-11 | Merge pull request #2 from toilahd/feat/simple-auth-server
+22d5227 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-10 | feat: add place holder pages
+9bc4c7b | mèo | trannguyenphuckhang12@gmail.com | 2025-12-10 | refactor: update page file names
+2c06ff6 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-10 | feat: tweakcn
+569ca50 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-08 | feat: home page with intial product section
+e6dd0e4 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-05 | feat: add validation and autogen
+b1408e2 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-05 | feat: file upload grpc server
+b40eefa | mèo | trannguyenphuckhang12@gmail.com | 2025-12-04 | feat: google login
+c0b31f3 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-04 | feat: example secure communication between services
+14a00a4 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-02 | feat: simple jwt based auth server
+a2f0692 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-11 | refactor: clean unused files
+447a28c | Nguyen Quang Huy | 116057557+toilahd@users.noreply.github.com | 2025-12-11 | Merge pull request #1 from toilahd/feat/migrate-db
+1a3e54d | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-11 | chore: update .gitignore
+9625462 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-11 | refactor: restructure seed
+ef373d5 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-10 | feat: create Prisma models and seed mock data
+8861380 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-09 | feat: migrate database from Supabase to local PostgreSQL and add mail implementation
+4cf2867 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-08 | feat: emao;
+ca24da4 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-08 | Setting up log monitoring with ELK stack
+2f2092d | mèo | trannguyenphuckhang12@gmail.com | 2025-12-02 | feat: setup shadcn
+be7942c | mèo | trannguyenphuckhang12@gmail.com | 2025-12-02 | feat: add tailwind and remove old styling
+1ef0790 | mèo | trannguyenphuckhang12@gmail.com | 2025-12-02 | feat: vite react template
+f397021 | Nguyễn Quang Huy | qhuy180624@gmail.com | 2025-12-01 | First init

@@ -14,7 +14,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useSocket } from "@/contexts/SocketContext";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Clock,
@@ -104,6 +105,7 @@ interface Product {
 const ProductDetailPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const { socket, isConnected, joinProduct, leaveProduct } = useSocket();
   const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
@@ -131,32 +133,72 @@ const ProductDetailPage = () => {
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/products/${id}`);
-        const data = await response.json();
-        if (data.success) {
-          setProduct(data.data);
-          // Fetch related products from same category
-          if (data.data.category?.id) {
-            fetchRelatedProducts(data.data.category.id);
-          }
-        } else {
-          setError("Không thể tải sản phẩm");
+  // Extract fetchProduct as a standalone function for reuse
+  const fetchProduct = useCallback(async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/products/${id}`);
+      const data = await response.json();
+      if (data.success) {
+        setProduct(data.data);
+        // Fetch related products from same category
+        if (data.data.category?.id) {
+          fetchRelatedProducts(data.data.category.id);
         }
-      } catch {
-        setError("Đã xảy ra lỗi");
-      } finally {
-        setLoading(false);
+      } else {
+        setError("Không thể tải sản phẩm");
       }
-    };
+    } catch {
+      setError("Đã xảy ra lỗi");
+    } finally {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [BACKEND_URL, id]);
+
+  // Initial fetch
+  useEffect(() => {
     if (id) {
       fetchProduct();
       fetchQuestions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Socket.io real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected || !id) return;
+
+    // Join product room
+    joinProduct(id);
+
+    // Listen for bid updates
+    const handleBidPlaced = (data: any) => {
+      console.log("🔔 New bid received, refreshing product data:", data);
+      if (data.productId === id) {
+        // Refresh product data to get latest currentWinner and currentPrice
+        fetchProduct();
+      }
+    };
+
+    // Listen for bidder rejection
+    const handleBidderRejected = (data: any) => {
+      console.log("🚫 Bidder rejected, refreshing product data:", data);
+      if (data.productId === id) {
+        // Refresh product data to get updated winner
+        fetchProduct();
+      }
+    };
+
+    socket.on("bid:placed", handleBidPlaced);
+    socket.on("bidder:rejected", handleBidderRejected);
+
+    // Cleanup
+    return () => {
+      socket.off("bid:placed", handleBidPlaced);
+      socket.off("bidder:rejected", handleBidderRejected);
+      leaveProduct(id);
+    };
+  }, [socket, isConnected, id, joinProduct, leaveProduct, fetchProduct]);
 
   const fetchQuestions = async () => {
     try {
@@ -611,6 +653,7 @@ const ProductDetailPage = () => {
               productId={product.id}
               productStatus={product.status}
               currentWinnerId={product.currentWinner?.id || null}
+              sellerId={product.seller?.id}
             />
           </div>
 

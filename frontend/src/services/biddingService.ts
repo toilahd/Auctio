@@ -5,6 +5,7 @@ export interface Bidder {
   id: string;
   fullName: string;
   email: string | null;
+  isDenied?: boolean; // Flag indicating if bidder is denied from this product
 }
 
 export interface Bid {
