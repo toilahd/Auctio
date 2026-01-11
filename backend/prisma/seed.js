@@ -113,6 +113,81 @@ async function main() {
     },
   });
 
+  const bidder3 = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440007',
+      email: 'bidder3@example.com',
+      password: hashedPassword,
+      fullName: 'Võ Thị Thu Hà',
+      address: '333 Lê Văn Sỹ, Quận Phú Nhuận, TP.HCM',
+      dateOfBirth: new Date('1995-04-12'),
+      role: 'BIDDER',
+      positiveRatings: 35,
+      negativeRatings: 3,
+      isVerified: true,
+    },
+  });
+
+  const bidder4 = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440008',
+      email: 'bidder4@example.com',
+      password: hashedPassword,
+      fullName: 'Đặng Minh Tuấn',
+      address: '444 Cách Mạng Tháng 8, Quận 10, TP.HCM',
+      dateOfBirth: new Date('1989-09-22'),
+      role: 'BIDDER',
+      positiveRatings: 42,
+      negativeRatings: 5,
+      isVerified: true,
+    },
+  });
+
+  const bidder5 = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440009',
+      email: 'bidder5@example.com',
+      password: hashedPassword,
+      fullName: 'Bùi Thị Lan Anh',
+      address: '555 Nguyễn Đình Chiểu, Quận 1, TP.HCM',
+      dateOfBirth: new Date('1993-06-18'),
+      role: 'BIDDER',
+      positiveRatings: 18,
+      negativeRatings: 2,
+      isVerified: true,
+    },
+  });
+
+  const bidder6 = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440010',
+      email: 'bidder6@example.com',
+      password: hashedPassword,
+      fullName: 'Ngô Văn Hùng',
+      address: '666 Điện Biên Phủ, Quận Bình Thạnh, TP.HCM',
+      dateOfBirth: new Date('1991-12-05'),
+      role: 'BIDDER',
+      positiveRatings: 25,
+      negativeRatings: 1,
+      isVerified: true,
+    },
+  });
+
+  const bidder7 = await prisma.user.create({
+    data: {
+      id: '550e8400-e29b-41d4-a716-446655440011',
+      email: 'bidder7@example.com',
+      password: hashedPassword,
+      fullName: 'Lý Thị Mai',
+      address: '777 Phan Văn Trị, Quận Gò Vấp, TP.HCM',
+      dateOfBirth: new Date('1994-03-28'),
+      role: 'BIDDER',
+      positiveRatings: 31,
+      negativeRatings: 4,
+      isVerified: true,
+    },
+  });
+
   console.log(`Created ${await prisma.user.count()} users\n`);
 
   // ========================================
@@ -1082,37 +1157,84 @@ async function main() {
     where: { status: 'ACTIVE' },
   });
 
-  const bidders = [bidder1.id, bidder2.id];
+  // All available bidders for realistic distribution
+  const allBidders = [
+    bidder1.id,
+    bidder2.id,
+    bidder3.id,
+    bidder4.id,
+    bidder5.id,
+    bidder6.id,
+    bidder7.id
+  ];
+
   let totalBidsCreated = 0;
 
   for (const product of allProducts) {
     const startPrice = Number(product.startPrice);
     const stepPrice = Number(product.stepPrice);
-    const numBids = 5 + Math.floor(Math.random() * 3); // 5-7 bids per product
+    const numBids = 5 + Math.floor(Math.random() * 5); // 5-9 bids per product
 
-    let currentPrice = startPrice;
+    // Shuffle bidders for this product to get random participation
+    const shuffledBidders = [...allBidders].sort(() => Math.random() - 0.5);
+    const participatingBidders = shuffledBidders.slice(0, Math.min(3 + Math.floor(Math.random() * 3), 6)); // 3-5 unique bidders per product
+
+    let currentMaxBid = startPrice;
     let currentWinnerId = null;
+    let currentPrice = startPrice;
+
+    // Track max bids per bidder for proxy bidding simulation
+    const bidderMaxBids = {};
 
     for (let i = 0; i < numBids; i++) {
-      const bidderId = bidders[i % bidders.length];
+      // Pick a random participating bidder
+      const bidderId = participatingBidders[Math.floor(Math.random() * participatingBidders.length)];
 
-      // Calculate amount and maxAmount
-      const amount = currentPrice;
-      const maxAmount = currentPrice + stepPrice * (Math.floor(Math.random() * 2) + 1);
+      // Calculate this bid's max amount (what they're willing to pay)
+      const maxBidIncrement = Math.floor(Math.random() * 3) + 1; // 1-3 steps above current
+      const maxAmount = currentPrice + (stepPrice * maxBidIncrement);
+
+      // Simulate proxy bidding logic
+      if (!bidderMaxBids[bidderId] || maxAmount > bidderMaxBids[bidderId]) {
+        bidderMaxBids[bidderId] = maxAmount;
+      }
+
+      // Determine the actual bid amount (current price they enter the auction at)
+      let bidAmount = currentPrice;
+
+      // If this bidder already has a max bid, they're updating it
+      const isAutoBid = bidderMaxBids[bidderId] !== undefined && i > 0;
+
+      // Find who would be the winner after this bid
+      const highestMaxBid = Math.max(...Object.values(bidderMaxBids));
+      const winnerId = Object.keys(bidderMaxBids).find(
+        id => bidderMaxBids[id] === highestMaxBid
+      );
+
+      // Calculate the current price after this bid
+      // Current price should be: min(winner's max, second highest max + step)
+      const sortedMaxBids = Object.values(bidderMaxBids).sort((a, b) => b - a);
+      if (sortedMaxBids.length > 1) {
+        const secondHighest = sortedMaxBids[1];
+        currentPrice = Math.min(highestMaxBid, secondHighest + stepPrice);
+      } else {
+        currentPrice = Math.min(highestMaxBid, startPrice);
+      }
+
+      bidAmount = currentPrice;
 
       await prisma.bid.create({
         data: {
           productId: product.id,
           bidderId: bidderId,
-          amount: amount,
+          amount: bidAmount,
           maxAmount: maxAmount,
-          isAutoBid: i > 0,
-          createdAt: new Date(Date.now() - (numBids - i) * 3600000), // Stagger by hours
+          isAutoBid: isAutoBid,
+          createdAt: new Date(Date.now() - (numBids - i) * 3600000 - Math.random() * 1800000), // Stagger by hours with random minutes
         },
       });
 
-      currentPrice = amount + stepPrice;
-      currentWinnerId = bidderId;
+      currentWinnerId = winnerId;
       totalBidsCreated++;
     }
 
@@ -1120,13 +1242,13 @@ async function main() {
     await prisma.product.update({
       where: { id: product.id },
       data: {
-        currentPrice: currentPrice - stepPrice, // Last bid price
+        currentPrice: currentPrice,
         currentWinnerId: currentWinnerId,
         bidCount: numBids,
       },
     });
 
-    console.log(`  ✓ Created ${numBids} bids for: ${product.title.substring(0, 50)}...`);
+    console.log(`  ✓ Created ${numBids} bids for: ${product.title.substring(0, 50)}... (${participatingBidders.length} bidders)`);
   }
 
   console.log(`\nCreated ${totalBidsCreated} total bids\n`);
