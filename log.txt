@@ -1,0 +1,1308 @@
+commit aa1a82f1434828cf8972070ff92228329346b47c
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Jan 11 18:22:06 2026 +0700
+
+    feat: update to use react hook form
+
+commit 91bd68d2f57808d4ae94d5c9460aae1e01fa2811
+Merge: 72bf9dc cd13899
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Sun Jan 11 18:12:56 2026 +0700
+
+    Merge pull request #29 from toilahd/feat/revision-4
+    
+    feat: fix bidding service
+
+commit cd1389958b5c540c7b81cd282e7b2b01c018991b
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sun Jan 11 18:12:10 2026 +0700
+
+    feat: fix bidding service
+
+commit 72bf9dc5616e0132ce7e2508933fb6101a191219
+Merge: d4f60f5 17c6ebf
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Sun Jan 11 17:10:32 2026 +0700
+
+    Merge pull request #28 from toilahd/feat/frontend-revision-2
+    
+    feat: add slide show effect
+
+commit 17c6ebf283694cb84802bc817d618fe647b83bed
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Jan 11 17:08:40 2026 +0700
+
+    feat: add slide show effect
+
+commit d4f60f5f21b3b4f61773fb936a96a6c6ceb5cb87
+Merge: 5ec8ef6 4c0723d
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Sun Jan 11 17:05:18 2026 +0700
+
+    Merge pull request #27 from toilahd/feat/revision-4
+    
+    Feat/revision 4
+
+commit 4c0723df065fdd9309331188488300f2e5e1b48d
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sun Jan 11 16:57:07 2026 +0700
+
+    refactor: refactor seed and delete unnecessary files
+
+commit 84527abc87f4f290178482f10d382c0c7dca5ca4
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sun Jan 11 14:24:55 2026 +0700
+
+    feat: add 5 bids/product
+
+commit 19185f440ea8c39ae92e5b7846a36bff6e37ba88
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sun Jan 11 13:55:34 2026 +0700
+
+    feat: fix bidding history, and deny bidder
+
+commit 4e56c2a41e74666e6c0ffca4c52c81bf42b8e05e
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sun Jan 11 11:56:23 2026 +0700
+
+    feat: update validation, bid history ui, fix bid logic
+
+commit 9f2c75b7e712955a52286ba79e5adb11424e8f92
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sun Jan 11 10:27:23 2026 +0700
+
+    fix: google oauth port
+
+commit f0d3b0335facddbae39fa1cec2ca234d3ee909f2
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sun Jan 11 10:20:19 2026 +0700
+
+    feat: validation on all endpoints
+
+commit 5ec8ef69c9ada8d1c8037548d4de9d6095628679
+Merge: 5f4bfa8 0889462
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Sat Jan 10 21:15:11 2026 +0700
+
+    Merge pull request #26 from toilahd/feat/revision-4
+    
+    add productid in get user ratings endpoint
+
+commit 08894628e247badbedd5a82621a3686f5b283ffa
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sat Jan 10 20:20:39 2026 +0700
+
+    add productid in get user ratings endpoint
+
+commit 5f4bfa8d4108dad556dba64e29f8d310107c42fd
+Merge: c8e925f 5b8003d
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Sat Jan 10 16:19:51 2026 +0700
+
+    Merge pull request #25 from toilahd/feat/frontend-revision-2
+    
+    feat: frontend and backend update
+
+commit 5b8003db9865757a93c54615ef510460bd64243e
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sat Jan 10 16:12:55 2026 +0700
+
+    feat: frontend and backend update
+    
+    Change getSellerCompletedProducts to get products that are `not "ACTIVE"`, add nav to user profile page, update my bid page and seller dashboard
+
+commit c8e925f31e7d6ce4542582ba06e9f76ade37078d
+Merge: 8d5994d 141f59d
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Sat Jan 10 14:12:17 2026 +0700
+
+    Merge pull request #23 from toilahd/feat/revision-3
+    
+    Feat/revision 3
+
+commit 141f59d81a5a683ccb904c51a7a097d66a5a95d0
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sat Jan 10 14:08:40 2026 +0700
+
+    update: update get product user is bidding on include active and ended status
+
+commit cc9dae802edfb4e5dc9cfd603b3fc5e2839f1815
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sat Jan 10 14:03:07 2026 +0700
+
+    feat:fix the current winner feature
+
+commit fcb661a6c025c66ec98eff16fbaaca403b5d88b8
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sat Jan 10 13:58:10 2026 +0700
+
+    feat: add buy now feature
+
+commit 8f6383f6749f8f52c1a01a2cfe3cd54f6206006b
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Fri Jan 9 22:52:55 2026 +0700
+
+    chore: update gitignore to ignore package-lock.json
+
+commit b5a0813126610af7c87f1302dabc7f0b5611c9d3
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Fri Jan 9 22:46:19 2026 +0700
+
+    update: package.json
+
+commit 484bdfc979ca322a0b1ec54a18d9e58dbc822779
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Fri Jan 9 22:43:50 2026 +0700
+
+    feat: confirmation before setting price
+
+commit 5f09dc2630696d8e8b456462a8053dc1c41e4d0f
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Fri Jan 9 22:41:57 2026 +0700
+
+    feat: check rating before allowing set price
+
+commit 6f2c43a3315c88071250a62176349b59047c3e74
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Fri Jan 9 21:37:56 2026 +0700
+
+    feat: update search page
+
+commit 4778bdb452230a742f20335e1d83eb7594e99bec
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Fri Jan 9 21:36:35 2026 +0700
+
+    feat: update search feature (adding filter)
+
+commit 8d5994dc280821e230d76b67e3d0f087df811e75
+Merge: 7ee70bc f30b4b9
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Sat Jan 10 10:16:53 2026 +0700
+
+    Merge pull request #22 from toilahd/feat/frontend-revision
+    
+    Feat/frontend revision
+
+commit f30b4b9be3e58420f8b05c5475990af976506db6
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sat Jan 10 10:15:59 2026 +0700
+
+    feat: name masking for current winner in product detail and you badge
+
+commit 8f7c6fb5bad9219e9f3446b7e514215d1868201c
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sat Jan 10 09:32:33 2026 +0700
+
+    feat: remove report md
+
+commit 26317beb398a8c91b4c52a43861dbb71fde2c638
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sat Jan 10 09:26:00 2026 +0700
+
+    fix: top and bottom white space around product thumbnail and mask current winner name
+
+commit 43ea41548f703cbe4ac5670d82fad8181c3bbe5b
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sat Jan 10 09:10:43 2026 +0700
+
+    feat: add navigation to profile from seller info and bidding history
+
+commit 7ee70bcd4ee03f9446172a0a1a5420a71f35671e
+Merge: f6b16dc 7559564
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Sat Jan 10 08:43:42 2026 +0700
+
+    Merge pull request #21 from toilahd/feat/revision-2
+    
+    Feat/revision 2
+
+commit 755956475771d9b4ff2921ad8260fb1dbfc76029
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Jan 9 21:25:53 2026 +0700
+
+    feat: image transition, object fit main image and able to support many product images
+
+commit a5e7195b18c3b3ca34b9299a36ce22c069b4a4e7
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Jan 9 21:16:42 2026 +0700
+
+    feat: remove changing email option, remove notification icon and add glow effect to new product
+
+commit 0ede145d3ce13ca302901e9abfedbcfb9849586b
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Jan 8 22:25:24 2026 +0700
+
+    feat: related products
+
+commit 53ee4e18584099d06c6f8cb2360b8c98ca5c8065
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Jan 8 22:06:18 2026 +0700
+
+    feat: update /my-bids with actual data
+
+commit bf435c7dddd5dabb7c104c37f59f3f9fa84a4795
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Jan 8 21:09:15 2026 +0700
+
+    feat: add error message when user use existing email for signup
+
+commit a3620e34454e5d7b4b4f962834da085b93e743b9
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Jan 8 20:54:28 2026 +0700
+
+    feat: update coutn down timer, add price formating to winning bidder info, max price input, check if email exist before captcha validation
+
+commit 8ea6ade91e040f42d8a6763d9a9305df861a9de3
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Jan 8 19:41:01 2026 +0700
+
+    feat: update navigation to react router
+
+commit a021e7f72009c1705c72920221382028cf55ef8f
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Jan 7 20:42:55 2026 +0700
+
+    fix: pagination with shadcn components
+
+commit 2c7fde86ee778dc60908480fbaceea87db181b54
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Jan 7 20:23:44 2026 +0700
+
+    feat: add description styling
+
+commit c5cbcf404565c5bf61e17d711e480e64ff39b0f0
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Jan 7 20:08:14 2026 +0700
+
+    feat: allow filter by parent category on search page
+
+commit f6b16dc65597b3315a2bb2cca859f5f82a6d968a
+Merge: be9973a bb14146
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Fri Jan 9 20:57:42 2026 +0700
+
+    Merge pull request #20 from toilahd/feat/mailing-system
+    
+    feat: finish mailing system
+
+commit bb1414686b225660bbe5bee569c6c9a7321a4199
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Wed Jan 7 22:55:07 2026 +0700
+
+    feat: finish mailing system
+
+commit be9973a42a3eaf275985a365cf57a00b996bfeba
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Wed Jan 7 20:13:08 2026 +0700
+
+    fix: update the search product by parent category id
+
+commit 023733070c1f02f1d96a2255a7cb1769a42366e5
+Merge: ca6ef33 60e0905
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Wed Jan 7 19:46:34 2026 +0700
+
+    Merge pull request #19 from toilahd/feat/revision-1
+    
+    Feat/revision 1
+
+commit 60e0905a5d1c89f0811f5d55e0b43480cc126c38
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Jan 7 19:20:06 2026 +0700
+
+    feat: hide buy now, watch list buttons when unauthenticated on product detail, new badge on product card, allow unauthenicated to see live bidding
+
+commit d608ce9a93ee85800a7312188447db788abd9570
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Jan 6 13:25:14 2026 +0700
+
+    feat: update swagger spec file
+
+commit cd684353114e100f5ff8a9288623e7e6ba53b690
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Jan 6 13:24:58 2026 +0700
+
+    fix: guest user cannot view product detail page
+    
+    - Removed navigation to login page on unauthorized error code
+
+commit 213646f8bc92a7c0dd9628d8a908e17d072a460b
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Jan 6 13:21:47 2026 +0700
+
+    feat: add name to compose stack
+
+commit ca6ef339ad71260448798a91b4db0feb32e77a2d
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Wed Jan 7 18:24:03 2026 +0700
+
+    feat: update get product by category
+
+commit e655e3e8b7c319ce3421cb4774cf912087fd53eb
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Wed Jan 7 18:17:07 2026 +0700
+
+    feat: add enpoint list products by category  parentid
+
+commit e793ba79cf9ba8e45b60562baf45e9858a132459
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Wed Jan 7 17:46:04 2026 +0700
+
+    feat: update seed db script
+
+commit 4d0a6ec471a73dc8432724293ac59cf830cc0401
+Merge: 3891f8a 220a25f
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Mon Jan 5 18:57:26 2026 +0700
+
+    Merge pull request #16 from toilahd/feat/test
+    
+    Feat/test
+
+commit 220a25f0bea146ec80f728c418aa2c066e5bc7ab
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Jan 5 18:56:47 2026 +0700
+
+    feat: update ui
+
+commit a8dd6bfc4bc5f51b3014a0cec383beec58d89dae
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sat Jan 3 16:55:51 2026 +0700
+
+    feat: add auction time setting and scheduler product services
+
+commit 3891f8a9c0bb0cb5f82b93c58b25384a606cffc2
+Merge: 512d10b cd7baa9
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Fri Jan 2 19:34:11 2026 +0700
+
+    Merge pull request #15 from toilahd/feat/bidder-seller
+    
+    Feat/bidder seller
+
+commit cd7baa95e8f9b98ddaf19ffd5af8515c1632be73
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Jan 2 19:30:35 2026 +0700
+
+    feat: after auction flow with stripe
+
+commit 943a50c0f7f3f7b4d6387fac0c3ab2562626aa5d
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Jan 2 17:52:31 2026 +0700
+
+    feat: update ui and navigation in product detail page after auction ended
+
+commit 29251187fd743be496025c84507ec5873b97e2ea
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Jan 2 16:29:25 2026 +0700
+
+    feat: seller upgrade flow with stripe
+    
+    - Updated to working flow: bidder clicks upgrade to seller button -> user chooses credit card option -> user uses test card and pay -> successful payment redirects to payment-result page, user can see payment is success and approval status
+    
+    Todo: admin reject upgrade flow
+
+commit 2905a625ce7814f1aaaeb1eeecfa53aec52ad2a9
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Jan 2 11:54:57 2026 +0700
+
+    feat: stripe payment endpoints
+
+commit 5a708f8a22aec733bcd1fa1a4a736a6f07d4b8ee
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Jan 1 20:56:39 2026 +0700
+
+    feat: update to countdown on product detail page
+
+commit 6dd46d38bdaeb40250014d4cf23ff7a144fede10
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Jan 1 20:56:14 2026 +0700
+
+    feat: translate bidding error messages
+
+commit b0bc04bdc55a0cc7c853dbf7b109d2b2e5357799
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Jan 1 11:07:43 2026 +0700
+
+    feat: implement order completion system with bidder rejection
+    
+    COMPLETED FEATURES:
+    ==================
+    
+    Database Schema:
+    - Extended ProductStatus enum: ENDED, PAYED, SHIPPING, DELIVERED, COMPLETED, CANCELLED
+    - No new tables created (reused existing Order, Rating, ChatMessage)
+    
+    Frontend Implementation:
+    - Created order-completion.tsx (1377 lines) with full order management UI
+      * 4-step progress indicator (Payment → Shipping → Delivery → Rating)
+      * Status-based content rendering for seller/buyer
+      * Chat interface with 3-second polling
+      * Rating modal (+1/-1 with comments, min 10 chars)
+      * Cancel order modal with reason
+      * Bidder list display (collapsible, seller-only)
+      * Reject winner modal with next-bidder preview
+    - Updated seller-dashboard.tsx with "Quản lý đơn hàng" button
+    - Updated product-detail.tsx with order completion buttons
+    - Updated main.tsx routing to use new OrderCompletionPage
+    
+    Backend Implementation:
+    - Created orderController.js (778 lines) with 9 endpoints:
+      * PUT  /api/products/:id/ship - Confirm shipment (PAYED → SHIPPING)
+      * PUT  /api/products/:id/deliver - Confirm delivery (SHIPPING → DELIVERED)
+      * PUT  /api/products/:id/cancel - Cancel order (any → CANCELLED, auto -1)
+      * PUT  /api/products/:id/reject-winner - Reject winner, move to next bidder
+      * GET  /api/products/:id/bidders - Get sorted bidder list
+      * POST /api/products/:id/rate - Submit/edit rating
+      * GET  /api/products/:id/ratings - Get both party ratings
+      * POST /api/products/:id/chat - Send message
+      * GET  /api/products/:id/chat - Get messages
+    - Created orderRoutes.js with authentication middleware
+    - Registered routes in app.js at /api/products/*
+    
+    Key Features:
+    - Bidder rejection: Seller can reject current winner, auto-rate -1, move to next highest bidder
+    - Access control: All endpoints require authentication, seller/buyer validation
+    - Rating system: Submit/edit ratings, auto-complete when both parties rated
+    - Cancel anytime: Seller can cancel with reason, auto -1 rating to buyer
+    - Chat integration: Auto-create order if doesn't exist, real-time polling
+    
+    CRITICAL ISSUES TO FIX:
+    =======================
+    
+    1. Payment Creation Endpoint - PARAMETER MISMATCH ❌
+       Location: backend/controllers/paymentController.js:createAuctionPaymentOrder
+    
+       Current State:
+       - Frontend sends: { productId, amount }
+       - Backend expects: { orderId, buyerId, amount, productTitle }
+    
+       Fix Required:
+       - Create new endpoint: POST /api/products/:id/payment/create
+       - Accept productId from frontend
+       - Auto-lookup/create order from product
+       - Get buyerId from authenticated user
+       - Get productTitle from product data
+       - Call existing ZaloPay service with proper params
+    
+       Alternative: Update existing endpoint to accept productId instead
+    
+    2. Payment Callback - MISSING PRODUCT STATUS UPDATE ⚠️
+       Location: backend/controllers/paymentController.js:handleAuctionPayment
+    
+       Current State:
+       - Only updates Order.status = "PAID"
+       - Does NOT update Product.status = "PAYED"
+    
+       Fix Required:
+       - Update handleAuctionPayment() to also update Product.status
+       - Find product via order.productId
+       - Set Product.status = "PAYED" when payment confirmed
+       - Frontend depends on this to show shipping step
+    
+    PENDING TASKS:
+    ==============
+    - Run Prisma migration: npx prisma migrate dev --name add_order_completion_statuses
+    - Fix payment creation endpoint parameter mismatch
+    - Add Product.status update to payment callback
+    - Test complete order flow end-to-end
+    - Test bidder rejection with multiple bidders
+    - Test chat switches to new winner after rejection
+    
+    FUTURE ENHANCEMENTS:
+    ====================
+    - WebSocket for real-time chat (replace polling)
+    - Email notifications on status changes
+    - Shipping tracking number field
+    - Payment deadline with auto-cancellation
+    - File attachments in chat
+    - Order history view
+    - Refund integration for cancelled orders
+
+commit b8c6dae1f7e3712af92372699421b343a4e9a3f0
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Jan 1 10:31:19 2026 +0700
+
+    feat: completed products update to seller dashboard
+
+commit 512d10bee445cefe86b029ece066d1e1228bb4ff
+Merge: 5598b9b 4867ee8
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Thu Jan 1 22:05:56 2026 +0700
+
+    Merge pull request #14 from toilahd/feat/bid-flow
+    
+    Feat/bid flow
+
+commit 4867ee87b6b6f672c7286f3de66ce33c9715e6ba
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Thu Jan 1 21:53:01 2026 +0700
+
+    feat: enhance the bid history ui
+
+commit 4d5f78db5db3013db04a645ba8c4f26685c443bd
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Thu Jan 1 21:26:03 2026 +0700
+
+    feat: fix the bid flow (using socket in frontend instead polling)
+
+commit 5598b9bb781c71ec791ab68b99859902b144919e
+Merge: 1ebc645 cb76aef
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Thu Jan 1 19:40:20 2026 +0700
+
+    Merge pull request #13 from toilahd/feat/bidding-flow-fe
+    
+    Feat/bidding flow fe
+
+commit cb76aef976a7af9e2f4dafc79cba1eb105e7d7b4
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Thu Jan 1 19:09:14 2026 +0700
+
+    feat: add history bidding and current winner display
+
+commit 4345ccef8e802aa015d8f0c7d5baa68cd79e2022
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Thu Jan 1 17:26:30 2026 +0700
+
+    feat: add bidding flow in frontend
+
+commit 1ebc645fe00a661c5acd9225d8a9b6993f7ed2e8
+Merge: 40c5e1b 26c9fa7
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Wed Dec 31 17:13:32 2025 +0700
+
+    Merge pull request #12 from toilahd/feat/user-actions
+    
+    Feat/user actions
+
+commit 26c9fa79b17a3529f48449c56d345e39c2a738f8
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 31 15:47:19 2025 +0700
+
+    feat: remove recaptcha from loigin
+
+commit 8ec1a70ecc373186fb786dbff50d5bddb8c738c8
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 31 03:13:04 2025 +0700
+
+    feat: update editor to both create product and edit product pages
+
+commit eb18833733c65efc6b2c3c367e6bf1e405622d6f
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 31 03:04:41 2025 +0700
+
+    fix: zalopay backend issues
+
+commit 202ac1247f97977fe56bb4dd0ae345de497352fc
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 31 03:03:08 2025 +0700
+
+    feat: wysiwyg editor
+
+commit 665eee1aa74883db5d334dce13d1d8949e301157
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 31 02:50:32 2025 +0700
+
+    feat: zalopay integration
+
+commit defe20913a42290ef9d9b74916e23f4ab6df8123
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 31 02:27:10 2025 +0700
+
+    feat: update to filtering and displaying products
+
+commit 794ef7c003e2e560c70654d8a97bb6296ceaa626
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 31 00:23:55 2025 +0700
+
+    feat: mock seller upgrade flow
+
+commit 54e2e89de88c01fe4233404b488f006023a4dc40
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 30 23:47:17 2025 +0700
+
+    feat: ask and answer questions
+    
+    - Updated product details page to have answer box only for seller of the product and ask box for other users
+
+commit eb9eed994cbab61e73411fffc930af29d4e1926d
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 30 20:53:52 2025 +0700
+
+    feat: integrate seller pages with backend APIs and add R2 image upload
+    
+    Backend:
+    - Add upload controller with S3/R2 image upload support
+    - Configure multer for multipart form data (max 10 images, 5MB each)
+    - Support Cloudflare R2 via PUBLIC_BUCKET_URL environment variable
+    - Upload path: products/{timestamp}-{random}.{ext}
+    - Register /api/upload/images endpoint with authentication
+    
+    Frontend:
+    - seller-dashboard: Fetch active/completed products from API endpoints
+      * Calculate real stats (total sold, revenue, watchers)
+      * Add loading states with spinner
+      * Display real product data from backend
+    - edit-product: Integrate with product fetch and description append APIs
+      * Fetch product details on mount
+      * Call PATCH /api/seller/products/:id/description
+      * Refetch product after successful update
+    - create-product: Use /api/upload/images for S3/R2 image uploads
+      * Upload images before creating product
+      * Pass returned URLs to product creation endpoint
+    
+    Known limitations:
+    - Views count not tracked in backend (shows 0)
+    - Average rating not calculated yet (shows 0)
+    - Q&A and order management pages still using mock data
+
+commit 91282a131fe04392a559be9d14311b5d67823537
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 30 20:17:27 2025 +0700
+
+    feat: working product creation for seller
+    
+    - Updated product creation form
+    - Added image upload route
+    - Added seller config endpoint (for getting categories and sub-categories)
+
+commit c27cc901ad0caf6c137679840475672b9e02d96c
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 30 19:30:30 2025 +0700
+
+    feat: add swagger notation to chat, question and seller controller and update output swagger specs
+
+commit a3074cea5455aeee94fc000e57bf407e377886ed
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 30 19:04:31 2025 +0700
+
+    feat: finish password reset flow and email verification flow
+
+commit 40c5e1bf5e3a6040dfe48a2a3f1f10bb30c1596e
+Merge: 96cb072 8e887ba
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Tue Dec 30 16:49:14 2025 +0700
+
+    Merge pull request #11 from toilahd/feat/role-based
+    
+    Feat/role based
+
+commit 8e887ba5274976cba5bf06aa852bf3a774fecb21
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 30 16:46:58 2025 +0700
+
+    feat: add verify status to auth context
+
+commit 7d100f4b0352a7a12ce5098847f7bea653c32bcc
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 29 20:11:32 2025 +0700
+
+    feat: admin mangement operation to products, categories and users
+
+commit 17560a38a6b98ce115f7ac3983e4d210fda21ea0
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 29 17:02:45 2025 +0700
+
+    feat: update admin api's swagger notation and output swagger spec
+
+commit b1fc0908f7698da148a63f32859cc2eeed1a37cc
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 29 16:31:07 2025 +0700
+
+    feat: watchlist feature
+
+commit 26e585aeefb23da31087ce8676d289f7acbe436c
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 29 15:58:12 2025 +0700
+
+    feat: otp email verification and password reset
+    
+    - Added endpoints for creating new OTP, verify email, forgot password and reseting password
+
+commit 96cb072c3f950622b0f55bc95525aafcbdd80442
+Merge: 0a4d6f7 020b71d
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Mon Dec 29 23:17:12 2025 +0700
+
+    Merge pull request #10 from toilahd/feat/chat-system
+    
+    feat: add chat message between winner and seller (using socket)
+
+commit 020b71d866341aaadf079eaea4890696deb064d3
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 29 21:24:20 2025 +0700
+
+    feat: add chat message between winner and seller (using socket)
+
+commit 0a4d6f79a19c9b68eb3db352116959d91d11abb9
+Merge: 5816bd6 99fcec9
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Mon Dec 29 19:45:37 2025 +0700
+
+    Merge pull request #9 from toilahd/feat/seller
+    
+    feat: seller endpoints
+
+commit 99fcec95d35a7124d96c620aa18a698fd150ec07
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 29 19:45:12 2025 +0700
+
+    feat: seller endpoints
+
+commit 5816bd6ebc559b44fa75c483472506640a20fe56
+Merge: da6bd68 44890e2
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Mon Dec 29 14:29:25 2025 +0700
+
+    Merge pull request #8 from toilahd/feat/frontend
+    
+    Feat/frontend
+
+commit 44890e2fd69c3a620d615de56a91640618aab7a2
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 29 14:28:50 2025 +0700
+
+    feat: create OTP token on sign up
+
+commit 3c2547ce62843244c7f13973be729bd02a9697b4
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 29 14:05:05 2025 +0700
+
+    feat: profile page support for other user
+
+commit 9a95a586c20473d37040cdf534144a1a170ec133
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 29 12:43:12 2025 +0700
+
+    feat: update profile page and edit profile page with actual data
+
+commit 0d4469ec4e6c595ea741c6d8415031d81104ac5e
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Dec 28 23:48:31 2025 +0700
+
+    feat: update token handling
+
+commit 878cbb328f162a1158a052c18d276f7c6cf76ff3
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Dec 28 22:20:37 2025 +0700
+
+    feat: add auth context
+    
+    - Added auto refresh token on failed /whoami call on Header component mount
+
+commit 2c1d749b475ab73f40c6a24ea448a3edcdc28436
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Dec 28 18:57:47 2025 +0700
+
+    feat: update to category page and search by category
+
+commit 83e04d93b82d49842f5d361769d050f657efd0ad
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Dec 28 17:39:43 2025 +0700
+
+    feat: update all pages with products
+    
+    - Updated to semi-working search page, home page and product details page
+
+commit 388b6efe5741b69b53c69b347a717e109bf91d55
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Dec 28 17:29:48 2025 +0700
+
+    feat: update autogen notation and swagger document
+
+commit 6b5933ef94da6295b60fa53856171f8524248dda
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sat Dec 27 18:52:01 2025 +0700
+
+    feat: update zalopay test script and requirements
+    
+    - Added requirements.txt
+    - Updated script to use env variables and Zalopay V2 API
+
+commit 3bb00dde280e4abd27f51b8c101df0661190f1f9
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 24 02:16:33 2025 +0700
+
+    feat: add search feature
+
+commit b9633dac0c1f23aa79a1a6ec77fb25f7810b3df0
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 24 01:50:31 2025 +0700
+
+    feat: update api doc
+    
+    - Added correct Swagger Autogen notation
+    - Updated API reference page UI
+
+commit ebfcc7f747d52a9f01207d7e65909aab070003f1
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 24 00:47:51 2025 +0700
+
+    feat: zalopay test script
+    
+    - Add `requests` to python and run with: `python zalopay-test.py`
+
+commit cd03a25418487c44ad5825da26071e721b02aa50
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Dec 19 18:05:36 2025 +0700
+
+    feat: add frontend for admin
+    
+    - Added main admin dashboard page, category, product and user management pages
+
+commit da6bd68d3b83a8fdcefde6d29c304504905fd960
+Merge: d3c3bdd fe50727
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Mon Dec 29 14:22:53 2025 +0700
+
+    Merge pull request #7 from toilahd/feat/admin
+    
+    feat/admin
+
+commit fe50727b1f8f41d26b438ceabc69fff8861441d9
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 29 14:21:06 2025 +0700
+
+    feat: dashboard feature
+
+commit 780a812dc917fe09f550632a6b4a89dea73b4f84
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 29 13:11:04 2025 +0700
+
+    feat: admin user management
+
+commit 15187d3f5e0dc8dbc750194413b08fa4bc8909af
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 29 13:08:13 2025 +0700
+
+    feat: add admin product managemennt
+
+commit df582e55d7a2483df7cc4a9d2900d266ba6360c7
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 29 11:46:47 2025 +0700
+
+    feat: admin category management feature
+
+commit d3c3bdd634f41e76940f709f5a53f2a887448350
+Merge: 067b9b2 1868956
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Mon Dec 22 20:24:19 2025 +0700
+
+    Merge pull request #6 from toilahd/feature/bidder
+    
+    feature/bidder
+
+commit 186895628c44321980476f004b39dcddb5550cdd
+Merge: 7e2bc89 067b9b2
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Mon Dec 22 20:24:09 2025 +0700
+
+    Merge branch 'main' into feature/bidder
+
+commit 7e2bc89c39668d0f2f298d387905eede6888018b
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 22 20:21:50 2025 +0700
+
+    refactor: update app setup and test scripts
+
+commit 18fd39f7746e12db338991ddb1091760dc098c3f
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 22 20:21:05 2025 +0700
+
+    feat: add user profile management APIs
+
+commit 77fc05866f75c62f9f428f47d9950983181e9af5
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 22 20:20:59 2025 +0700
+
+    feat: add product question feature
+
+commit 2f1c361f7cf509703fd01d27b8234d48b4fcbada
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 22 20:20:54 2025 +0700
+
+    feat: update product APIs and services
+
+commit 4e637c3becd1b34529128e6db236823f297d0d1b
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 22 20:20:48 2025 +0700
+
+    feat: add category controller and routes
+
+commit da3c96b2806590f0d79ce5c99b5cbc47bbda962e
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 22 20:20:43 2025 +0700
+
+    feat: add watchlist feature
+
+commit 067b9b245a5294338c5c7c5cc29eabfc3fac78f6
+Merge: 475647c 16a2884
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Mon Dec 22 19:40:23 2025 +0700
+
+    Merge pull request #5 from toilahd/feature/guest
+    
+    feature/guest
+
+commit 16a2884d2f535cba0b130cdbb01095f7a7bb5cc5
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 22 19:38:13 2025 +0700
+
+    feat: detail products and menu category feature
+
+commit b7740b15ae138634458a690ed5292dfdaf288cb9
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sat Dec 20 15:29:09 2025 +0700
+
+    feat: show list categories
+
+commit 475647c5fc277f315e5f94987d32fc277c6b0ccb
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Dec 19 00:49:56 2025 +0700
+
+    feat: update swagger doc generation script and output swagger spec
+
+commit 97e972fed94d7c6f1c31d1e494e6acd5f3ebe538
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 18 23:28:43 2025 +0700
+
+    refactor: remove duplicate CORS config and old Express server starting function
+
+commit 304148b8e9b1f3f189611842fdf99fbf9211c48e
+Merge: 464f3b2 c5e5c09
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Thu Dec 18 23:22:52 2025 +0700
+
+    Merge pull request #4 from toilahd/feat/auth
+    
+    feat: auth with reCAPTCHA and pages frontend
+
+commit c5e5c098a0539bf842d6bea44d82f307d9eab951
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 18 23:20:54 2025 +0700
+
+    fix: add missing packages and env variable
+
+commit d77dbf98ad3478036bc368ac7dac3739eb211ae4
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 18 18:36:35 2025 +0700
+
+    feat: frontend for account upgrade and order review pages
+
+commit c00d748bece6b3eab17555eb2023f67856499973
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 18 18:06:09 2025 +0700
+
+    feat: frontend for purchase history and profile pages
+
+commit bd94ec598cda7d03fbd977df373534241b38e5cc
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 18 17:57:46 2025 +0700
+
+    feat: frontend for search and categories pages
+
+commit 1da5a91211e1837ec21d9d575ad84e1786bddd7f
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 18 17:46:02 2025 +0700
+
+    feat: frontend for the rest of seller pages
+
+commit b2b5b13c8bce36c9db7ac01c66464d234c87df19
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 18 16:53:56 2025 +0700
+
+    feat: frontend for watchlist and past bids
+
+commit bdb31867c77a513e578a8fa8ea8b36294673a520
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 16 23:54:17 2025 +0700
+
+    feat: frontend for product detail page
+
+commit 55042bec0c6e821dd0bbf2beb23daa62c163f600
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 16 23:38:19 2025 +0700
+
+    feat: frontend for products page
+    
+    - Filters sidebar: Categories (8 categories with counts), price range, and feature filters ("Có Mua ngay", "Sắp kết thúc")
+    - Sorting: Ending soon, newest, price low-to-high, price high-to-low, most bids
+    - Pagination: 12 items per page with page navigation
+    - Responsive grid: 1-4 columns based on screen size
+    - Search integration: Supports search query from URL params
+    - Empty state: Shows when no products match filters
+    - View toggles: Grid/list view icons (UI only)
+
+commit 74b658bab6fd00399634cd3d943809a9a84b848a
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 16 23:23:43 2025 +0700
+
+    feat: frontend for home/landing page
+
+commit 937018090fa894bf308ce37089e0f49b9f931fe1
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 16 23:09:10 2025 +0700
+
+    feat: frontend for sign up/log in
+    
+    - Added verify email, forgot password, reset password, edit profile and change password page
+
+commit 86047e5b90e0ca5db350c0cf724036fcf04bef52
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 16 22:18:19 2025 +0700
+
+    feat: add captcha verification
+
+commit c0117254e242633e7b338512e2c7e64af6c96cca
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 15 00:57:12 2025 +0700
+
+    feat: initial code for captcha
+
+commit e21a743444e992e934e40fb717860177a5e1ccff
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 15 00:35:09 2025 +0700
+
+    feat: add basic account info page
+    
+    - Added /me and basic account info page
+    - Fixed no cookies included in requests to backend
+
+commit 1e2a51688db2a00f9db65905d992e875ca79ef1d
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Dec 14 23:39:37 2025 +0700
+
+    feat: update language and log in/sign up form validation
+
+commit 8079c16266b1b396bb95289491ef6ad37b1d6acb
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Dec 14 23:23:22 2025 +0700
+
+    feat: add google auth
+
+commit d4bc37041a3d323a95ea30e042d38899a3a44320
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Sun Dec 14 22:09:23 2025 +0700
+
+    feat: add cors
+
+commit 830ad3b77c7b66e52a343546bbc65ae40d84041d
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Dec 12 17:44:30 2025 +0700
+
+    feat: add google auth endpoints
+    
+    - Added /login/federated/google and /auth/google/callback
+
+commit a1129bbffd698b31c5050b5e63427593d4dac7e3
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Dec 12 14:42:14 2025 +0700
+
+    feat: add log in and sign up pages
+    
+    - Added log in page at /log-in
+    - Added sign up page at /sign-up
+
+commit 464f3b2c44382c4c9558ba9966d327731375fe24
+Merge: 86a022d a6c9b32
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Thu Dec 18 22:36:20 2025 +0700
+
+    Merge pull request #3 from toilahd/feat/bidding-flow
+    
+    feat: bidding flow and full text search on product
+
+commit a6c9b322995532d4a21ad35b7e54f3734e5bfb57
+Merge: b9694d4 86a022d
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Thu Dec 18 22:36:10 2025 +0700
+
+    Merge branch 'main' into feat/bidding-flow
+
+commit b9694d469cdd422b6085469d324d5e0cd179672e
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Sun Dec 14 19:08:13 2025 +0700
+
+    feat: bidding flow and full text search on product
+
+commit 86a022d1dbb3dc47b68cc9f6fb4bc6fa4f4a5844
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 11 15:57:42 2025 +0700
+
+    feat: add docs and example file structure
+    
+    - Updated gen-swagger.js config
+    - Added Swagger UI on /docs
+    - Added example file structure:
+    Routes → Controllers → Services (not added yet)
+
+commit e8ee4e5b2fb24f703b463d52bdb7fa7b98bc8b06
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 11 15:38:31 2025 +0700
+
+    fix: prisma client generation
+    
+    - Downgraded prisma to version 6.0.1
+
+commit 0882ef83a939ad77c5e06c7fd73bfd50f84e7e3b
+Merge: a2f0692 22d5227
+Author: Phúc Khang <84757707+PhKhang@users.noreply.github.com>
+Date:   Thu Dec 11 14:31:36 2025 +0700
+
+    Merge pull request #2 from toilahd/feat/simple-auth-server
+    
+    feat: auth server and other stuff
+
+commit 22d5227b8bb7bfac2f87d049ed838bf229d670dd
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 10 21:10:10 2025 +0700
+
+    feat: add place holder pages
+
+commit 9bc4c7b28bece4d8860e66ddc2feded36d976b60
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 10 18:10:18 2025 +0700
+
+    refactor: update page file names
+
+commit 2c06ff65928baaae298fe2a3aeea6369931bbcdf
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Wed Dec 10 18:02:17 2025 +0700
+
+    feat: tweakcn
+
+commit 569ca500b4b1a055a98ab15fb0b180b5b4648725
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Mon Dec 8 23:36:36 2025 +0700
+
+    feat: home page with intial product section
+
+commit e6dd0e4ee8b3742b7e94bc55f3f1a044d9825735
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Dec 5 17:34:35 2025 +0700
+
+    feat: add validation and autogen
+    
+    - Added zod validation to /login
+    - Added Swagger specs autogen script gen-swagger.js
+    - Added example extra Swagger endpoint specs to /login, /whoami and /refresh
+
+commit b1408e290425c6a060c715d5767508ebcfd9b615
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Fri Dec 5 14:18:02 2025 +0700
+
+    feat: file upload grpc server
+    
+    - Added file upload server
+    - Added example client to use with the server
+    
+    Steps:
+    
+    1. Run gRPC server: `npm run grpc-server`
+    
+    2. Test with a client: `node fileUploadClient.js <path-to.file>`
+    
+    `node fileUploadClient.js '/Users/lap14630/Downloads/new strategy mới.mp4'`
+
+commit b40eefac3b617b7d6f3d3856689f6f2d632ef64d
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 4 16:19:55 2025 +0700
+
+    feat: google login
+
+commit c0b31f3009f661050dfc3b73809185f708cf831e
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Thu Dec 4 10:09:03 2025 +0700
+
+    feat: example secure communication between services
+    
+    - Added service A: called from http://localhost:4001/data, calls to service B to get data
+    - Added service B: verify jwt, returns data if authorized
+    - Added simple cookies based jwt, refesh token storage on frontend
+
+commit 14a00a44f5cc5f2b3ff0a2c7ff4062ce108e2f94
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 2 16:30:22 2025 +0700
+
+    feat: simple jwt based auth server
+    
+    - Added auth.js server
+    - Added simple /login and /protected routes
+
+commit a2f06925a674b9d34f0b7ffa7688dcddb551cf58
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Thu Dec 11 10:51:41 2025 +0700
+
+    refactor: clean unused files
+
+commit 447a28c05d5a7cb76e312ff1e6cc06b5acabcb04
+Merge: 4cf2867 1a3e54d
+Author: Nguyen Quang Huy <116057557+toilahd@users.noreply.github.com>
+Date:   Thu Dec 11 10:41:24 2025 +0700
+
+    Merge pull request #1 from toilahd/feat/migrate-db
+    
+    Merge feat/migrate db to main
+
+commit 1a3e54d17289cd6592b44c19c6860b53c1f1db37
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Thu Dec 11 10:32:17 2025 +0700
+
+    chore: update .gitignore
+
+commit 9625462840a7f8090ccdfe87859c126da05ed78e
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Thu Dec 11 10:28:56 2025 +0700
+
+    refactor: restructure seed
+
+commit ef373d56351e074380e6f3f22e2cb107331dee0e
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Wed Dec 10 20:21:39 2025 +0700
+
+    feat: create Prisma models and seed mock data
+
+commit 886138020abf355491cd676794b18f0246cc71a0
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Tue Dec 9 15:14:34 2025 +0700
+
+    feat: migrate database from Supabase to local PostgreSQL and add mail implementation
+
+commit 4cf286759085050f90d63f0139d5f07001de23c8
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 8 17:41:01 2025 +0700
+
+    feat: emao;
+
+commit ca24da4747c89601681ab08a232dc2d92e7c532b
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 8 15:27:14 2025 +0700
+
+    Setting up log monitoring with ELK stack
+
+commit 2f2092d7b47a376d7283c2c542bbb0da169266d4
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 2 14:53:55 2025 +0700
+
+    feat: setup shadcn
+    
+    - Added example ItemCard with Shadcn components
+
+commit be7942cd28be5406d89aa96d366d05912733c5b3
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 2 11:13:51 2025 +0700
+
+    feat: add tailwind and remove old styling
+
+commit 1ef0790fa6193acf1a12a68c7e0893b44e44e2c6
+Author: mèo <trannguyenphuckhang12@gmail.com>
+Date:   Tue Dec 2 10:47:56 2025 +0700
+
+    feat: vite react template
+
+commit f3970215099761c90f72040c7a72d7eb504d3359
+Author: Nguyễn Quang Huy <qhuy180624@gmail.com>
+Date:   Mon Dec 1 13:17:55 2025 +0700
+
+    First init
